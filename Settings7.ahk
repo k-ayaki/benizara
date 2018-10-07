@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.0 .... 2018/10/04
+;	ver.0.1.1 .... 2018/10/04
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -131,7 +131,7 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30 Y92,機能：Yet another NICOLA Emulaton Software / キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.0 / 2018年10月 4日
+	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.1 / 2018年10月 7日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
