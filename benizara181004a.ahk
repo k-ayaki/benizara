@@ -2,11 +2,12 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.1 .... 2018/10/04
+;	ver.0.1.2 .... 2018/10/10
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
 	#MaxhotkeysPerInterval 200
+	#KeyHistory
 	SetWorkingDir, %A_ScriptDir%
 	g_Romaji = A
 	g_Thumb  = N
@@ -22,7 +23,6 @@
 	GoSub,Init
 	g_ThumbR = 0
 	g_ThumbL = 0
-	#MaxHotkeysPerInterval 200
 	
 	vLayoutFile := g_LayoutFile
 	Gosub,ReadLayout
@@ -103,49 +103,53 @@ RShift up::
 	g_Koyubi = N
 	Goto, keyup
 
-LAlt::
+;WindowsキーとAltキーをホットキー登録すると、WindowsキーやAltキーの単体押しが効かなくなるのでコメントアウトする。
+;代わりにInterrupt10 でA_Priorkeyを見て、Windowsキーを監視する。
+;但し、WindowsキーやAltキーを離したことを感知できないことに留意。
+
+;LAlt::
 	kName = LAlt
 	kCode = 0
 	g_Modifier = Alt
 	Goto, keydown
 	
-LAlt up::
+;LAlt up::
 	kName = LAlt
 	kCode = 0
 	g_Modifier = 
 	Goto, keyup
 
-RAlt::
+;RAlt::
 	kName = RAlt
 	kCode = 0
 	g_Modifier = Alt
 	Goto, keydown
 
-RAlt up::
+;RAlt up::
 	kName = RAlt
 	kCode = 0
 	g_Modifier = 
 	Goto, keyup
 
-LWin::
+;LWin::
 	kName = LWin
 	kCode = 0
 	g_Modifier = Win
 	Goto, keydown
 
-LWin up::
+;LWin up::
 	kName = LWin
 	kCode = 0
 	g_Modifier = 
 	Goto, keyup
 
-RWin::
+;RWin::
 	kName = RWin
 	kCode = 0
 	g_Modifier = Win
 	Goto, keydown
 
-RWin up::
+;RWin up::
 	kName = RWin
 	kCode = 0
 	g_Modifier = 
@@ -651,6 +655,10 @@ keyup:
 		g_SendTick =
 		g_SendPtn =
 	}
+	if g_Modifier in Win,Alt
+	{
+		IME_SET(0)
+	}
 	return
 	
 ;----------------------------------------------------------------------
@@ -663,6 +671,18 @@ Interrupt10:
 		{
 			Gosub, SendOnHoldKey
 		}
+	}
+	if A_PriorKey in LWin,RWin
+	{
+		g_Modifier = Win
+	}
+	else if A_PriorKey in LAlt,RAlt
+	{
+		g_Modifier = Alt
+	}
+	else if g_Modifier in Win,Alt
+	{
+		g_Modifier = 
 	}
 	return
 
