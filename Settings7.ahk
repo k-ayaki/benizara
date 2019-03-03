@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.2 .... 2018/10/10
+;	ver.0.1.3 .... 2019/1/12
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -30,8 +30,10 @@ Init:
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
 		g_Overlap = 50
 		IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
-		g_ThumbKey = 無変換－変換
-		IniWrite,%g_ThumbKey%,%g_IniFile%,Key,ThumbKey
+		g_OyaKey = 無変換－変換
+		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
+		g_KeySingle = 無効
+		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
 	IniRead,g_Continue,%g_IniFile%,Key,Continue
@@ -54,9 +56,14 @@ Init:
 		g_Overlap = 20
 	if g_Overlap > 80
 		g_Overlap = 80
-	IniRead,g_ThumbKey,%g_IniFile%,Key,ThumbKey
-	if g_ThumbKey not in 無変換－変換,無変換－空白
-		g_ThumbKey = 無変換－変換
+	IniRead,g_OyaKey,%g_IniFile%,Key,OyaKey
+	if g_OyaKey not in 無変換－変換,無変換－空白
+		g_OyaKey = 無変換－変換
+	vOyaKey := g_OyaKey
+	gosub, RemapOya
+	IniRead,g_KeySingle,%g_IniFile%,Key,KeySingle
+	if g_KeySingle not in 有効,無効
+		g_KeySingle = 無効
 	return
 	
 ;-----------------------------------------------------------------------
@@ -69,13 +76,14 @@ Settings:
 	_LayoutFile := g_LayoutFile
 	_allTheLayout := g_allTheLayout
 	_Overlap := g_Overlap
-	_ThumbKey := g_ThumbKey
+	_OyaKey := g_OyaKey
+	_KeySingle := g_KeySingle
 _Settings:
 	Gui, New
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X343 Y308 W77 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X431 Y308 W77 H22,キャンセル
-	Gui, Add, Tab2,X12 Y8 W522 H291, 配列||親指シフト|紅皿について
+	Gui, Add, Tab2,X12 Y8 W522 H291, 配列||親指シフト|管理者権限|紅皿について
 
 	Gui, Tab, 1
 	Gui, Font,s10 c000000
@@ -94,11 +102,11 @@ _Settings:
 	Gui, Tab, 2
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,親指シフトキー：
-	if _ThumbKey = 無変換－変換
-		Gui, Add, ComboBox,ggThumb vvThumbKey X133 Y52 W125,無変換－変換||無変換－空白|
+	if _OyaKey = 無変換－変換
+		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|
 	else
-		Gui, Add, ComboBox,ggThumb vvThumbKey X133 Y52 W125,無変換－変換|無変換－空白||
-	;GuiControl,,vThumbKey,%_ThumbKey%
+		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||
+	;GuiControl,,vOyaKey,%_OyaKey%
 	Gui, Add, Checkbox,ggContinue vvContinue X292 Y52,連続シフト
 	GuiControl,,vContinue,%_Continue%
 
@@ -107,8 +115,12 @@ _Settings:
 	
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X57 Y92,単独打鍵：
-	Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,有効|無効||
-	GuiControl,Disable,vKeySingle
+	if _KeySingle = 無効
+		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
+	else
+		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
+	
+	;GuiControl,Disable,vKeySingle
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X292 Y92,キーリピート
 	GuiControl,Disable,vKeyRepeat
 	
@@ -128,12 +140,25 @@ _Settings:
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
+	b := DllCall("Shell32\IsUserAnAdmin")
+	if b = 1
+	{
+		Gui, Add, Text,X30 Y52,管理者権限で動作しています。
+	}
+	else
+	{
+		Gui, Add, Text,X30 Y52,通常権限で動作しています。
+		Gui, Add, Button,ggButtonAdmin X30 Y102 W140 H22,管理者権限に切替
+	}
+
+	Gui, Tab, 4
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30 Y92,機能：Yet another NICOLA Emulaton Software / キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.2 / 2018年10月10日
+	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3 / 2019年1月12日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
+
 	return
 
 ;-----------------------------------------------------------------------
@@ -296,31 +321,59 @@ gZeroDelay:
 ;-----------------------------------------------------------------------
 ; 機能：その他、無効化したＧＵＩ要素の操作・・・ダミー
 ;-----------------------------------------------------------------------
-gThumb:
-	Gui, Submit, NoHide	
-RemapThumb:
-	if vThumbKey = 無変換－変換
+gOya:
+	Gui, Submit, NoHide
+RemapOya:
+	_OyaKey := vOyaKey
+	if vOyaKey = 無変換－変換
 	{
-		Hotkey,Space,gSpace
-		Hotkey,Space up,gSpaceUp
-		Hotkey,*sc079,gThumbR
-		Hotkey,*sc079 up,gThumbRUp
-		Hotkey,*sc07B,gThumbL
-		Hotkey,*sc07B up,gThumbLUp
+		Hotkey,Space,gOyaR
+		Hotkey,Space up,gOyaRUp
+		Hotkey,Space,off
+		Hotkey,Space up,off
+
+		Hotkey,*sc079,gOyaR
+		Hotkey,*sc079,on
+		Hotkey,*sc079 up,gOyaRUp
+		Hotkey,*sc079 up,on
+		kOyaR := "sc079"
+		
+		Hotkey,*sc07B,gOyaL
+		Hotkey,*sc07B up,gOyaLUp
+		kOyaL := "sc07B"
 	}
-	else if vThumbKey = 無変換－空白
+	else if vOyaKey = 無変換－空白
 	{
-		Hotkey,*sc079,gSpace
-		Hotkey,*sc079 up,gSpaceUp
-		Hotkey,Space,gThumbR
-		Hotkey,Space up,gThumbRUp
-		Hotkey,*sc07B,gThumbL
-		Hotkey,*sc07B up,gThumbLUp
+		Hotkey,*sc079,gOyaR
+		Hotkey,*sc079,off
+		Hotkey,*sc079 up,gOyaRUp
+		Hotkey,*sc079 up,off
+		
+		Hotkey,Space,gOyaR
+		Hotkey,Space,on
+		Hotkey,Space up,gOyaRUp
+		Hotkey,Space up,on
+		kOyaR := "Space"
+
+		Hotkey,*sc07B,gOyaL
+		Hotkey,*sc07B up,gOyaLUp
+		kOyaL := "sc07B"
 	}
-	_ThumbKey = vThumbKey
 	Return
 
 gKeySingle:
+	Gui, Submit, NoHide
+	_KeySingle := vKeySingle
+	if vKeySingle = 有効
+	{
+		fKeySingle = 1
+	}
+	else if vKeySingle = 無効
+	{
+		fKeySingle = 0
+	}
+	return
+
 gKeyRepeat:
 gDefFile:
 	Gui, Submit, NoHide
@@ -356,6 +409,20 @@ gFileSelect:
 	Gui,Destroy
 	Goto,_Settings
 
+
+gButtonAdmin:
+	{ 
+		try ; leads to having the script re-launching itself as administrator 
+		{ 
+			if A_IsCompiled 
+				Run *RunAs "%A_ScriptFullPath%" /restart 
+			else
+				Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%" 
+		} 
+		ExitApp 
+	}
+	return
+
 ;-----------------------------------------------------------------------
 ; 機能：OKボタンの押下
 ;-----------------------------------------------------------------------
@@ -367,7 +434,8 @@ gButtonOk:
 	g_LayoutFile := _LayoutFile
 	g_allTheLayout := _allTheLayout
 	g_Overlap := _Overlap
-	g_ThumbKey := _ThumbKey
+	g_OyaKey := _OyaKey
+	g_KeySingle := _KeySingle
 
 	g_IniFile = .\benizara.ini
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
@@ -375,7 +443,8 @@ gButtonOk:
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
 	IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
-	IniWrite,%g_ThumbKey%,%g_IniFile%,Key,ThumbKey
+	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
+	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 	Gui,Destroy
 	return
 
