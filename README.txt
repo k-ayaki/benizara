@@ -1,8 +1,8 @@
 ;-----------------------------------------------------------------------
-; –¼‘OFBenizara / gŽM ver.0.1.3
+; –¼‘OFBenizara / gŽM ver.0.1.3.1
 ; ƒL[ƒ{[ƒh”z—ñƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ\ƒtƒgƒEƒFƒA
 ; ìŽÒFˆ»–Ø@Œ’ˆê˜Y
-; •½¬31”N3ŒŽ3“ú
+; •½¬31”N3ŒŽ17“ú
 ;-----------------------------------------------------------------------
 ‚PD	Žn‚ß‚É
 ‚PD‚PD‰½‚ð‚·‚é‚à‚Ì‚È‚Ì‚©
@@ -17,8 +17,9 @@
 EeŽw‚Ì—FMk-2 ƒL[ƒ{[ƒhƒhƒ‰ƒCƒo V2.0L23‚ÉŽÀ‘•‚³‚ê‚½u—ë’x‰„ƒ‚[ƒhv‚ðA“–ŠYƒ\ƒtƒg‚É‚àŽÀ‘•‚µ‚Ü‚µ‚½B—ë’x‰„ƒ‚[ƒh‚Æ‚ÍAeŽwƒVƒtƒgŽž‚Ì•\Ž¦’x‰„‚ðƒ[ƒ‚É‚µ‚ÄA‚‘¬‘ÅŒ®‚ð‰Â”\‚Æ‚·‚éƒ‚[ƒh‚Å‚·B
 EPerformance Counter‚ð—p‚¢‚ÄA1ƒ~ƒŠ•b’PˆÊ‚ÌƒL[“ü—Íƒ^ƒCƒ~ƒ“ƒO‘ª’è‚ðŽÀŒ»‚µ‚Ü‚µ‚½B‚±‚ê‚É‚æ‚è³Šm‚È“¯Žž‘ÅŒ®^’P“Æ‘ÅŒ®‚Ì”»’è‚ªs‚¦‚Ü‚·B‚È‚¨AVer.0.1.2ˆÈ‘O‚ÍƒVƒXƒeƒ€ƒ^ƒCƒ}[‚ð—p‚¢‚ÄƒL[“ü—Í‚ð‘ª’è‚µ‚Ä‚¢‚½‚½‚ßA‘ª’è¸“x‚Í16ƒ~ƒŠ•b’PˆÊ‚Å‚µ‚½B
 EŠÇ—ŽÒŒ ŒÀ‚Ö‚ÌØ‘Öƒ{ƒ^ƒ“‚ðŽÀ‘•‚µ‚Ü‚µ‚½BgŽM‚ðŠÇ—ŽÒŒ ŒÀ‚ÅŽÀs‚³‚¹‚é‚±‚Æ‚É‚æ‚èAŠÇ—ŽÒŒ ŒÀ‚ÅŽÀs‚³‚ê‚Ä‚¢‚éƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚É‘Î‚µ‚Ä‚àƒL[”z—ñ‚ÌƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ª‰Â”\‚Å‚·B
+EeŽwƒL[‚Ì’P“Æ‘ÅŒ®Žž‚ÌƒL[ƒŠƒs[ƒg‚ÆA‚»‚ÌØ‚è‘Ö‚¦‚ðŽÀ‘•‚µ‚Ü‚µ‚½B
 ‚PD‚RD–¢‚¾ŽÀ‘•‚µ‚Ä‚¢‚È‚¢‚±‚Æ
-E‹@”\ƒL[‚ÌØ‚è‘Ö‚¦AƒL[ƒŠƒs[ƒg‚Ì—L–³‚ÌØ‚è‘Ö‚¦‚Í–¢‚¾ŽÀ‘•‚µ‚Ä‚¢‚Ü‚¹‚ñB
+E‹@”\ƒL[‚ÌØ‚è‘Ö‚¦‚Í–¢‚¾ŽÀ‘•‚µ‚Ä‚¢‚Ü‚¹‚ñB
 E’P“Æ‘ÅŒ®‚Ì—LŒøE–³Œø‚ÌØ‚è‘Ö‚¦‚ÍAver.0.1.3i–{ƒo[ƒWƒ‡ƒ“j‚ÅŽÀ‘•‚µ‚Ü‚µ‚½B
 ‚PD‚SD“ü—Í‘¬“xƒxƒ“ƒ`ƒ}[ƒN
 E—ŽŒêu‚¶‚ã‚°‚Þv‚Ì–¼‘O‚ð“ü—Í‚·‚éƒxƒ“ƒ`ƒ}[ƒN‚Å•]‰¿‚µ‚Ü‚µ‚½B‹ï‘Ì“I‚É‚¢‚¤‚Æu‚¶‚ã‚°‚Þ‚¶‚ã‚°‚Þ‚²‚±‚¤‚Ì‚·‚è‚«‚ê@‚©‚¢‚¶‚á‚è‚·‚¢‚¬‚å‚Ì‚·‚¢‚¬‚å‚¤‚Ü‚Â‚¤‚ñ‚ç‚¢‚Ü‚Â‚Ó‚¤‚ç‚¢‚Ü‚Â@‚­‚¤‚Ë‚é‚Æ‚±‚ë‚É‚·‚Þ‚Æ‚±‚ë@‚â‚Ô‚ç‚±‚¤‚¶‚Ì‚Ô‚ç‚±‚¤‚¶@‚Ï‚¢‚Û‚Ï‚¢‚Û‚Ï‚¢‚Û‚Ì‚µ‚ã[‚è‚ñ‚ª‚ñ@‚µ‚ã[‚è‚ñ‚ª‚ñ‚Ì‚®[‚è‚ñ‚½‚¢@‚®[‚è‚ñ‚½‚¢‚Ì‚Û‚ñ‚Û‚±‚Ò[‚Ì‚Û‚ñ‚Û‚±‚È[‚Ì‚¿‚å‚¤‚«‚ã‚¤‚ß‚¢‚Ì‚¿‚å‚¤‚·‚¯v‚ð‰¼–¼“ü—Í‚·‚éŽžŠÔ‚ðŒv‘ª‚·‚é‚à‚Ì‚Å‚·B‚±‚Ìƒxƒ“ƒ`ƒ}[ƒN‚ÍA¡ˆäŽm˜Y‚³‚ñ‚ÌƒuƒƒO‚ðŽQl‚É‚µ‚Ü‚µ‚½B
@@ -68,6 +69,10 @@ SetBenizaraTask.exe‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰‚Ébenizara‚ªÝ’è‚³‚êAˆÈ~‚Íƒ
 ‚RD‚SDgŽM‚É‚Â‚¢‚Äƒ^ƒu
 ƒo[ƒWƒ‡ƒ“î•ñ‚âgŽM‚ÌŠT—v‚ª‘‚©‚ê‚½ƒ^ƒu‚Å‚·B
 
+‚RD‚TDƒƒO‚Ìà–¾
+ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAƒƒO‚ðƒNƒŠƒbƒN‚·‚é‚ÆgŽMƒƒO‚ª•\Ž¦‚³‚ê‚Ü‚·B
+•\Ž¦“à—e‚Í¶‚©‚çAŽžŠÔŠÔŠuiƒ~ƒŠ•b’PˆÊjA“ü—ÍƒL[‚Æ‚»‚Ìdown/upAó‘ÔAƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Ö‚Ì‘—MƒL[“à—e‚Å‚·B
+
 ‚SD	ƒL[”z—ñiƒfƒtƒHƒ‹ƒgj
 @gŽM‚ÍA‚â‚Ü‚Ô‚«‚Æ“¯—l‚ÉAƒ[ƒ}Žšƒ‚[ƒh‚U–Ê‚ÆA‰p”ƒ‚[ƒh‚U–Ê‚Ì‘S‚P‚Q–Ê‚ÌƒL[ƒ{[ƒhƒŒƒCƒAƒEƒg‚ðŽ‚Á‚Ä‚¢‚Ü‚·Bƒ[ƒ}Žšƒ‚[ƒh‚ÍA‚h‚l‚d‚ðƒ[ƒ}Žš“ü—Í‚Ì‚Ð‚ç‚ª‚ÈE‘SŠpƒJƒ^ƒJƒiE”¼ŠpƒJƒ^ƒJƒi‚ÉÝ’è‚µ‚½‚Æ‚«‚Ìƒ‚[ƒh‚Å‚ ‚èA‰p”ƒ‚[ƒh‚ÍA‚h‚l‚d‚ð‘SŠp‰p”E”¼Šp‰p”E’¼Ú“ü—Í‚ÉÝ’è‚µ‚½‚Æ‚«‚Ìƒ‚[ƒh‚Å‚·BˆÈ‰º•\‚ÉAŠeƒŒƒCƒAƒEƒg–¼‚ÆƒVƒtƒg‘€ì‚Æ‚ÌŠÖŒW‚ðŽ¦‚µ‚Ü‚·B
 
@@ -112,4 +117,5 @@ ver.0.1.1@c@‰”Å
 ver.0.1.2@c@WindowsƒL[‚ÆAltƒL[‚Ì’P“Æ‰Ÿ‚µ“®ì‚ð‹–‰Â‚·‚é‚½‚ß
 @@@@@@@@Hotkey“o˜^‚ðŠO‚µAƒ^ƒCƒ}[Š„ž‚Ý‚ÅŠÄŽ‹‚·‚é‚æ‚¤‚É‚µ‚½
 ver.0.1.3@c@Performance Counter ‘Î‰žAŠÇ—ŽÒŒ ŒÀ‚Ö‚Ì¸Ši‹@”\AIME”»’è‚Ì•s‹ï‡‘Î‰žB
+ver.0.1.3.1@c@eŽwƒL[‚Ì’P“Æ‘ÅŒ®Žž‚ÌƒL[ƒŠƒs[ƒgAƒƒO‹@”\’Ç‰ÁB
 ˆÈã
