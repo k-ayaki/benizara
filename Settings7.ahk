@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.3 .... 2019/1/12
+;	ver.0.1.3.1 .... 2019/3/17
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -34,6 +34,8 @@ Init:
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 		g_KeySingle = 無効
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
+		g_KeyRepeat = 0
+		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
 	IniRead,g_Continue,%g_IniFile%,Key,Continue
@@ -64,6 +66,9 @@ Init:
 	IniRead,g_KeySingle,%g_IniFile%,Key,KeySingle
 	if g_KeySingle not in 有効,無効
 		g_KeySingle = 無効
+	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
+	if g_KeyRepeat not in 1,0
+		g_KeyRepeat = 0
 	return
 	
 ;-----------------------------------------------------------------------
@@ -78,6 +83,7 @@ Settings:
 	_Overlap := g_Overlap
 	_OyaKey := g_OyaKey
 	_KeySingle := g_KeySingle
+	_KeyRepeat := g_KeyRepeat
 _Settings:
 	Gui, New
 	Gui, Font,s10 c000000
@@ -121,8 +127,16 @@ _Settings:
 		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
 	
 	;GuiControl,Disable,vKeySingle
+
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X292 Y92,キーリピート
-	GuiControl,Disable,vKeyRepeat
+	if _KeySingle = 無効
+	{
+		GuiControl,disable,vKeyRepeat
+		_KeyRepeat = 0
+		g_KeyRepeat = 0
+	} else {
+		GuiControl,,vKeyRepeat,%_KeyRepeat%
+	}
 	
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y132 c000000,文字と親指シフトの同時打鍵の割合：
@@ -152,14 +166,15 @@ _Settings:
 	}
 
 	Gui, Tab, 4
-	Gui, Font,s10 c000000
-	Gui, Add, Text,X30 Y52,名称：benizara / 紅皿
-	Gui, Add, Text,X30 Y92,機能：Yet another NICOLA Emulaton Software / キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3 / 2019年1月12日
+	Gui, Font,s10 c000000,ＭＳ ゴシック
+	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
+	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
+	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
+	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3.1 / 2019年3月17日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
-
 	return
+
 
 ;-----------------------------------------------------------------------
 ; 機能：キーレイアウトの表示
@@ -375,6 +390,10 @@ gKeySingle:
 	return
 
 gKeyRepeat:
+	Gui, Submit, NoHide
+	_KeyRepeat := vKeyRepeat
+	return
+	
 gDefFile:
 	Gui, Submit, NoHide
 	;MsgBox % %A_GuiControl%
@@ -436,6 +455,7 @@ gButtonOk:
 	g_Overlap := _Overlap
 	g_OyaKey := _OyaKey
 	g_KeySingle := _KeySingle
+	g_KeyRepeat := _KeyRepeat
 
 	g_IniFile = .\benizara.ini
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
@@ -445,6 +465,7 @@ gButtonOk:
 	IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
+	IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	Gui,Destroy
 	return
 
@@ -456,4 +477,3 @@ GuiClose:
 	Gosub, Init
 	Gui,Destroy
 	return
-
