@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.3.1 .... 2019/3/17
+;	ver.0.1.3.2 .... 2019/3/31
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -59,7 +59,7 @@ Init:
 	if g_Overlap > 80
 		g_Overlap = 80
 	IniRead,g_OyaKey,%g_IniFile%,Key,OyaKey
-	if g_OyaKey not in 無変換－変換,無変換－空白
+	if g_OyaKey not in 無変換－変換,無変換－空白,空白－変換
 		g_OyaKey = 無変換－変換
 	vOyaKey := g_OyaKey
 	gosub, RemapOya
@@ -109,9 +109,12 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,親指シフトキー：
 	if _OyaKey = 無変換－変換
-		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|
+		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
+	else if _OyaKey = 無変換－空白
+		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
 	else
-		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||
+		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
+	
 	;GuiControl,,vOyaKey,%_OyaKey%
 	Gui, Add, Checkbox,ggContinue vvContinue X292 Y52,連続シフト
 	GuiControl,,vContinue,%_Continue%
@@ -170,7 +173,7 @@ _Settings:
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3.1 / 2019年3月17日
+	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3.2 / 2019年3月31日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
@@ -354,7 +357,9 @@ RemapOya:
 		kOyaR := "sc079"
 		
 		Hotkey,*sc07B,gOyaL
+		Hotkey,*sc07B,on
 		Hotkey,*sc07B up,gOyaLUp
+		Hotkey,*sc07B up,on
 		kOyaL := "sc07B"
 	}
 	else if vOyaKey = 無変換－空白
@@ -371,8 +376,29 @@ RemapOya:
 		kOyaR := "Space"
 
 		Hotkey,*sc07B,gOyaL
+		Hotkey,*sc07B,on
 		Hotkey,*sc07B up,gOyaLUp
+		Hotkey,*sc07B up,on
 		kOyaL := "sc07B"
+	}
+	else	; 空白－変換
+	{
+		Hotkey,*sc07B,gOyaR
+		Hotkey,*sc07B,off
+		Hotkey,*sc07B up,gOyaRUp
+		Hotkey,*sc07B up,off
+		
+		Hotkey,Space,gOyaL		; スペースキー
+		Hotkey,Space,on
+		Hotkey,Space up,gOyaLUp
+		Hotkey,Space up,on
+		kOyaL := "Space"
+
+		Hotkey,*sc079,gOyaR		; 変換キー
+		Hotkey,*sc079,on
+		Hotkey,*sc079 up,gOyaRUp
+		Hotkey,*sc079 up,on
+		kOyaR := "sc079"
 	}
 	Return
 
