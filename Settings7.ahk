@@ -1,11 +1,11 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.3.2 .... 2019/3/31
+;	ver.0.1.3.4 .... 2019/4/24
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
-	g_LayoutFile =.\NICOLA配列.bnz
+	g_LayoutFile := ".\NICOLA配列.bnz"
 	Gosub,ReadLayout
 	Gosub, Settings
 	return
@@ -17,58 +17,58 @@
 ; Iniファイルの読み込み
 ;-----------------------------------------------------------------------
 Init:
-	g_IniFile = .\benizara.ini
-	if Path_FileExists(g_IniFile) = 0
+	g_IniFile := ".\benizara.ini"
+	if(Path_FileExists(g_IniFile) = 0)
 	{
-		g_LayoutFile =
+		g_LayoutFile := ""
 		IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
-		g_Continue = 1
+		g_Continue := 1
 		IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
-		g_Threshold = 100
+		g_Threshold := 100
 		IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
-		g_ZeroDelay = 1
+		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-		g_Overlap = 50
+		g_Overlap := 50
 		IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
-		g_OyaKey = 無変換－変換
+		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
-		g_KeySingle = 無効
+		g_KeySingle := "無効"
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
-		g_KeyRepeat = 0
+		g_KeyRepeat := 0
 		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
 	IniRead,g_Continue,%g_IniFile%,Key,Continue
-	if g_Continue>1 
-		g_Continue = 1
-	if g_Continue<0
-		g_Continue = 0
+	if(g_Continue>1) 
+		g_Continue := 1
+	if(g_Continue<0)
+		g_Continue := 0
 	IniRead,g_ZeroDelay,%g_IniFile%,Key,ZeroDelay
-	if g_ZeroDelay>1 
-		g_ZeroDelay = 1
-	if g_ZeroDelay<0
-		g_ZeroDelay = 0
+	if(g_ZeroDelay>1) 
+		g_ZeroDelay := 1
+	if(g_ZeroDelay<0)
+		g_ZeroDelay := 0
 	IniRead,g_Threshold,%g_IniFile%,Key,Threshold
-	if g_Threshold < 10
-		g_Threshold = 10
-	if g_Threshold > 400
-		g_Threshold = 400
+	if(g_Threshold < 10)
+		g_Threshold := 10
+	if(g_Threshold > 400)
+		g_Threshold := 400
 	IniRead,g_Overlap,%g_IniFile%,Key,Overlap
-	if g_Overlap < 20
-		g_Overlap = 20
-	if g_Overlap > 80
-		g_Overlap = 80
+	if(g_Overlap < 20)
+		g_Overlap := 20
+	if(g_Overlap > 80)
+		g_Overlap := 80
 	IniRead,g_OyaKey,%g_IniFile%,Key,OyaKey
 	if g_OyaKey not in 無変換－変換,無変換－空白,空白－変換
-		g_OyaKey = 無変換－変換
+		g_OyaKey := "無変換－変換"
 	vOyaKey := g_OyaKey
 	gosub, RemapOya
 	IniRead,g_KeySingle,%g_IniFile%,Key,KeySingle
 	if g_KeySingle not in 有効,無効
-		g_KeySingle = 無効
+		g_KeySingle := "無効"
 	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
 	if g_KeyRepeat not in 1,0
-		g_KeyRepeat = 0
+		g_KeyRepeat := 0
 	return
 	
 ;-----------------------------------------------------------------------
@@ -108,9 +108,9 @@ _Settings:
 	Gui, Tab, 2
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,親指シフトキー：
-	if _OyaKey = 無変換－変換
+	if(_OyaKey = "無変換－変換")
 		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
-	else if _OyaKey = 無変換－空白
+	else if(_OyaKey = "無変換－空白")
 		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
 	else
 		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
@@ -124,7 +124,7 @@ _Settings:
 	
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X57 Y92,単独打鍵：
-	if _KeySingle = 無効
+	if(_KeySingle = "無効")
 		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
 	else
 		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
@@ -132,11 +132,11 @@ _Settings:
 	;GuiControl,Disable,vKeySingle
 
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X292 Y92,キーリピート
-	if _KeySingle = 無効
+	if(_KeySingle = "無効")
 	{
 		GuiControl,disable,vKeyRepeat
-		_KeyRepeat = 0
-		g_KeyRepeat = 0
+		_KeyRepeat := 0
+		g_KeyRepeat := 0
 	} else {
 		GuiControl,,vKeyRepeat,%_KeyRepeat%
 	}
@@ -157,8 +157,7 @@ _Settings:
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
-	b := DllCall("Shell32\IsUserAnAdmin")
-	if b = 1
+	if(DllCall("Shell32\IsUserAnAdmin") = 1)
 	{
 		Gui, Add, Text,X30 Y52,管理者権限で動作しています。
 	}
@@ -173,7 +172,7 @@ _Settings:
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3.2 / 2019年3月31日
+	Gui, Add, Text,X30 Y132,パージョン：ver.0.1.3.4 / 2019年4月29日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
@@ -183,7 +182,7 @@ _Settings:
 ; 機能：キーレイアウトの表示
 ;-----------------------------------------------------------------------
 DrawKeyFrame:
-	_col =1
+	_col := 1
 	_ypos := 148 + 36*(_col - 1)
 	_cnt := 13
 	loop,%_cnt%
@@ -194,7 +193,7 @@ DrawKeyFrame:
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
-	_col =2
+	_col := 2
 	_ypos := 148 + 36*(_col - 1)
 	_cnt := 12
 	loop,%_cnt%
@@ -205,7 +204,7 @@ DrawKeyFrame:
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
-	_col =3
+	_col := 3
 	_ypos := 148 + 36*(_col - 1)
 	_cnt := 12
 	loop,%_cnt%
@@ -216,7 +215,7 @@ DrawKeyFrame:
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
-	_col =4
+	_col := 4
 	_ypos := 148 + 36*(_col - 1)
 	_cnt := 11
 	loop,%_cnt%
@@ -237,39 +236,23 @@ KeyRectangle:
 	_ypos0 := _ypos - 17
 	_xpos0 := _xpos - 7
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% W36 +Center BackgroundTrans, ■
-	if A_Index = 1
+	if(A_Index = 1)
 	{
 		Gui, Font,s34 cFFC3E1
 	}
-	else if A_Index = 2
-	{
-		Gui, Font,s34 cFFE1C3
-	}
-	else if A_Index = 3
+	else if A_Index in 2,3
 	{
 		Gui, Font,s34 cFFFFC3
 	}
-	else if A_Index = 4
+	else if A_Index in 4,5
 	{
 		Gui, Font,s34 cC3FFC3
 	}
-	else if A_Index = 5
-	{
-		Gui, Font,s34 cC3FFC3
-	}
-	else if A_Index = 6
+	else if A_Index in 6,7
 	{
 		Gui, Font,s34 cC3FFFF
 	}
-	else if A_Index = 7
-	{
-		Gui, Font,s34 cC3FFFF
-	}
-	else if A_Index = 8
-	{
-		Gui, Font,s34 cC3E1FF
-	}
-	else if A_Index = 9
+	else if A_Index in 8,9
 	{
 		Gui, Font,s34 cE1C3FF
 	}
@@ -288,16 +271,15 @@ KeyRectangle:
 gLayout:
 	Gui, Submit, NoHide
 	_mode := Layout2Mode(vLayout)
-	if _mode=
+	if(_mode = "")
 		return
-	_col =1
 	loop,4
 	{
 		_col := A_Index
-		_cnt := org%_mode%%_col%0
-		loop,%_cnt%
+		StringSplit org,LF%_mode%%_col%,`,
+		loop,%org0%
 		{
-			_ch := org%_mode%%_col%%A_Index%
+			_ch := org%A_Index%
 			GuiControl,,vkey%_col%%A_Index%,%_ch%
 		}
 	}
@@ -343,7 +325,7 @@ gOya:
 	Gui, Submit, NoHide
 RemapOya:
 	_OyaKey := vOyaKey
-	if vOyaKey = 無変換－変換
+	if(vOyaKey = "無変換－変換")
 	{
 		Hotkey,Space,gOyaR
 		Hotkey,Space up,gOyaRUp
@@ -362,7 +344,7 @@ RemapOya:
 		Hotkey,*sc07B up,on
 		kOyaL := "sc07B"
 	}
-	else if vOyaKey = 無変換－空白
+	else if(vOyaKey = "無変換－空白")
 	{
 		Hotkey,*sc079,gOyaR
 		Hotkey,*sc079,off
@@ -405,13 +387,13 @@ RemapOya:
 gKeySingle:
 	Gui, Submit, NoHide
 	_KeySingle := vKeySingle
-	if vKeySingle = 有効
+	if(vKeySingle = "有効")
 	{
-		fKeySingle = 1
+		fKeySingle := 1
 	}
-	else if vKeySingle = 無効
+	else if(vKeySingle = "無効")
 	{
-		fKeySingle = 0
+		fKeySingle := 0
 	}
 	return
 
@@ -430,17 +412,21 @@ gDefFile:
 ;-----------------------------------------------------------------------
 gFileSelect:
 	SetWorkingDir, %A_ScriptDir%
-	FileSelectFile, vLayoutFileAbs,0,.,,Layout File (*.bnz; *.yab)
+	FileSelectFile, vLayoutFileAbs,0,%A_ScriptDir%,,Layout File (*.bnz; *.yab)
 	
-	if vLayoutFileAbs<>
+	if(vLayoutFileAbs<>"")
 	{
 		vLayoutFile := Path_RelativePathTo(A_WorkingDir, 0x10, vLayoutFileAbs, 0x20)
+		if(vLayoutFile = "")
+		{
+			vLayoutFile := vLayoutFileAbs
+		}
 		GuiControl,, vFilePath, %vLayoutFile%
 
 		Gosub, InitLayout
 		Gosub, Layout2Key
 		GoSub, ReadLayoutFile
-		if _error <>
+		if(_error <> "")
 		{
 			msgbox, %_error%
 			Gosub, InitLayout
@@ -483,7 +469,7 @@ gButtonOk:
 	g_KeySingle := _KeySingle
 	g_KeyRepeat := _KeyRepeat
 
-	g_IniFile = .\benizara.ini
+	g_IniFile := ".\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 	IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold

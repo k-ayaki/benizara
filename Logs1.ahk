@@ -42,7 +42,7 @@ Logs:
 ;-----------------------------------------------------------------------
 gButtonSave:
 	SetWorkingDir, %A_ScriptDir%
-	FileSelectFile, vLogFileAbs,0,.,,Log File (*.log)
+	FileSelectFile, vLogFileAbs,0,.\%A_Now%.log,,Log File (*.log)
 	
 	if vLogFileAbs<>
 	{
