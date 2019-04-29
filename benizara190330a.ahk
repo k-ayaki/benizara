@@ -1714,10 +1714,10 @@ F12 up::
 	kName := "F12"
 	MojiCode := 0
 	Goto, keyup
-AppsKey up::
-	kName := "AppsKey"
-	MojiCode := 0
-	Goto, keyup
+;AppsKey up::
+	;kName := "AppsKey"
+	;MojiCode := 0
+	;Goto, keyup
 PrintScreen up::
 	kName := "PrintScreen"
 	MojiCode := 0

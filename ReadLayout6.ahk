@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.3.3 .... 2019/4/20
+;	ver.0.1.3.4 .... 2019/4/29
 ;-----------------------------------------------------------------------
 ReadLayout:
 	Gosub, InitControl
@@ -370,7 +370,7 @@ SetKeyTable:
 		if(_qstr <> "")
 		{
 			kdn%_mode%%_col%%A_Index% := _qstr
-			kup%_mode%%_col%%A_Index% := 
+			kup%_mode%%_col%%A_Index% := ""
 			continue
 		}
 		ret := Kanji2KeySymbol(org%A_Index%,_symbol)
@@ -530,6 +530,7 @@ ParseEscSeq(aQuo) {
 ;----------------------------------------------------------------------
 Kanji2KeySymbol(_ch,BYREF vSymbol)
 {
+	vSymbol := ""
 	ret := 0
 	if(_ch = "")
 		return 0
