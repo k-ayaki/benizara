@@ -98,7 +98,7 @@ _Settings:
 	Gui, Add, Button,ggFileSelect X453 Y78 W32 H19,…
 
 	Gui, Add, Text,X40 Y110, 配列のモード：
-	Gui, Add, ComboBox,ggLayout vvLayout X128 Y110,%_allTheLayout%
+	Gui, Add, DropDownList,ggLayout vvLayout X128 Y110,%_allTheLayout%
 		;英数シフト無し|英数小指シフト|ローマ字シフト無し||ローマ字左親指シフト|ローマ字右親指シフト|ローマ字小指シフト
 	Gosub,DrawKeyFrame
 	StringSplit _thisLayout,_allTheLayout,|
@@ -109,11 +109,11 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y52,親指シフトキー：
 	if(_OyaKey = "無変換－変換")
-		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
 	else if(_OyaKey = "無変換－空白")
-		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
 	else
-		Gui, Add, ComboBox,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
 	
 	;GuiControl,,vOyaKey,%_OyaKey%
 	Gui, Add, Checkbox,ggContinue vvContinue X292 Y52,連続シフト
@@ -125,9 +125,9 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X57 Y92,単独打鍵：
 	if(_KeySingle = "無効")
-		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
+		Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
 	else
-		Gui, Add, ComboBox,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
+		Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
 	
 	;GuiControl,Disable,vKeySingle
 
@@ -172,8 +172,8 @@ _Settings:
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	g_Ver := "ver.0.1.3.5"
-	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年6月2日
+	g_Ver := "ver.0.1.3.6"
+	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年6月19日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
