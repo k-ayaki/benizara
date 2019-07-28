@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.3.4 .... 2019/4/24
+;	ver.0.1.3.5 .... 2019/6/1
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -59,8 +59,10 @@
 	g_LayoutFile := vLayoutFile
 	
 	g_SendTick := ""
+	Menu, Tray, NoStandard 
 	Menu, Tray, Add, 紅皿設定,Settings
 	Menu, Tray, Add, ログ,Logs
+	Menu, Tray, Add, 終了,Menu_Exit 	
 	Menu, Tray, Icon
 	SetBatchLines, -1
 	fPf := Pf_Init()
@@ -72,24 +74,11 @@
 	
 	vIntKeyUp := 0
 	vIntKeyDn := 0
-	/*
-	Hotkey,Space,gSpace
-	Hotkey,Space up,gSpaceUp
-	
-	Hotkey,Space,off
-	Hotkey,Space up,off
-	
-	Hotkey,*sc079,gOyaR
-	Hotkey,*sc079 up,gOyaRUp
-	kOyaR := "sc079"		; 単独打鍵
-	
-	Hotkey,*sc07B,gOyaL
-	Hotkey,*sc07B up,gOyaLUp
-	kOyaL := "sc07B"		; 単独打鍵
-	fKeySingle := 0			; 単独打鍵無しモード
-	*/
 	return
 
+
+Menu_Exit:
+	exitapp
 
 #include IME.ahk
 #include ReadLayout6.ahk
@@ -271,13 +260,15 @@ gOyaR:
 			}
 			else
 			{
-				if(g_Continue = 0)
+				if(g_ZeroDelayOut<>"")
 				{
-					Gosub, SendOnHoldO	; 保留キーの打鍵
+					SubSend(MnDown("Backspace") . MnUp("Backspace"))
 				}
+				Gosub, SendOnHoldO	; 保留キーの打鍵
 				g_OyaOnHold := g_Oya
 				g_SendTick := g_OyaRTick + g_MRInterval
 				g_KeyInPtn := g_KeyInPtn . g_Oya
+				Gosub,SendZeroDelay
 			}
 		}
 		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; O-M-Oオフ状態
@@ -304,10 +295,13 @@ gOyaRUp:
 		g_MrInterval := g_OyarTick - g_MojiTick	; 文字キー押しから右親指キー解除までの期間
 		g_RrInterval := g_OyarTick - g_OyaRTick	; 右親指キー押しから右親指キー解除までの期間
 
-		if(g_OyaL = 1)
-			g_Oya := "L"
-		else
-			g_Oya := "N"
+		if(g_Continue = 1)
+		{
+			if(g_OyaL = 1)
+				g_Oya := "L"
+			else
+				g_Oya := "N"
+		}
 		
 		if(g_KeyInPtn = "R")		; Oオン状態
 		{
@@ -428,13 +422,15 @@ gOyaL:
 				g_SendTick := g_OyaLTick + g_Threshold
 				g_KeyInPtn := g_KeyInPtn . g_Oya
 			} else {
-				if(g_Continue = 0)
+				if(g_ZeroDelayOut<>"")
 				{
-					Gosub, SendOnHoldO	; 親指キーの単独打鍵
+					SubSend(MnDown("Backspace") . MnUp("Backspace"))
 				}
+				Gosub, SendOnHoldO	; 親指キーの単独打鍵
 				g_OyaOnHold := g_Oya
 				g_SendTick := g_OyaLTick + g_MLInterval
 				g_KeyInPtn := g_KeyInPtn . g_Oya
+				Gosub,SendZeroDelay
 			}
 		}
 		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")		; O-M-Oオフ状態
@@ -462,10 +458,13 @@ gOyaLUp:
 		g_MlInterval := g_OyalTick - g_MojiTick	; 文字キー押しから左親指キー解除までの期間
 		g_LlInterval := g_OyalTick - g_OyaLTick	; 右親指キー押しから右親指キー解除までの期間
 
-		if(g_OyaR = 1)
-			g_Oya := "R"
-		else
-			g_Oya := "N"
+		if(g_Continue = 1) 
+		{
+			if(g_OyaR = 1)
+				g_Oya := "R"
+			else
+				g_Oya := "N"
+		}
 
 		if(g_KeyInPtn = "L")			; Oオン状態
 		{
@@ -643,6 +642,10 @@ SendOnHoldMO:
 	g_KoyubiOnHold := "N"
 	g_SendTick := ""
 	g_KeyInPtn := ""
+	if(g_Continue = 0)	; 連続モードではない
+	{
+		g_Oya := "N"
+	}
 	return
 
 ;----------------------------------------------------------------------
@@ -716,7 +719,6 @@ SendOnHoldO:
 		{
 			if(g_OyaLDown=1)
 			{
-				;SubSend("{Blind}{" . kOyaL . "}{Blind}{" . kOyaL . " up}")
 				SubSend(MnDown(kOyaL) . MnUp(kOyaL))
 				g_OyaLDown := 0
 			}
@@ -734,6 +736,7 @@ SendOnHoldO:
 	if(g_Continue = 0)
 	{
 		g_OyaOnHold := "N"
+		g_Oya := "N"
 	}
 	return
 
@@ -839,12 +842,16 @@ keydown:
 		{
 			g_SendTick := g_MojiTick + g_OMInterval
 			g_KeyInPtn := g_Oya . "M"
-			g_Oya := "N"			; 親指シフトが押されていない状態に遷移
 		} else {
 			g_SendTick := g_MojiTick + g_Threshold
 			g_KeyInPtn := g_Oya . "M"
 		}
 	}
+	Gosub,SendZeroDelay
+	critical,off
+	return
+
+SendZeroDelay:
 	if(g_MojiOnHold<>"")	; 当該キーの保留
 	{
 		; 左右親指シフト面と非シフト面の文字キーが同一ならば、保留しない
@@ -879,7 +886,6 @@ keydown:
 			g_ZeroDelayOut := ""
 		}
 	}
-	critical,off
 	return
 
 ;----------------------------------------------------------------------
@@ -918,27 +924,8 @@ keyup:
 		}
 		if(g_KeyInPtn="RM" || g_KeyInPtn="LM")	; O-Mオン状態
 		{
-			if(g_Continue = 0)	; 連続モードではない
-			{
-				; 処理E
-				g_MmInterval := g_MojiUpTick - g_MojiTick
-				if(g_KeyInPtn="RM")
-				{
-					g_OmInterval := g_MojiUpTick - g_OyaRTick
-				} else {
-					g_OmInterval := g_MojiUpTick - g_OyaLTick
-				}
-				vOverlap := 100*(g_MmInterval)/g_OmInterval
-				if(vOverlap <= g_Overlap && g_MmInterval <= g_Threshold) ;  g_Tau
-				{
-					Gosub, SendOnHoldO
-					Gosub, SendOnHoldM
-				} else {
-					Gosub, SendOnHoldMO
-				}
-			} else {
-				Gosub, SendOnHoldMO
-			}
+			; 処理E
+			Gosub, SendOnHoldMO
 		}
 		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;O-M-Oオフ状態
 		{
@@ -986,6 +973,10 @@ Polling:
 			else if g_KeyInPtn in L,R	; Oオン状態
 			{
 				; タイムアウトせずに留まる
+				if(g_Continue = 0)	; 連続モードではない
+				{
+					g_Oya := "N"
+				}
 			}
 			else if g_KeyInPtn in ML,MR,RM,LM	; M-Oオン状態、O-Mオン状態
 			{

@@ -47,6 +47,13 @@ gButtonSave:
 	if vLogFileAbs<>
 	{
 		file := FileOpen(vLogFileAbs, "w")
+		file.WriteLine(g_Ver . "`r`n")
+		file.WriteLine("オーバラップ=" . g_Overlap . "`r`n")
+		file.WriteLine("同時打鍵間隔=" . g_Threshold . "`r`n")
+		file.WriteLine("連続モード=" . g_Continue . "`r`n")
+		file.WriteLine("零遅延モード=" . g_ZeroDelay . "`r`n")
+		file.WriteLine("親指キー単独打鍵=" . g_KeySingle . "`r`n")
+		file.WriteLine("親指キーリピート=" . g_KeyRepeat . "`r`n")
 		file.WriteLine("TIME   INPUT  MD SEND`r`n")
 		loop, 64
 		{
