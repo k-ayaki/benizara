@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.3.5 .... 2019/5/18
+;	ver.0.1.3.6 .... 2019/7/28
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -173,7 +173,7 @@ _Settings:
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
 	g_Ver := "ver.0.1.3.6"
-	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年6月19日
+	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年7月28日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return

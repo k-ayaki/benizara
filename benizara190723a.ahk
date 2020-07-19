@@ -19,7 +19,7 @@
 	
 	TrayTip,キーボード配列エミュレーションソフト「紅皿」,benizara ver.0.1.3.6
 	SetWorkingDir, %A_ScriptDir%
-	
+
 	idxLogs := 0
 	aLogCnt := 0
 	loop, 64
