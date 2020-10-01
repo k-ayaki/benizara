@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.3.6 .... 2019/7/28
+;	ver.0.1.4.1 .... 2019/8/16
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -172,8 +172,7 @@ _Settings:
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	g_Ver := "ver.0.1.3.6"
-	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年7月28日
+	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年8月17日
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
@@ -321,6 +320,7 @@ gZeroDelay:
 
 ;-----------------------------------------------------------------------
 ; 機能：その他、無効化したＧＵＩ要素の操作・・・ダミー
+; ver.0.1.3.7 ... gSpace/gSpaceUp を追加
 ;-----------------------------------------------------------------------
 gOya:
 	Gui, Submit, NoHide
@@ -328,59 +328,17 @@ RemapOya:
 	_OyaKey := vOyaKey
 	if(vOyaKey = "無変換－変換")
 	{
-		Hotkey,Space,gOyaR
-		Hotkey,Space up,gOyaRUp
-		Hotkey,Space,off
-		Hotkey,Space up,off
-
-		Hotkey,*sc079,gOyaR
-		Hotkey,*sc079,on
-		Hotkey,*sc079 up,gOyaRUp
-		Hotkey,*sc079 up,on
 		kOyaR := "sc079"
-		
-		Hotkey,*sc07B,gOyaL
-		Hotkey,*sc07B,on
-		Hotkey,*sc07B up,gOyaLUp
-		Hotkey,*sc07B up,on
 		kOyaL := "sc07B"
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
-		Hotkey,*sc079,gOyaR
-		Hotkey,*sc079,off
-		Hotkey,*sc079 up,gOyaRUp
-		Hotkey,*sc079 up,off
-		
-		Hotkey,Space,gOyaR
-		Hotkey,Space,on
-		Hotkey,Space up,gOyaRUp
-		Hotkey,Space up,on
 		kOyaR := "Space"
-
-		Hotkey,*sc07B,gOyaL
-		Hotkey,*sc07B,on
-		Hotkey,*sc07B up,gOyaLUp
-		Hotkey,*sc07B up,on
 		kOyaL := "sc07B"
 	}
 	else	; 空白－変換
 	{
-		Hotkey,*sc07B,gOyaR
-		Hotkey,*sc07B,off
-		Hotkey,*sc07B up,gOyaRUp
-		Hotkey,*sc07B up,off
-		
-		Hotkey,Space,gOyaL		; スペースキー
-		Hotkey,Space,on
-		Hotkey,Space up,gOyaLUp
-		Hotkey,Space up,on
 		kOyaL := "Space"
-
-		Hotkey,*sc079,gOyaR		; 変換キー
-		Hotkey,*sc079,on
-		Hotkey,*sc079 up,gOyaRUp
-		Hotkey,*sc079 up,on
 		kOyaR := "sc079"
 	}
 	Return
@@ -424,17 +382,18 @@ gFileSelect:
 		}
 		GuiControl,, vFilePath, %vLayoutFile%
 
-		Gosub, InitLayout
-		Gosub, Layout2Key
+		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
 		if(_error <> "")
 		{
 			msgbox, %_error%
-			Gosub, InitLayout
-			Gosub, Layout2Key
+			
+			; 元ファイルを再読み込みする
+			Gosub, InitLayout2
 			_LayoutFile := g_LayoutFile
 			GoSub, ReadLayoutFile
 		}
+		Gosub, SetLayoutProperty
 		_allTheLayout := vAllTheLayout
 		_LayoutFile := vLayoutFile
 	}

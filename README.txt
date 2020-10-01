@@ -1,8 +1,8 @@
 ;-----------------------------------------------------------------------
-; –¼‘OFBenizara / gŽM ver.0.1.3.6
+; –¼‘OFBenizara / gŽM ver.0.1.4.1
 ; ƒL[ƒ{[ƒh”z—ñƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ\ƒtƒgƒEƒFƒA
 ; ìŽÒFˆ»–Ø@Œ’ˆê˜Y
-; —ß˜a1”N7ŒŽ28“ú
+; —ß˜a2”N10ŒŽ1“ú
 ;-----------------------------------------------------------------------
 ‚PD	Žn‚ß‚É
 ‚PD‚PD‰½‚ð‚·‚é‚à‚Ì‚È‚Ì‚©
@@ -129,5 +129,6 @@ ver.0.1.3.3@c@ƒL[ƒŒƒCƒAƒEƒgƒtƒ@ƒCƒ‹‚Ì•ÏX‚ªŽŸ‰ñ‹N“®Žž‚É”½‰f‚³‚ê‚È‚©‚Á‚½•s‹ï
 ver.0.1.3.4@c@ƒL[ƒŒƒCƒAƒEƒgƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚ÝŽž‚ÌƒGƒ‰[ˆ—‚Ì’Ç‰ÁB
 ver.0.1.3.5@c@eŽwƒL[ƒIƒ“¨•¶ŽšƒL[ƒIƒ“¨‘¼‚ÌeŽwƒL[ƒIƒ“‚Ìˆ—B‚ÆAeŽwƒL[ƒIƒ“•¶ŽšƒL[ƒIƒ“ƒIƒt‚Ìˆ—E‚ðŽd—l‘‚É“K‡‚·‚é‚æ‚¤‚ÉC³B
 ver.0.1.3.6@c@“¯Žž•¡”‹N“®‚Ì—}Ž~AƒVƒtƒgƒL[‚ÆƒRƒ“ƒgƒ[ƒ‹ƒL[‚Æã‰º¶‰EƒJ[ƒ\ƒ‹ƒL[‚ÌƒtƒbƒN‚ðŠO‚·Agoogle“ú–{Œê“ü—Í‚Ö‚Ì‰¼‘Î‰žAƒ^ƒCƒvƒEƒFƒ‹‚Å‰¼–¼•¶Žš‚ð“ü—Í‚·‚éÛ‚Ì”z—ñ‚ðœŠOB
-
+Ver.0.1.4.0@c@‰p”ƒ‚[ƒh‚Ì‚æ‚¤‚ÉA“ü—ÍƒL[‚ÆƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Ö‚Ìo—ÍƒL[‚Æ‚ªˆê’v‚µ‚Ä‚¢‚éê‡‚ÉƒL[‚ðƒtƒbƒN‚µ‚È‚¢‚æ‚¤‚É•ÏXB“ü—ÍƒL[orz”z—ñ‚ÅA‚©‚È’·‰¹‚ª‚¨‚©‚µ‚­‚È‚éŒ‚É‘Î‰žBeŽwƒVƒtƒg•\‹L•t‚«USBƒ‰ƒCƒgƒ^ƒbƒ`ƒL[ƒ{[ƒh”z—ñ‚Ìu‚Ÿv‚Ì“ü—Í‚ª‚Å‚«‚È‚©‚Á‚½Œ‚É‘Î‰žB
+Ver.0.1.4.1@c@@Windows 10 May 2020 Update‚É‘Î‰ž‚·‚é‚½‚ßA‘SŠp‚ð’¼ÚƒAƒvƒŠ‚Éo—Í‚·‚é•”•ª‚ð‰Â”\‚ÈŒÀ‚èŒ¸‚ç‚µA‚©‚Â‘SŠpo—Í‘O‚É‚Í•ÏŠ·•¶Žš‚ðŠm’è‚·‚éB
 ˆÈã
