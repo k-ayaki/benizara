@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.1 .... 2019/8/16
+;	ver.0.1.4.3 .... 2020/10/5
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -100,7 +100,7 @@ _Settings:
 	Gui, Add, Text,X40 Y110, 配列のモード：
 	Gui, Add, DropDownList,ggLayout vvLayout X128 Y110,%_allTheLayout%
 		;英数シフト無し|英数小指シフト|ローマ字シフト無し||ローマ字左親指シフト|ローマ字右親指シフト|ローマ字小指シフト
-	Gosub,DrawKeyFrame
+	Gosub, DrawKeyFrame
 	StringSplit _thisLayout,_allTheLayout,|
 	vLayout := _thisLayout1
 	Gosub, gLayout
@@ -172,7 +172,7 @@ _Settings:
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / 2019年8月17日
+	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / %g_Date%
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
 	Gui, Show, W547 H341, 紅皿
 	return
@@ -189,7 +189,7 @@ DrawKeyFrame:
 	{
 		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
 		_ch := " "
-		Gosub, KeyRectangle
+		KeyRectangle(_xpos,_ypos)
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
@@ -200,7 +200,7 @@ DrawKeyFrame:
 	{
 		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
 		_ch := " "
-		Gosub, KeyRectangle
+		KeyRectangle(_xpos,_ypos)
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
@@ -211,7 +211,7 @@ DrawKeyFrame:
 	{
 		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
 		_ch := " "
-		Gosub, KeyRectangle
+		KeyRectangle(_xpos,_ypos)
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
@@ -222,7 +222,7 @@ DrawKeyFrame:
 	{
 		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
 		_ch := " "
-		Gosub, KeyRectangle
+		KeyRectangle(_xpos,_ypos)
 		Gui, Font,s10 c000000
 		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
 	}
@@ -231,7 +231,7 @@ DrawKeyFrame:
 ;-----------------------------------------------------------------------
 ; 機能：各キーの矩形表示
 ;-----------------------------------------------------------------------
-KeyRectangle:
+KeyRectangle( _xpos, _ypos ) {
 	Gui, Font,s36 c000000
 	_ypos0 := _ypos - 17
 	_xpos0 := _xpos - 7
@@ -264,7 +264,7 @@ KeyRectangle:
 	_xpos0 := _xpos - 6
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% W34 +Center BackgroundTrans, ■
 	return
-
+}
 ;-----------------------------------------------------------------------
 ; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
 ;-----------------------------------------------------------------------

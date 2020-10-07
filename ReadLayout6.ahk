@@ -1,13 +1,15 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.3.4 .... 2019/4/29
+;	ver.0.1.4.0 .... 2019/8/18
 ;-----------------------------------------------------------------------
 ReadLayout:
 	Gosub, InitControl
+	romahash := MakeRomaHash()
+	SymbolHash := MakeSymbolHash()
+	
 
-	Gosub, InitLayout
-	Gosub, Layout2Key
+	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
 	if(vLayoutFile = "")
 		return
@@ -17,74 +19,35 @@ ReadLayout:
 	if(_error <> "")
 	{
 		Msgbox,%_error%
-		Gosub, InitLayout
-		Gosub, Layout2Key
+
+		LFA := 0
+		LFN := 0
 	}
+	Gosub, SetLayoutProperty
 	return
 
 #include Path.ahk
 
-InitLayout:
-	LFANN1 :="１,２,３,４,５,６,７,８,９,０,－,＾,￥"
-	LFANN2 :="ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
-	LFANN3 :="ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
-	LFANN4 :="ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+; 各テーブルを読み込んだか否かの判定変数の初期化
 
-	LFALN1 :="１,２,３,４,５,６,７,８,９,０,－,＾,￥"
-	LFALN2 :="ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
-	LFALN3 :="ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
-	LFALN4 :="ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+InitLayout2:
+	LFANN := 0
+	LFALN := 0
+	LFARN := 0
 
-	LFARN1 :="１,２,３,４,５,６,７,８,９,０,－,＾,￥"
-	LFARN2 :="ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
-	LFARN3 :="ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
-	LFARN4 :="ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+	LFANK := 0
+	LFALK := 0
+	LFARK := 0
 
-	LFANK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFANK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFANK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFANK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
+	LFRNN := 0
+	LFRLN := 0
+	LFRRN := 0
 
-	LFALK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFALK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFALK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFALK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
-
-	LFARK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFARK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFARK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFARK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
-
-	LFRNN1 :="１,２,３,４,５,６,７,８,９,０,'－',＾,￥"
-	LFRNN2 :="．,ｋａ,ｔａ,ｋｏ,ｓａ,ｒａ,ｔｉ,ｋｕ,ｔｕ,'，',，,「"
-	LFRNN3 :="ｕ,ｓｉ,ｔｅ,ｋｅ,ｓｅ,ｈａ,ｔｏ,ｋｉ,ｉ,ｎｎ,：,」"
-	LFRNN4 :="'．',ｈｉ,ｓｕ,ｆｕ,ｈｅ,ｍｅ,ｓｏ,ｎｅ,ｈｏ,／,￥"
-
-	LFRLN1 :="？,'／',～,［,］,'［','］',（,）,｛,｝,＾,￥"
-	LFRLN2 :="ｌａ,ｅ,ｒｉ,ｌｙａ,ｒｅ,ｐａ,ｄｉ,ｇｕ,ｄｕ,ｐｉ,＠,「"
-	LFRLN3 :="ｗｏ,ａ,ｎａ,ｌｙｕ,ｍｏ,ｂａ,ｄｏ,ｇｉ,ｐｏ,；,：,」"
-	LFRLN4 :="ｌｕ,－,ｒｏ,ｙａ,ｌｉ,ｐｕ,ｚｏ,ｐｅ,ｂｏ,'゛',＿"
-
-	LFRRN1 :="？,'／',～,［,］,'［','］',（,）,｛,｝,＾,￥"
-	LFRRN2 :="'゜',ｇａ,ｄａ,ｇｏ,ｚａ,ｙｏ,ｎｉ,ｒｕ,ｍａ,ｌｅ,＠,「"
-	LFRRN3 :="ｖｕ,ｚｉ,ｄｅ,ｇｅ,ｚｅ,ｍｉ,ｏ,ｎｏ,ｌｙｏ,ｌｔｕ,：,」"
-	LFRRN4 :="無,ｂｉ,ｚｕ,ｂｕ,ｂｅ,ｎｕ,ｙｕ,ｍｕ,ｗａ,ｌｏ,￥"
-
-	LFRNK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFRNK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFRNK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFRNK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
-
-	LFRLK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFRLK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFRLK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFRLK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
-
-	LFRRK1 :="！,”,＃,＄,％,＆,’,（,）,無,＝,～,｜"
-	LFRRK2 :="Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFRRK3 :="Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFRRK4 :="Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
+	LFRNK := 0
+	LFRLK := 0
+	LFRRK := 0
 	return
+
 
 ;----------------------------------------------------------------------
 ;	制御文字表の初期化
@@ -169,12 +132,6 @@ ReadLayoutFile:
 				if(_mode <> "")
 				{
 					_mline := 0
-					if(vAllTheLayout = "")
-					{
-						vAllTheLayout := _LayoutName . "||"
-					} else {
-						vAllTheLayout := vAllTheLayout . _LayoutName . "|"
-					}
 				}
 			}
 			if(_mode <> "") 
@@ -199,99 +156,12 @@ ReadLayoutFile:
 	}
 	Return
 
-;----------------------------------------------------------------------
-;	レイアウトをキー配列に変更
-;----------------------------------------------------------------------
-Layout2Key:
-	_LayoutName := "英数シフト無し"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "英数左親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-	
-	_LayoutName := "英数右親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "英数小指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "英数小指左親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "英数小指右親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字シフト無し"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字左親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字右親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字小指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字小指左親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-
-	_LayoutName := "ローマ字小指右親指シフト"
-	_mode := Layout2Mode(_LayoutName)
-	_error := ""
-	GoSub, Mode2Key
-	if(_error <> "")
-		return
-	return
 
 ;----------------------------------------------------------------------
 ;	各モードのレイアウトを処理
 ;----------------------------------------------------------------------
 Mode2Key:
+	LF%_mode% := 1
 	_col := "1"
 	StringSplit org,LF%_mode%%_col%,`,
 	if(org0 <> 13)
@@ -344,6 +214,63 @@ Mode2Key:
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	return
+
+;----------------------------------------------------------------------
+;	レイアウトファイルの設定
+;----------------------------------------------------------------------
+
+SetLayoutProperty:
+	vAllTheLayout := ""
+	LFA := 0
+	if(LFANN=1) {
+		LFA := LFA | 1
+	}
+	if(LFALN=1) {
+		LFA := LFA | 2
+	}
+	if(LFARN=1) {
+		LFA := LFA | 4
+	}
+	if(LFANK=1) {
+		LFA := LFA | 0x10
+	}
+	if(LFALK=1) {
+		LFA := LFA | 0x20
+	}
+	if(LFARK=1) {
+		LFA := LFA | 0x40
+	}
+	if(LFA=0x77) {
+		vAllTheLayout := "英数シフト無し|英数左親指シフト|英数右親指シフト|英数小指シフト|英数小指左親指シフト|英数小指右親指シフト|"
+	} else if(LFA!=0x00) {
+		msgbox,英数モードの６面ののうち、定義されていないモードがあります。
+	}
+	LFR := 0
+	if(LFRNN=1) {
+		LFR := LFR | 1
+	}
+	if(LFRRN=1) {
+		LFR := LFR | 2
+	}
+	if(LFRLN=1) {
+		LFR := LFR | 4
+	}
+	if(LFRNK=1) {
+		LFR := LFR | 0x10
+	}
+	if(LFRLK=1) {
+		LFR := LFR | 0x20
+	}
+	if(LFRRK=1) {
+		LFR := LFR | 0x40
+	}
+	if(LFR=0x77) {
+		vAllTheLayout := vAllTheLayout . "ローマ字シフト無し||ローマ字左親指シフト|ローマ字右親指シフト|ローマ字小指シフト|ローマ字小指左親指シフト|ローマ字小指右親指シフト"
+	} else if(LFR!=0x00) {
+		msgbox,ローマ字モードの６面のうち、定義されていないモードがあります
+	}
+	return
+
 ;----------------------------------------------------------------------
 ;	行内のスペースを除去
 ;----------------------------------------------------------------------
@@ -385,6 +312,14 @@ SetKeyTable:
 		{
 			kdn%_mode%%_col%%A_Index% := "{" . _vk . "}"
 			kup%_mode%%_col%%A_Index% := ""
+			continue
+		}
+		ret := ConvKana(org%A_Index%, _nc)
+		if(ret = 0)
+		{
+			GenSendStr(_nc,_dn,_up)
+			kdn%_mode%%_col%%A_Index% := _dn
+			kup%_mode%%_col%%A_Index% := _up
 			continue
 		}
 		ret := ConvNarrow(org%A_Index%, _nc)
@@ -601,9 +536,36 @@ ConvVkey(aStr) {
 	return
 }
 ;----------------------------------------------------------------------
+; 全角平仮名をローマ字に変換
+; 引数　：aStr：変換前の文字列
+; 戻り値：エラーコード 0:正常
+;----------------------------------------------------------------------
+ConvKana(aStr,BYREF nStr) {
+	global romahash
+	nStr := ""
+	rVal := 0
+	StringLen _len,aStr
+	if(_len == 1) 
+	{
+		_code := Asc(aStr)
+		nStr := romahash[_code]
+		StringLen _len2,nStr
+		if(_len2 == 0) 
+		{
+			rVal := 1
+		}
+	}
+	else
+	{
+		rVal := 1
+	}
+	return rVal
+}
+
+;----------------------------------------------------------------------
 ; 全角文字列が半角に変換可能ならば変換
 ; 引数　：aStr：変換前の文字列
-; 戻り値：変換後の文字列
+; 戻り値：エラーコード 0:正常
 ;----------------------------------------------------------------------
 ConvNarrow(aStr,BYREF nStr) {
 	nStr := ""
@@ -654,6 +616,7 @@ ConvNarrow(aStr,BYREF nStr) {
 ;----------------------------------------------------------------------
 GenSendStr(aStr,BYREF _dn,BYREF _up)
 {
+	global SymbolHash
 	_len := strlen(aStr)
 	if(_len = 0)
 	{
@@ -664,20 +627,16 @@ GenSendStr(aStr,BYREF _dn,BYREF _up)
 	loop,%_len%
 	{
 		StringMid, _ch, aStr, A_Index, 1
-		_c2 := Char2KeySymbol(_ch)
+		_code := Asc(_ch)
+		_c2 := SymbolHash[_code]
 		if(_c2 <> "")
 		{
-			if(Asc(_c2) <= 255)
+			if(A_Index = _len)
 			{
-				if(A_Index = _len)
-				{
-					_dn := _dn . "{" . _c2 . " Down}"
-					_up := "{Blind}{" . _c2 . " up}"
-				} else {
-					_dn := _dn . "{" . _c2 . " Down}{" . _c2 . " up}"
-				}
+				_dn := _dn .  "{" . _c2 . " Down}"
+				_up := "{Blind}{" . _c2 . " up}"
 			} else {
-				_dn := _dn . "{" . _ch . "}"
+				_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
 			}
 		}
 	}
@@ -745,4 +704,208 @@ Layout2Mode(_LayoutName)
 	else
 		return ""
 	return ""
+}
+;----------------------------------------------------------------------
+;	半角文字のうち制御コードをAutoHotKeyのシンボルに変換
+;----------------------------------------------------------------------
+MakeSymbolHash() {
+	Symbolhash := Object()
+	Symbolhash[0x08] := "Backspace"
+	Symbolhash[0x09] := "Tab"
+	Symbolhash[0x0A] := "Enter"
+	Symbolhash[0x0D] := "Enter"
+	Symbolhash[0x1B] := "Esc"
+	Symbolhash[0x20] := "Space"
+	Symbolhash[0x21] := "!"
+	Symbolhash[0x22] := """"
+	Symbolhash[0x23] := "#"
+	Symbolhash[0x24] := "$"
+	Symbolhash[0x25] := "%"
+	Symbolhash[0x26] := "&"
+	Symbolhash[0x27] := "'"
+	Symbolhash[0x28] := "("
+	Symbolhash[0x29] := ")"
+	Symbolhash[0x2A] := "*"
+	Symbolhash[0x2B] := "+"
+	Symbolhash[0x2C] := ","
+	Symbolhash[0x2D] := "-"
+	Symbolhash[0x2E] := "."
+	Symbolhash[0x2F] := "/"
+	Symbolhash[0x30] := "0"
+	Symbolhash[0x31] := "1"
+	Symbolhash[0x32] := "2"
+	Symbolhash[0x33] := "3"
+	Symbolhash[0x34] := "4"
+	Symbolhash[0x35] := "5"
+	Symbolhash[0x36] := "6"
+	Symbolhash[0x37] := "7"
+	Symbolhash[0x38] := "8"
+	Symbolhash[0x39] := "9"
+	Symbolhash[0x3A] := ":"
+	Symbolhash[0x3B] := ";"
+	Symbolhash[0x3C] := "<"
+	Symbolhash[0x3D] := "="
+	Symbolhash[0x3E] := ">"
+	Symbolhash[0x3F] := "?"
+	Symbolhash[0x40] := "@"
+	Symbolhash[0x41] := "A"
+	Symbolhash[0x42] := "B"
+	Symbolhash[0x43] := "C"
+	Symbolhash[0x44] := "D"
+	Symbolhash[0x45] := "E"
+	Symbolhash[0x46] := "F"
+	Symbolhash[0x47] := "G"
+	Symbolhash[0x48] := "H"
+	Symbolhash[0x49] := "I"
+	Symbolhash[0x4A] := "J"
+	Symbolhash[0x4B] := "K"
+	Symbolhash[0x4C] := "L"
+	Symbolhash[0x4D] := "M"
+	Symbolhash[0x4E] := "N"
+	Symbolhash[0x4F] := "O"
+	Symbolhash[0x50] := "P"
+	Symbolhash[0x51] := "Q"
+	Symbolhash[0x52] := "R"
+	Symbolhash[0x53] := "S"
+	Symbolhash[0x54] := "T"
+	Symbolhash[0x55] := "U"
+	Symbolhash[0x56] := "V"
+	Symbolhash[0x57] := "W"
+	Symbolhash[0x58] := "X"
+	Symbolhash[0x59] := "Y"
+	Symbolhash[0x5A] := "Z"
+	Symbolhash[0x5B] := "["
+	Symbolhash[0x5C] := "\"
+	Symbolhash[0x5D] := "]"
+	Symbolhash[0x5E] := "^"
+	Symbolhash[0x5F] := "_"
+	Symbolhash[0x60] := "`"
+	Symbolhash[0x61] := "a"
+	Symbolhash[0x62] := "b"
+	Symbolhash[0x63] := "c"
+	Symbolhash[0x64] := "d"
+	Symbolhash[0x65] := "e"
+	Symbolhash[0x66] := "f"
+	Symbolhash[0x67] := "g"
+	Symbolhash[0x68] := "h"
+	Symbolhash[0x69] := "i"
+	Symbolhash[0x6A] := "j"
+	Symbolhash[0x6B] := "k"
+	Symbolhash[0x6C] := "l"
+	Symbolhash[0x6D] := "m"
+	Symbolhash[0x6E] := "n"
+	Symbolhash[0x6F] := "o"
+	Symbolhash[0x70] := "p"
+	Symbolhash[0x71] := "q"
+	Symbolhash[0x72] := "r"
+	Symbolhash[0x73] := "s"
+	Symbolhash[0x74] := "t"
+	Symbolhash[0x75] := "u"
+	Symbolhash[0x76] := "v"
+	Symbolhash[0x77] := "w"
+	Symbolhash[0x78] := "x"
+	Symbolhash[0x79] := "y"
+	Symbolhash[0x7A] := "z"
+	Symbolhash[0x7B] := "{"
+	Symbolhash[0x7C] := "|"
+	Symbolhash[0x7D] := "}"
+	Symbolhash[0x7E] := "~"
+	Symbolhash[0x7F] := "Del"
+	return SymbolHash
+}
+
+;----------------------------------------------------------------------
+; ローマ字変換用ハッシュを生成
+; 戻り値：モード名
+;----------------------------------------------------------------------
+MakeRomaHash()
+{
+	hash := Object()
+	hash[0x3041] := "la"	;ぁ
+	hash[0x3042] := "a"		;あ
+	hash[0x3043] := "xi"	;ぃ
+	hash[0x3044] := "i"		;い
+	hash[0x3045] := "lu"	;ぅ
+	hash[0x3046] := "u"		;う
+	hash[0x3047] := "le"	;ぇ
+	hash[0x3048] := "e"		;え
+	hash[0x3049] := "lo"	;ぉ
+	hash[0x304A] := "o"		;お
+	hash[0x304B] := "ka"	;か
+	hash[0x304C] := "ga"	;が
+	hash[0x304D] := "ki"	;き
+	hash[0x304E] := "gi"	;ぎ
+	hash[0x304F] := "ku"	;く
+	hash[0x3050] := "gu"	;ぐ
+	hash[0x3051] := "ke"	;け
+	hash[0x3052] := "ge"	;げ
+	hash[0x3053] := "ko"	;こ
+	hash[0x3054] := "go"	;ご
+	hash[0x3055] := "sa"	;さ
+	hash[0x3056] := "za"	;ざ
+	hash[0x3057] := "si"	;し
+	hash[0x3058] := "zi"	;じ
+	hash[0x3059] := "su"	;す
+	hash[0x305A] := "zu"	;ず
+	hash[0x305B] := "se"	;せ
+	hash[0x305C] := "ze"	;ぜ
+	hash[0x305D] := "so"	;そ
+	hash[0x305E] := "zo"	;ぞ
+	hash[0x305F] := "ta"	;た
+	hash[0x3060] := "da"	;だ
+	hash[0x3061] := "ti"	;ち
+	hash[0x3062] := "di"	;ぢ
+	hash[0x3063] := "ltu"	;っ
+	hash[0x3064] := "tu"	;つ
+	hash[0x3065] := "du"	;づ
+	hash[0x3066] := "te"	;て
+	hash[0x3067] := "de"	;で
+	hash[0x3068] := "to"	;と
+	hash[0x3069] := "do"	;ど
+	hash[0x306A] := "na"	;な
+	hash[0x306B] := "ni"	;に
+	hash[0x306C] := "nu"	;ぬ
+	hash[0x306D] := "ne"	;ね
+	hash[0x306E] := "no"	;の
+	hash[0x306F] := "ha"	;は
+	hash[0x3070] := "ba"	;ば
+	hash[0x3071] := "pa"	;ぱ
+	hash[0x3072] := "hi"	;ひ
+	hash[0x3073] := "bi"	;び
+	hash[0x3074] := "pi"	;ぴ
+	hash[0x3075] := "fu"	;ふ
+	hash[0x3076] := "bu"	;ぶ
+	hash[0x3077] := "pu"	;ぷ
+	hash[0x3078] := "he"	;へ
+	hash[0x3079] := "be"	;べ
+	hash[0x307A] := "pe"	;ぺ
+	hash[0x307B] := "ho"	;ほ
+	hash[0x307C] := "bo"	;ぼ
+	hash[0x307D] := "po"	;ぽ
+	hash[0x307E] := "ma"	;ま
+	hash[0x307F] := "mi"	;み
+	hash[0x3080] := "mu"	;む
+	hash[0x3081] := "me"	;め
+	hash[0x3082] := "mo"	;も
+	hash[0x3083] := "lya"	;ゃ
+	hash[0x3084] := "ya"	;や
+	hash[0x3085] := "lyu"	;ゅ
+	hash[0x3086] := "yu"	;ゆ
+	hash[0x3087] := "lyo"	;ょ
+	hash[0x3088] := "yo"	;よ
+	hash[0x3089] := "ra"	;ら
+	hash[0x308A] := "ri"	;り
+	hash[0x308B] := "ru"	;る
+	hash[0x308C] := "re"	;れ
+	hash[0x308D] := "ro"	;ろ
+	hash[0x308E] := "lwa"	;ゎ
+	hash[0x308F] := "wa"	;わ
+	hash[0x3090] := "wi"	;ゐ
+	hash[0x3091] := "we"	;ゑ
+	hash[0x3092] := "wo"	;を
+	hash[0x3093] := "nn"	;ん
+	hash[0x3094] := "vu"	;ゔ
+	hash[0x3095] := "lka"	;ゕ
+	hash[0x3096] := "lke"	;ゖ
+	return hash
 }

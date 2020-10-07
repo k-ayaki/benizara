@@ -9,7 +9,8 @@
 	#MaxhotkeysPerInterval 200
 	#KeyHistory
 #SingleInstance, Off
-	g_Ver := "ver.0.1.4.2"
+	g_Ver := "ver.0.1.4.3"
+	g_Date := "2020/10/5"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -73,8 +74,12 @@
 	g_LayoutFile := vLayoutFile
 	
 	g_SendTick := ""
-	Menu, Tray, NoStandard
+	if(A_IsCompiled == 1)
+	{
+		Menu, Tray, NoStandard
+	}
 	Menu, Tray, Add, 紅皿設定,Settings
+	Menu, Tray, Add, 配列,ShowLayout
 	Menu, Tray, Add, ログ,Logs
 	Menu, Tray, Add, 終了,Menu_Exit 	
 	Menu, Tray, Icon
@@ -102,6 +107,7 @@ Menu_Exit:
 #include Settings7.ahk
 #include PfCount.ahk
 #include Logs1.ahk
+#include ShowLayout.ahk
 
 
 ;-----------------------------------------------------------------------
@@ -754,9 +760,9 @@ SendZeroDelay:
 	if(g_MojiOnHold<>"")	; 当該キーの保留
 	{
 		; 左右親指シフト面と非シフト面の文字キーが同一ならば、保留しない
-		if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% = kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%)
+		if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% == kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%)
 		{
-			if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% = kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%)
+			if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% == kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%)
 			{
 				vOut                   := kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
 				kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
@@ -769,7 +775,7 @@ SendZeroDelay:
 			}
 		}
 		; 左右親指シフト面と非シフト面の文字キーに制御コードが有れば、保留しない
-		if(strlen(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%)<>1 or strlen(kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%)<>1 or strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%)<>1)
+		if(mod(strlen(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0 or mod(strlen(kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0)
 		{
 			vOut                   := kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
 			kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
