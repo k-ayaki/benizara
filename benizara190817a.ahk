@@ -7,6 +7,7 @@
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
 	#MaxhotkeysPerInterval 200
+	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
 	g_Ver := "ver.0.1.4.3"
@@ -650,11 +651,16 @@ SendOnHoldO:
 ;----------------------------------------------------------------------
 keydown:
 	Critical
+	vkeyD%MojiCode% := "□"
+	
+	_ch := "□"
+	GuiControl,4:,vkeyX%MojiCode%,%_ch%
+	
 	g_trigger := kName
 	RegLogs(kName . " down")
 
 	gosub,Polling
-	if(MojiCode = 0)	; 文字キー以外(space,tab,Enter)
+	if(MojiCode = 0)	; 文字キー以外(space,tab,Enter,Ctrl)
 	{
 		g_ModifierTick := Pf_Count()	;A_TickCount
 		Gosub,ModeInitialize
@@ -701,6 +707,7 @@ keydown:
 	g_MojiTick := Pf_Count()	;A_TickCount
 
 	SetKeyDelay -1
+	Gosub,ScanModifier
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
@@ -775,7 +782,7 @@ SendZeroDelay:
 			}
 		}
 		; 左右親指シフト面と非シフト面の文字キーに制御コードが有れば、保留しない
-		if(mod(strlen(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0 or mod(strlen(kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),15)!=0)
+		if(mod(strlen(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1)
 		{
 			vOut                   := kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
 			kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
@@ -810,8 +817,13 @@ SendZeroDelay:
 ;----------------------------------------------------------------------
 keyup:
 	Critical
+	vkeyD%MojiCode% := "　"
+	_ch := "　"
+	GuiControl,4:,vkeyX%MojiCode%,%_ch%
+
 	g_trigger := kName
 	RegLogs(kName . " up")
+
 	gosub,Polling
 	g_MojiUpTick := Pf_Count()	;A_TickCount
 	if(MojiCode = g_MojiOnHold)	; 保留キーがアップされた
@@ -866,38 +878,7 @@ keyup:
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
 Interrupt10:
-	stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
-	stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
-	if(stLShift = 0x80 or stRShift = 0x80)
-	{
-		g_Koyubi := "K"
-	} else {
-		g_Koyubi := "N"
-	}
-	g_trigger := "Int"
-	Critical
-	g_Modifier := 0x00
-	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
-	g_Modifier := g_Modifier | stLCtrl
-	g_Modifier := g_Modifier >> 1			; 0x02
-	stRCtrl := GetKeyStateWithLog(stRCtrl,163,"RCtrl")
-	g_Modifier := g_Modifier | stRCtrl
-	g_Modifier := g_Modifier >> 1			; 0x04
-	stLAlt  := GetKeyStateWithLog(stLAlt,164,"LAlt")
-	g_Modifier := g_Modifier | stLAlt
-	g_Modifier := g_Modifier >> 1			; 0x08
-	stRAlt  := GetKeyStateWithLog(stRAlt,165,"RAlt")
-	g_Modifier := g_Modifier | stRAlt
-	g_Modifier := g_Modifier >> 1			; 0x10
-	stLWin  := GetKeyStateWithLog(stLWin,91,"LWin")
-	g_Modifier := g_Modifier | stLWin
-	g_Modifier := g_Modifier >> 1			; 0x20
-	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
-	g_Modifier := g_Modifier | stRWin
-	g_Modifier := g_Modifier >> 1			; 0x40
-	stAppsKey   := GetKeyStateWithLog(stApp,93,"AppsKey")
-	g_Modifier := g_Modifier | stAppsKey	; 0x80
-	critical,off
+	Gosub,ScanModifier
 	if(A_IsCompiled <> 1)
 	{
 		;Tooltip, %g_Modifier%, 0, 0, 2 ; debug	
@@ -947,6 +928,41 @@ Polling:
 			}
 		}
 	}
+	return
+
+ScanModifier:
+	stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
+	stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
+	if(stLShift = 0x80 or stRShift = 0x80)
+	{
+		g_Koyubi := "K"
+	} else {
+		g_Koyubi := "N"
+	}
+	g_trigger := "Int"
+	Critical
+	g_Modifier := 0x00
+	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
+	g_Modifier := g_Modifier | stLCtrl
+	g_Modifier := g_Modifier >> 1			; 0x02
+	stRCtrl := GetKeyStateWithLog(stRCtrl,163,"RCtrl")
+	g_Modifier := g_Modifier | stRCtrl
+	g_Modifier := g_Modifier >> 1			; 0x04
+	stLAlt  := GetKeyStateWithLog(stLAlt,164,"LAlt")
+	g_Modifier := g_Modifier | stLAlt
+	g_Modifier := g_Modifier >> 1			; 0x08
+	stRAlt  := GetKeyStateWithLog(stRAlt,165,"RAlt")
+	g_Modifier := g_Modifier | stRAlt
+	g_Modifier := g_Modifier >> 1			; 0x10
+	stLWin  := GetKeyStateWithLog(stLWin,91,"LWin")
+	g_Modifier := g_Modifier | stLWin
+	g_Modifier := g_Modifier >> 1			; 0x20
+	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
+	g_Modifier := g_Modifier | stRWin
+	g_Modifier := g_Modifier >> 1			; 0x40
+	stAppsKey   := GetKeyStateWithLog(stApp,93,"AppsKey")
+	g_Modifier := g_Modifier | stAppsKey	; 0x80
+	critical,off
 	return
 
 ModeInitialize:
@@ -1132,10 +1148,10 @@ SetHook(flg)
 		hotkey,*sc029 up,gSC029up
 		hotkey,*sc070,gSC070		;ひらがな／カタカナ
 		hotkey,*sc070 up,gSC070up
-		;hotkey,LCtrl,gLCTRL
-		;hotkey,LCtrl up,gLCTRLup
-		;hotkey,RCtrl,gRCTRL
-		;hotkey,RCtrl up,gRCTRLup
+		hotkey,LCtrl,gLCTRL
+		hotkey,LCtrl up,gLCTRLup
+		hotkey,RCtrl,gRCTRL
+		hotkey,RCtrl up,gRCTRLup
 		Hotkey,Space,gSpace
 		Hotkey,Space up,gSpaceUp
 		Hotkey,*sc079,gSC079

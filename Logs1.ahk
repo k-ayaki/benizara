@@ -7,7 +7,13 @@
 ; 機能：ログダイアログの表示
 ;-----------------------------------------------------------------------
 Logs:
-	Gui, New
+	IfWinExist,紅皿ログ
+	{
+		msgbox, 既に紅皿ログ・ダイアログは開いています。
+		return
+	}
+	Gui,3:Default	
+	Gui, 3:New
 	Gui, Font,s9 c000000
 	Gui, Add, Button,ggButtonSave  X343 Y766 W77 H22,ログ保存
 	Gui, Add, Button,ggButtonClose X431 Y766 W77 H22,閉じる
@@ -20,11 +26,14 @@ Logs:
 		_disp := "_                                                               "
 		Gui, Add, Text,vdisp%A_Index% X30 Y%_yaxis%, %_disp%
 	}
+	SetTimer LogRedraw,100
+	return
+
 	loop
 	{
         IfWinNotExist, 紅皿ログ
         {
-            Gui, Destroy
+            Gui, 3:Destroy
             return
         }
 		loop, 64
@@ -34,6 +43,15 @@ Logs:
 			GuiControl,,disp%A_Index%, %_disp%
 		}
         Sleep,500
+	}
+	return
+
+LogRedraw:
+	loop, 64
+	{
+		_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
+		_disp := aLog%_idx% . "                                                                "
+		GuiControl,3:,disp%A_Index%, %_disp%
 	}
 	return
 
@@ -62,12 +80,12 @@ gButtonSave:
 		}
 		file.close()
 	}
-	Gui,Destroy
+	Gui,3:Destroy
 	Goto,Logs
 
 ;-----------------------------------------------------------------------
 ; 機能：閉じるボタンの押下
 ;-----------------------------------------------------------------------
 gButtonClose:
-	Gui,Destroy
+	Gui,3:Destroy
 	return

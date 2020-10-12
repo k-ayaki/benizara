@@ -75,6 +75,11 @@ Init:
 ; 機能：設定ダイアログの表示
 ;-----------------------------------------------------------------------
 Settings:
+	IfWinExist,紅皿設定
+	{
+		msgbox, 既に紅皿設定ダイアログは開いています。
+		return
+	}	
 	_Continue := g_Continue
 	_ZeroDelay := g_ZeroDelay
 	_Threshold := g_Threshold
@@ -85,7 +90,8 @@ Settings:
 	_KeySingle := g_KeySingle
 	_KeyRepeat := g_KeyRepeat
 _Settings:
-	Gui, New
+	Gui,2:Default
+	Gui, 2:New
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X343 Y308 W77 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X431 Y308 W77 H22,キャンセル
@@ -174,7 +180,7 @@ _Settings:
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
 	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / %g_Date%
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
-	Gui, Show, W547 H341, 紅皿
+	Gui, Show, W547 H341, 紅皿設定
 	return
 
 
