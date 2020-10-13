@@ -91,7 +91,7 @@
 	g_OyaLTick := Pf_Count()	;A_TickCount
 	g_MojiTick := Pf_Count()	;A_TickCount
 	VarSetCapacity(lpKeyState,256,0)
-	SetTimer Interrupt10,10
+	SetTimer,Interrupt10,10
 	
 	vIntKeyUp := 0
 	vIntKeyDn := 0
@@ -118,6 +118,7 @@ Menu_Exit:
 gOyaR:
 	Critical
 	g_trigger := "R"
+	GuiControl,4:,vkeyX52,□
 	gosub,Polling
 	RegLogs("R down")
 	if(g_OyaR = 1 && g_KeyRepeat = 1)
@@ -208,6 +209,7 @@ gOyaR:
 gOyaRUp:
 	Critical
 	g_trigger := "R up"
+	GuiControl,4:,vkeyX52,　
 	gosub,Polling
 	if(g_OyaR = 1)	; 右親指シフトキーの単独シフト
 	{
@@ -280,6 +282,7 @@ gOyaRUp:
 gOyaL:	; 無変換
 	Critical
 	g_trigger := "L"
+	GuiControl,4:,vkeyX51,□
 	gosub,Polling
 	RegLogs("L down")
 	if(g_OyaL = 1 && g_KeyRepeat = 1)
@@ -368,6 +371,7 @@ gOyaL:	; 無変換
 gOyaLUp:
 	Critical
 	g_trigger := "L up"
+	GuiControl,4:,vkeyX51,　
 	gosub,Polling
 	if(g_OyaL != 0)	; 右親指シフトキーの単独シフト
 	{

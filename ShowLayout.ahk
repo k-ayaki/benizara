@@ -14,15 +14,16 @@ ShowLayout:
 	}
 	Gui,4:Default
 	Gui, 4:New
-	Gui, 4:Font,s10 c000000
+	Gui, 4:Font,s10 c000000,Yu Gothic UI
 	;Gui, Add, Button,ggSLButtonClose X620 Y320 W66 H22,閉じる
 	Gui, 4:Add, Button,ggSLButtonClose X343 Y308 W77 H22,閉じる
 	;Gui, Add, Tab2,X12 Y8 W522 H291, 配列
 	;Gui, Tab, 1
-	Gui, 4:Font,s10 c000000
+	Gui, 4:Font,s10 c000000,Yu Gothic UI
 	Gosub,SLDrawKeyFrame
-	Gosub, gLayout2
+	Gosub, RefreshLayout
 	Gui, 4:Show, W720 H341, 紅皿配列
+	SetTimer,PollingLayout,100
 	return
 	
 	loop
@@ -44,7 +45,7 @@ ShowLayout:
 ; 機能：閉じるボタンの押下
 ;-----------------------------------------------------------------------
 gSLButtonClose:
-	Gui,Destroy
+	Gui,4:Destroy
 	isShowLayout := 0
 	return
 	
@@ -57,172 +58,258 @@ SLDrawKeyFrame:
 	_cnt := 13
 	loop,%_cnt%
 	{
-		_xpos := 32*(_col-1) + 50*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1)
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 22
-		_ypos0 := _ypos + 11
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRR%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 11
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRL%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 33
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRN%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 20
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 		Gosub, SLKeyBorder
 	}
 
 	_col := 2
-	_ypos := 54*(_col - 1)
+	_ypos := 52*(_col - 1)
 	_cnt := 12
 	loop,%_cnt%
 	{
-		_xpos := 32*(_col-1) + 50*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1)
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 22
-		_ypos0 := _ypos + 11
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRR%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 11
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRL%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 33
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRN%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 20
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 		Gosub, SLKeyBorder
 	}
 	_col := 3
-	_ypos := 54*(_col - 1)
+	_ypos := 52*(_col - 1)
 	_cnt := 12
 	loop,%_cnt%
 	{
-		_xpos := 32*(_col-1) + 50*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1)
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 22
-		_ypos0 := _ypos + 11
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRR%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 11
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRL%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
- 		_xpos0 := _xpos + 33
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRN%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 20
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+ 		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 		Gosub, SLKeyBorder
 	}
 	_col := 4
-	_ypos := 54*(_col - 1)
+	_ypos := 52*(_col - 1)
 	_cnt := 11
 	loop,%_cnt%
 	{
-		_xpos := 32*(_col-1) + 50*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1)
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 22
-		_ypos0 := _ypos + 11
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRR%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 11
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRL%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 33
-		_ypos0 := _ypos + 33
-		Gui, Font,s12 c000000
-		Gui, Add, Text,vvkeyRN%_col%%A_Index% X%_xpos0% Y%_ypos0% W12 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 20
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 		Gosub, SLKeyBorder
 	}
+	_col := 5
+	_ypos := 52*(_col - 1)
+
+	_row := 1
+	_xpos := 32*(_col-1) + 48*(_row + 3 - 1)
+	Gosub, SLKeyRectangle5
+	_ch := "左"
+	_xpos0 := _xpos + 20
+	_ypos0 := _ypos + 20
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gosub, SLKeyBorder
+
+	_row := 2
+	_xpos := 32*(_col-1) + 48*(_row + 3 - 1)
+	Gosub, SLKeyRectangle5
+	_ch := "空"
+	_xpos0 := _xpos + 20
+	_ypos0 := _ypos + 20
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gosub, SLKeyBorder
+
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：各キーの矩形表示
 ;-----------------------------------------------------------------------
 SLKeyRectangle:
-	Gui, Font,s48 c000000
-	_ypos0 := _ypos - 2
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 11
 	_xpos0 := _xpos - 3
-	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% W48 +Center BackgroundTrans,■
-	if(A_Index = 1)
+	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	if(_row = 1)
 	{
-		Gui, Font,S44 cFFC3E1
+		Gui, Font,s42 cFFC3E1,Yu Gothic UI
 	}
-	else if A_Index in 2,3
+	else if _row in 2,3
 	{
-		Gui, Font,S44 cFFFFC3
+		Gui, Font,s42 cFFFFC3,Yu Gothic UI
 	}
-	else if A_Index in 4,5
+	else if _row in 4,5
 	{
-		Gui, Font,S44 cC3FFC3
+		Gui, Font,s42 cC3FFC3,Yu Gothic UI
 	}
-	else if A_Index in 6,7
+	else if _row in 6,7
 	{
-		Gui, Font,S44 cC3FFFF
+		Gui, Font,s42 cC3FFFF,Yu Gothic UI
 	}
-	else if A_Index in 8,9
+	else if _row in 8,9
 	{
-		Gui, Font,S44 cE1C3FF
+		Gui, Font,s42 cE1C3FF,Yu Gothic UI
 	}
 	else
 	{
-		Gui, Font,s44 cC0C0C0
+		Gui, Font,s42 cC0C0C0,Yu Gothic UI
 	}
-	_ypos0 := _ypos
+	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% W44 +Center BackgroundTrans,■
+	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	return
+
+;-----------------------------------------------------------------------
+; 機能：各キーの矩形表示・・・５列目
+;-----------------------------------------------------------------------
+SLKeyRectangle5:
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 11
+	_xpos0 := _xpos - 3
+	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	if(_row = 1)
+	{
+		Gui, Font,s42 cFFFF00,Yu Gothic UI
+	}
+	else if _row in 2
+	{
+		Gui, Font,s42 c00FFFF,Yu Gothic UI
+	}
+	else
+	{
+		Gui, Font,s42 cC0C0C0,Yu Gothic UI
+	}
+	_ypos0 := _ypos - 8
+	_xpos0 := _xpos - 1
+	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
 SLKeyBorder:
-	Gui, Font,s48 c000000
-	_ypos0 := _ypos - 2
-	_xpos0 := _xpos - 3 + 8
-	Gui, Add, Text,vvkeyX%_col%%A_Index% X%_xpos0% X%_xpos0% Y%_ypos0% W48 +Center BackgroundTrans,　
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 11
+	_xpos0 := _xpos - 3
+	Gui, Add, Text,vvkeyX%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
 	vkeyX%_col%%A_Index% := "　"
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
 ;-----------------------------------------------------------------------
-gLayout2:
-	Gui, Submit, NoHide
+PollingLayout:
+	currMode := g_Romaji . g_Koyubi
+	if(currMode == lastMode) 
+	{
+		return
+	}
+	lastMode := currMode
+	Gui, 4:Submit, NoHide
+	_col := 1
+	loop,13
+	{
+		GuiControl,4:,vkeyX%_col%%A_Index%,　
+	}
+	_col := 2
+	loop,12
+	{
+		GuiControl,4:,vkeyX%_col%%A_Index%,　
+	}
+	_col := 3
+	loop,12
+	{
+		GuiControl,4:,vkeyX%_col%%A_Index%,　
+	}
+	_col := 4
+	loop,11
+	{
+		GuiControl,4:,vkeyX%_col%%A_Index%,　
+	}
+;-----------------------------------------------------------------------
+; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
+;-----------------------------------------------------------------------
+RefreshLayout:
+	Gui, 4:Submit, NoHide
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LFRNN%_col%,`,
+		StringSplit org,LF%g_Romaji%N%g_Koyubi%%_col%,`,
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,,vkeyRN%_col%%A_Index%,%_ch%
+			GuiControl,4:,vkeyRN%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LFRLN%_col%,`,
+		StringSplit org,LF%g_Romaji%L%g_Koyubi%%_col%,`,
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,,vkeyRL%_col%%A_Index%,%_ch%
+			GuiControl,4:,vkeyRL%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LFRRN%_col%,`,
+		StringSplit org,LF%g_Romaji%R%g_Koyubi%%_col%,`,
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,,vkeyRR%_col%%A_Index%,%_ch%
+			GuiControl,4:,vkeyRR%_col%%A_Index%,%_ch%
 		}
 	}
+	_col := 5
+	GuiControl,4:,vkeyF%_col%1,左
+	GuiControl,4:,vkeyF%_col%2,右
 	return
 
 ;-----------------------------------------------------------------------
