@@ -15,32 +15,15 @@ ShowLayout:
 	Gui,4:Default
 	Gui, 4:New
 	Gui, 4:Font,s10 c000000,Yu Gothic UI
-	;Gui, Add, Button,ggSLButtonClose X620 Y320 W66 H22,閉じる
-	Gui, 4:Add, Button,ggSLButtonClose X343 Y308 W77 H22,閉じる
-	;Gui, Add, Tab2,X12 Y8 W522 H291, 配列
-	;Gui, Tab, 1
+	Gui, 4:Add, Button,ggSLButtonClose X620 Y345 W80 H24,閉じる
+	Gui, Add, Tab2,X10 Y10 W690 H330, 配列||
 	Gui, 4:Font,s10 c000000,Yu Gothic UI
 	Gosub,SLDrawKeyFrame
 	Gosub, RefreshLayout
-	Gui, 4:Show, W720 H341, 紅皿配列
+	Gui, 4:Show, W720 H380, 紅皿配列
 	SetTimer,PollingLayout,100
 	return
 	
-	loop
-	{
-        IfWinNotExist, 紅皿配列
-        {
-            Gui, 4:Destroy
-            return
-        }
-        Gosub, ReadKeyState3
-        ;Gosub, ReadKeyState
-        ;Gosub, ReadKeyboardState
-        Sleep,64
-	}
-	return
-
-
 ;-----------------------------------------------------------------------
 ; 機能：閉じるボタンの押下
 ;-----------------------------------------------------------------------
@@ -54,15 +37,19 @@ gSLButtonClose:
 ;-----------------------------------------------------------------------
 SLDrawKeyFrame:
 	_col := 1
-	_ypos := 30*(_col - 1)
+	_ypos := 60
 	_cnt := 13
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1)
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 20
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
 		_ypos0 := _ypos + 10
 		Gui, Font,s11 c000000,Meiryo UI
 		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
@@ -78,15 +65,19 @@ SLDrawKeyFrame:
 	}
 
 	_col := 2
-	_ypos := 52*(_col - 1)
+	_ypos := _ypos + 52
 	_cnt := 12
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1)
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 20
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%		
+		_xpos0 := _xpos + 30
 		_ypos0 := _ypos + 10
 		Gui, Font,s11 c000000,Meiryo UI
 		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
@@ -101,15 +92,19 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 3
-	_ypos := 52*(_col - 1)
+	_ypos := _ypos + 52
 	_cnt := 12
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1)
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 20
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
 		_ypos0 := _ypos + 10
 		Gui, Font,s11 c000000,Meiryo UI
 		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
@@ -124,15 +119,19 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 4
-	_ypos := 52*(_col - 1)
+	_ypos := _ypos + 52
 	_cnt := 11
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1)
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
 		Gosub, SLKeyRectangle
-		_xpos0 := _xpos + 20
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
 		_ypos0 := _ypos + 10
 		Gui, Font,s11 c000000,Meiryo UI
 		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
@@ -147,26 +146,32 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 5
-	_ypos := 52*(_col - 1)
-
+	_ypos := _ypos + 52
 	_row := 1
-	_xpos := 32*(_col-1) + 48*(_row + 3 - 1)
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, SLKeyRectangle5
-	_ch := "左"
-	_xpos0 := _xpos + 20
+	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 20
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,無変換
 	Gosub, SLKeyBorder
 
 	_row := 2
-	_xpos := 32*(_col-1) + 48*(_row + 3 - 1)
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, SLKeyRectangle5
-	_ch := "空"
-	_xpos0 := _xpos + 20
+	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 20
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,　
+	Gosub, SLKeyBorder
+
+	_row := 3
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
+	Gosub, SLKeyRectangle5
+	_xpos0 := _xpos + 10
+	_ypos0 := _ypos + 20
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,変換
 	Gosub, SLKeyBorder
 
 	return
@@ -176,7 +181,7 @@ SLDrawKeyFrame:
 ;-----------------------------------------------------------------------
 SLKeyRectangle:
 	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 11
+	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
 	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	if(_row = 1)
@@ -213,29 +218,40 @@ SLKeyRectangle:
 ;-----------------------------------------------------------------------
 SLKeyRectangle5:
 	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 11
+	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
 	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(_row = 1)
+	if(_row == 1 && kOyaL=="sc07B")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
-	else if _row in 2
+	else 
+	if(_row == 2 && kOyaL=="Space")
+	{
+		Gui, Font,s42 cFFFF00,Yu Gothic UI
+	}
+	else
+	if(_row == 2 && kOyaR=="Space")
+	{
+		Gui, Font,s42 c00FFFF,Yu Gothic UI
+	}
+	else
+	if(_row == 3 && kOyaR=="sc079")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
 	else
 	{
-		Gui, Font,s42 cC0C0C0,Yu Gothic UI
+		Gui, Font,s42 cFFFFFF,Yu Gothic UI
 	}
 	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	Gui, Add, Text,vvkeyY%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
 SLKeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 11
+	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
 	Gui, Add, Text,vvkeyX%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
 	vkeyX%_col%%A_Index% := "　"
@@ -245,14 +261,24 @@ SLKeyBorder:
 ; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
 ;-----------------------------------------------------------------------
 PollingLayout:
-	currMode := g_Romaji . g_Koyubi
+	currMode := g_Romaji
 	if(currMode == lastMode) 
 	{
 		return
 	}
 	lastMode := currMode
+
+	Gui,4:Default
 	Gui, 4:Submit, NoHide
 	_col := 1
+	loop,4
+	{
+		_col := A_Index
+		loop,13
+		{
+			GuiControl,-Redraw,vkeyX%_col%%A_Index%
+		}
+	}
 	loop,13
 	{
 		GuiControl,4:,vkeyX%_col%%A_Index%,　
@@ -276,11 +302,47 @@ PollingLayout:
 ; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
 ;-----------------------------------------------------------------------
 RefreshLayout:
+	Gui,4:Default
 	Gui, 4:Submit, NoHide
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LF%g_Romaji%N%g_Koyubi%%_col%,`,
+		loop,13
+		{
+			GuiControl,-Redraw,vkeyRK%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRN%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRL%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRR%_col%%A_Index%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%NK%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%NK%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFADK%_col%,`,
+		}
+		loop,%org0%
+		{
+			_ch := org%A_Index%
+			GuiControl,4:,vkeyRK%_col%%A_Index%,%_ch%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%NN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%NN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFADN%_col%,`,
+		}
 		loop,%org0%
 		{
 			_ch := org%A_Index%
@@ -290,7 +352,14 @@ RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LF%g_Romaji%L%g_Koyubi%%_col%,`,
+		if(LF%g_Romaji%LN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%LN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFNUL%_col%,`,
+		}
 		loop,%org0%
 		{
 			_ch := org%A_Index%
@@ -300,16 +369,32 @@ RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		StringSplit org,LF%g_Romaji%R%g_Koyubi%%_col%,`,
+		if(LF%g_Romaji%RN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%RN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFNUL%_col%,`,
+		}
 		loop,%org0%
 		{
 			_ch := org%A_Index%
 			GuiControl,4:,vkeyRR%_col%%A_Index%,%_ch%
 		}
 	}
-	_col := 5
-	GuiControl,4:,vkeyF%_col%1,左
-	GuiControl,4:,vkeyF%_col%2,右
+	loop,4
+	{
+		_col := A_Index
+		loop,13
+		{
+			GuiControl,+Redraw,vkeyX%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRK%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRN%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRL%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
+		}
+	}
 	return
 
 ;-----------------------------------------------------------------------

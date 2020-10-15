@@ -336,16 +336,37 @@ RemapOya:
 	{
 		kOyaR := "sc079"
 		kOyaL := "sc07B"
+		Gui,4:Default
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyY51
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY53
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
 		kOyaR := "Space"
 		kOyaL := "sc07B"
+		Gui,4:Default
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyY51
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY52
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY53
 	}
 	else	; 空白－変換
 	{
 		kOyaL := "Space"
 		kOyaR := "sc079"
+		Gui,4:Default
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY51
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyY52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyY53
 	}
 	Return
 

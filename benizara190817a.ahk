@@ -118,7 +118,6 @@ Menu_Exit:
 gOyaR:
 	Critical
 	g_trigger := "R"
-	GuiControl,4:,vkeyX52,□
 	gosub,Polling
 	RegLogs("R down")
 	if(g_OyaR = 1 && g_KeyRepeat = 1)
@@ -209,7 +208,6 @@ gOyaR:
 gOyaRUp:
 	Critical
 	g_trigger := "R up"
-	GuiControl,4:,vkeyX52,　
 	gosub,Polling
 	if(g_OyaR = 1)	; 右親指シフトキーの単独シフト
 	{
@@ -282,7 +280,6 @@ gOyaRUp:
 gOyaL:	; 無変換
 	Critical
 	g_trigger := "L"
-	GuiControl,4:,vkeyX51,□
 	gosub,Polling
 	RegLogs("L down")
 	if(g_OyaL = 1 && g_KeyRepeat = 1)
@@ -371,7 +368,6 @@ gOyaL:	; 無変換
 gOyaLUp:
 	Critical
 	g_trigger := "L up"
-	GuiControl,4:,vkeyX51,　
 	gosub,Polling
 	if(g_OyaL != 0)	; 右親指シフトキーの単独シフト
 	{
@@ -1718,56 +1714,62 @@ gSC070up:	;ひらがな／カタカナ
 gSpace:
 	kName := "Space"
 	MojiCode := 0
-	if(kOyaL=kName) {
+	GuiControl,4:,vkeyX52,□
+	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
-	if(kOyaR=kName) {
+	if(kOyaR==kName) {
 		Goto, gOyaR
 	}
 	Goto, keydown
 gSpaceUp:
 	kName := "Space"
 	MojiCode := 0
-	if(kOyaL="Space") {
+	GuiControl,4:,vkeyX52,　
+	if(kOyaL=="Space") {
 		Goto, gOyaLUp
 	}
-	if(kOyaR="Space") {
+	if(kOyaR=="Space") {
 		Goto, gOyaRUp
 	}
 	Goto, keyup
-gSC07B:
+gSC07B:					; 無変換キー（左）
 	kName := "sc07B"
 	MojiCode := 0
-	if(kOyaL=kName) {
+	GuiControl,4:,vkeyX51,□
+	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
-	if(kOyaR=kName) {
+	if(kOyaR==kName) {
 		Goto, gOyaR
 	}
 	Goto, keydown
 gSC07Bup:
 	kName := "sc07B"
 	MojiCode := 0
-	if(kOyaL=kName) {
+	GuiControl,4:,vkeyX51,　
+	if(kOyaL==kName) {
 		Goto, gOyaLUp
 	}
-	if(kOyaR=kName) {
+	if(kOyaR==kName) {
 		Goto, gOyaRUp
 	}
 	Goto, keyup
-gSC079:
+gSC079:				; 変換キー（右）
 	kName := "sc079"
 	MojiCode := 0
-	if(kOyaL=kName) {
+	GuiControl,4:,vkeyX53,□
+	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
-	if(kOyaR=kName) {
+	if(kOyaR==kName) {
 		Goto, gOyaR
 	}
 	Goto, keydown
 gSC079up:
 	kName := "sc079"
 	MojiCode := 0
+	GuiControl,4:,vkeyX53,　
 	if(kOyaL=kName) {
 		Goto, gOyaLUp
 	}
