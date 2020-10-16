@@ -26,7 +26,7 @@ Logs:
 		_disp := "_                                                               "
 		Gui, Add, Text,vdisp%A_Index% X30 Y%_yaxis%, %_disp%
 	}
-	SetTimer LogRedraw,100
+	SetTimer,LogRedraw,100
 	return
 
 	loop
@@ -80,6 +80,7 @@ gButtonSave:
 		}
 		file.close()
 	}
+	SetTimer LogRedraw,Off
 	Gui,3:Destroy
 	Goto,Logs
 
@@ -87,5 +88,6 @@ gButtonSave:
 ; 機能：閉じるボタンの押下
 ;-----------------------------------------------------------------------
 gButtonClose:
+	SetTimer LogRedraw,Off
 	Gui,3:Destroy
 	return
