@@ -80,7 +80,7 @@
 		Menu, Tray, NoStandard
 	}
 	Menu, Tray, Add, 紅皿設定,Settings
-	Menu, Tray, Add, 配列,ShowLayout
+	;Menu, Tray, Add, 配列,ShowLayout
 	Menu, Tray, Add, ログ,Logs
 	Menu, Tray, Add, 終了,Menu_Exit 	
 	Menu, Tray, Icon
@@ -108,11 +108,11 @@ Menu_Exit:
 #include Settings7.ahk
 #include PfCount.ahk
 #include Logs1.ahk
-#include ShowLayout.ahk
 
 
 ;-----------------------------------------------------------------------
 ; 親指シフトキー
+; スペースキーに割り当てられていれば連続打鍵
 ;-----------------------------------------------------------------------
 
 gOyaR:
@@ -120,7 +120,7 @@ gOyaR:
 	g_trigger := "R"
 	gosub,Polling
 	RegLogs("R down")
-	if(g_OyaR = 1 && g_KeyRepeat = 1)
+	if(g_OyaR = 1 && (g_KeyRepeat = 1 || kOyaR = "Space"))
 	{
 		g_OyaR := 1
 		g_OyaRDown := 1
@@ -282,7 +282,7 @@ gOyaL:	; 無変換
 	g_trigger := "L"
 	gosub,Polling
 	RegLogs("L down")
-	if(g_OyaL = 1 && g_KeyRepeat = 1)
+	if(g_OyaL = 1 && (g_KeyRepeat = 1 || kOyaL = "Space"))
 	{
 		g_OyaL := 1
 		g_OyaLDown := 1
@@ -598,11 +598,12 @@ SendOnHoldM:
 
 ;----------------------------------------------------------------------
 ; 保留された親指キーの出力
+; 2020/10/16 : スペースキーをホールドしているときは単独打鍵する
 ;----------------------------------------------------------------------
 SendOnHoldO:
 	if(g_OyaOnHold = "R")
 	{
-		if(g_KeySingle = "有効")
+		if(g_KeySingle = "有効" || kOyaR = "Space")
 		{
 			if(g_OyaRDown=1)
 			{
@@ -621,7 +622,7 @@ SendOnHoldO:
 	}
 	else if(g_OyaOnHold = "L")
 	{
-		if(g_KeySingle = "有効")
+		if(g_KeySingle = "有効" || kOyaL = "Space")
 		{
 			if(g_OyaLDown=1)
 			{
@@ -651,10 +652,7 @@ SendOnHoldO:
 ;----------------------------------------------------------------------
 keydown:
 	Critical
-	vkeyD%MojiCode% := "□"
-	
-	_ch := "□"
-	GuiControl,4:,vkeyX%MojiCode%,%_ch%
+	GuiControl,2:,vkeyDN%MojiCode%,□
 	
 	g_trigger := kName
 	RegLogs(kName . " down")
@@ -817,9 +815,7 @@ SendZeroDelay:
 ;----------------------------------------------------------------------
 keyup:
 	Critical
-	vkeyD%MojiCode% := "　"
-	_ch := "　"
-	GuiControl,4:,vkeyX%MojiCode%,%_ch%
+	GuiControl,2:,vkeyDN%MojiCode%,　
 
 	g_trigger := kName
 	RegLogs(kName . " up")
@@ -1714,7 +1710,7 @@ gSC070up:	;ひらがな／カタカナ
 gSpace:
 	kName := "Space"
 	MojiCode := 0
-	GuiControl,4:,vkeyX52,□
+	GuiControl,2:,vkeyDN52,□
 	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
@@ -1725,7 +1721,7 @@ gSpace:
 gSpaceUp:
 	kName := "Space"
 	MojiCode := 0
-	GuiControl,4:,vkeyX52,　
+	GuiControl,2:,vkeyDN52,　
 	if(kOyaL=="Space") {
 		Goto, gOyaLUp
 	}
@@ -1736,7 +1732,7 @@ gSpaceUp:
 gSC07B:					; 無変換キー（左）
 	kName := "sc07B"
 	MojiCode := 0
-	GuiControl,4:,vkeyX51,□
+	GuiControl,2:,vkeyDN51,□
 	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
@@ -1747,7 +1743,7 @@ gSC07B:					; 無変換キー（左）
 gSC07Bup:
 	kName := "sc07B"
 	MojiCode := 0
-	GuiControl,4:,vkeyX51,　
+	GuiControl,2:,vkeyDN51,　
 	if(kOyaL==kName) {
 		Goto, gOyaLUp
 	}
@@ -1758,7 +1754,7 @@ gSC07Bup:
 gSC079:				; 変換キー（右）
 	kName := "sc079"
 	MojiCode := 0
-	GuiControl,4:,vkeyX53,□
+	GuiControl,2:,vkeyDN53,□
 	if(kOyaL==kName) {
 		Goto, gOyaL
 	}
@@ -1769,7 +1765,7 @@ gSC079:				; 変換キー（右）
 gSC079up:
 	kName := "sc079"
 	MojiCode := 0
-	GuiControl,4:,vkeyX53,　
+	GuiControl,2:,vkeyDN53,　
 	if(kOyaL=kName) {
 		Goto, gOyaLUp
 	}

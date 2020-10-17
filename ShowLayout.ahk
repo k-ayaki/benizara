@@ -1,43 +1,164 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ShowLayout.ahk
 ;	機能：配列表示
-;	ver.0.1.4.3 .... 2020/10/10
+;	ver.0.1.4.3 .... 2020/10/16
 ;-----------------------------------------------------------------------
 ;-----------------------------------------------------------------------
 ; 機能：配列ダイアログの表示
 ;-----------------------------------------------------------------------
+
+	g_LayoutFile := ".\NICOLA配列.bnz"
+	Gosub,ReadLayout
+	Gosub, ShowLayout
+	Gosub, InitLayout2
+	return
+
+#include ReadLayout6.ahk
+#include Path.ahk
+
 ShowLayout:
 	IfWinExist,紅皿配列
 	{
 		msgbox, 既に紅皿配列ダイアログは開いています。
 		return
 	}
+	_Continue := g_Continue
+	_ZeroDelay := g_ZeroDelay
+	_Threshold := g_Threshold
+	_LayoutFile := g_LayoutFile
+	_allTheLayout := g_allTheLayout
+	_Overlap := g_Overlap
+	_OyaKey := g_OyaKey
+	_KeySingle := g_KeySingle
+	_KeyRepeat := g_KeyRepeat
+_ShowLayout:
 	Gui,4:Default
-	Gui, 4:New
-	Gui, 4:Font,s10 c000000,Yu Gothic UI
-	Gui, 4:Add, Button,ggSLButtonClose X620 Y345 W80 H24,閉じる
-	Gui, Add, Tab2,X10 Y10 W690 H330, 配列||
-	Gui, 4:Font,s10 c000000,Yu Gothic UI
+	Gui,4:New
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Button,ggSLButtonOk X530 Y405 W80 H24,ＯＫ
+	Gui, Add, Button,ggSLButtonCancel X620 Y405 W80 H24,キャンセル
+	Gui, Add, Tab3,X10 Y10 W690 H390, 配列||
+	Gui, Tab,1
+
+	Gui, Add, Text,X30 Y40, 配列定義ファイル：
+	Gui, Add, Edit,vvFilePath ggSLDefFile X150 Y40 W380 H20 ReadOnly, %_LayoutFile%
+	Gui, Add, Button,ggSLFileSelect X550 Y40 W32 H21,…
+
+	Gui, Add, Text,X30 Y70,親指シフトキー：
+	if(_OyaKey = "無変換－変換")
+		Gui, Add, DropDownList,ggSLOya vvOyaKey X133 Y70 W125,無変換－変換||無変換－空白|空白－変換|
+	else if(_OyaKey = "無変換－空白")
+		Gui, Add, DropDownList,ggSLOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白||空白－変換|
+	else
+		Gui, Add, DropDownList,ggSLOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白|空白－変換||
+
+	Gui, Add, Text,X290 Y70,単独打鍵：
+	if(_KeySingle = "無効")
+		Gui, Add, DropDownList,ggSLKeySingle vvKeySingle X360 Y70 W95,無効||有効|
+	else
+		Gui, Add, DropDownList,ggSLKeySingle vvKeySingle X360 Y70 W95,無効|有効||
+
+	Gui, Font,s10 c000000,Meiryo UI
 	Gosub,SLDrawKeyFrame
-	Gosub, RefreshLayout
-	Gui, 4:Show, W720 H380, 紅皿配列
-	SetTimer,PollingLayout,100
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Edit,vvEdit X60 Y370 W600 H20 -Vscroll,
+	Gosub,SLRefreshLayout
+	Gui, Show, W720 H440, 紅皿配列
+	SetTimer,SLPollingLayout,100
+	GuiControl,Focus,vEdit
 	return
 	
 ;-----------------------------------------------------------------------
 ; 機能：閉じるボタンの押下
 ;-----------------------------------------------------------------------
-gSLButtonClose:
-	Gui,4:Destroy
-	isShowLayout := 0
+gSLButtonOk:
+	Gui,Destroy
+	return
+;-----------------------------------------------------------------------
+; 機能：閉じるボタンの押下
+;-----------------------------------------------------------------------
+gSLButtonCancel:
+	Gui,Destroy
 	return
 	
+;-----------------------------------------------------------------------
+; 機能：ファイル名のテキストボックス
+;-----------------------------------------------------------------------
+gSLDefFile:
+	Gui, Submit, NoHide
+	Return
+;-----------------------------------------------------------------------
+; 機能：その他、無効化したＧＵＩ要素の操作・・・ダミー
+; ver.0.1.3.7 ... gSpace/gSpaceUp を追加
+;-----------------------------------------------------------------------
+gSLOya:
+	Gui, Submit, NoHide
+	_OyaKey := vOyaKey
+	if(vOyaKey = "無変換－変換")
+	{
+		kOyaR := "sc079"
+		kOyaL := "sc07B"
+	}
+	else if(vOyaKey = "無変換－空白")
+	{
+		kOyaR := "Space"
+		kOyaL := "sc07B"
+	}
+	else	; 空白－変換
+	{
+		kOyaL := "Space"
+		kOyaR := "sc079"
+	}
+	Return
+
+;-----------------------------------------------------------------------
+; 機能：無変換・変換キーの単独打鍵
+;-----------------------------------------------------------------------
+gSLKeySingle:
+	Gui, Submit, NoHide
+	g_KeySingle := vKeySingle
+	return
+;-----------------------------------------------------------------------
+; 機能：ファイル選択ボタンの押下
+;-----------------------------------------------------------------------
+gSLFileSelect:
+	SetWorkingDir, %A_ScriptDir%
+	FileSelectFile, vLayoutFileAbs,0,%A_ScriptDir%,,Layout File (*.bnz; *.yab)
+	
+	if(vLayoutFileAbs<>"")
+	{
+		vLayoutFile := Path_RelativePathTo(A_WorkingDir, 0x10, vLayoutFileAbs, 0x20)
+		if(vLayoutFile = "")
+		{
+			vLayoutFile := vLayoutFileAbs
+		}
+		GuiControl,, vFilePath, %vLayoutFile%
+
+		Gosub, InitLayout2
+		GoSub, ReadLayoutFile
+		if(_error <> "")
+		{
+			msgbox, %_error%
+			
+			; 元ファイルを再読み込みする
+			Gosub, InitLayout2
+			_LayoutFile := g_LayoutFile
+			GoSub, ReadLayoutFile
+		}
+		Gosub, SetLayoutProperty
+		_allTheLayout := vAllTheLayout
+		_LayoutFile := vLayoutFile
+	}
+	Gui,Destroy
+	Goto,_ShowLayout
+
 ;-----------------------------------------------------------------------
 ; 機能：キーレイアウトの表示
 ;-----------------------------------------------------------------------
 SLDrawKeyFrame:
+	Gui,Add,GroupBox,X20 Y90 W670 H270,キー配列
 	_col := 1
-	_ypos := 60
+	_ypos := 110
 	_cnt := 13
 	loop,%_cnt%
 	{
@@ -65,7 +186,7 @@ SLDrawKeyFrame:
 	}
 
 	_col := 2
-	_ypos := _ypos + 52
+	_ypos := _ypos + 48
 	_cnt := 12
 	loop,%_cnt%
 	{
@@ -92,7 +213,7 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 3
-	_ypos := _ypos + 52
+	_ypos := _ypos + 48
 	_cnt := 12
 	loop,%_cnt%
 	{
@@ -119,7 +240,7 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 4
-	_ypos := _ypos + 52
+	_ypos := _ypos + 48
 	_cnt := 11
 	loop,%_cnt%
 	{
@@ -146,32 +267,44 @@ SLDrawKeyFrame:
 		Gosub, SLKeyBorder
 	}
 	_col := 5
-	_ypos := _ypos + 52
+	_ypos := _ypos + 48
 	_row := 1
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, SLKeyRectangle5
-	_xpos0 := _xpos + 10
-	_ypos0 := _ypos + 20
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,無変換
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,左親指
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
 	Gosub, SLKeyBorder
 
 	_row := 2
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, SLKeyRectangle5
-	_xpos0 := _xpos + 10
-	_ypos0 := _ypos + 20
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,　
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
 	Gosub, SLKeyBorder
 
 	_row := 3
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, SLKeyRectangle5
-	_xpos0 := _xpos + 10
-	_ypos0 := _ypos + 20
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyF%_col%%_row% X%_xpos0% Y%_ypos0% +Center c000000 BackgroundTrans,変換
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,右親指
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
 	Gosub, SLKeyBorder
 
 	return
@@ -246,69 +379,132 @@ SLKeyRectangle5:
 	}
 	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	Gui, Add, Text,vvkeyY%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	Gui, Add, Text,vvkeyFC%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
+;-----------------------------------------------------------------------
+; 機能：キーダウン表示
+;-----------------------------------------------------------------------
 SLKeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	Gui, Add, Text,vvkeyX%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
-	vkeyX%_col%%A_Index% := "　"
+	Gui, Add, Text,vvkeyDN%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
+	vkeyDN%_col%%A_Index% := "　"
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
+; 機能：キー配列変更に係る変数の監視
 ;-----------------------------------------------------------------------
-PollingLayout:
-	currMode := g_Romaji
-	if(currMode == lastMode) 
-	{
-		return
-	}
-	lastMode := currMode
-
+SLPollingLayout:
 	Gui,4:Default
-	Gui, 4:Submit, NoHide
-	_col := 1
-	loop,4
+	if(s_Romaji != g_Romaji) 
 	{
-		_col := A_Index
-		loop,13
+		s_Romaji := g_Romaji
+		Gosub,SLRefreshLayout
+	}
+	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle)
+	{
+		s_kOyaL := kOyaL 
+		s_kOyaR := kOyaR
+		s_KeySingle := g_KeySingle
+		Gosub,SLRefreshLayout5
+	}
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キー配列表示の切り替え
+;-----------------------------------------------------------------------
+SLRefreshLayout5:
+	Gui, Submit, NoHide
+	if(s_kOyaL = "sc07B" && s_kOyaR = "sc079")
+	{
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		Gui, Font,s9 c000000,Meiryo UI
+		GuiControl,,vkeyFA51,左親指
+		GuiControl,,vkeyFA52,　　　
+		GuiControl,,vkeyFA53,右親指
+		if(s_KeySingle = "有効")
 		{
-			GuiControl,-Redraw,vkeyX%_col%%A_Index%
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,　　　
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53,　　　
 		}
 	}
-	loop,13
+	else if(s_kOyaL = "sc07B" && s_kOyaR = "Space")
 	{
-		GuiControl,4:,vkeyX%_col%%A_Index%,　
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		GuiControl,,vkeyFA51,左親指
+		GuiControl,,vkeyFA52,右親指
+		GuiControl,,vkeyFA53,　　　
+		if(s_KeySingle = "有効")
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,　　　
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
 	}
-	_col := 2
-	loop,12
+	else	; 空白－変換
 	{
-		GuiControl,4:,vkeyX%_col%%A_Index%,　
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		GuiControl,,vkeyFA51,　　　
+		GuiControl,,vkeyFA52,左親指
+		GuiControl,,vkeyFA53,右親指
+		if(s_KeySingle = "有効")
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53,　　　
+		}
 	}
-	_col := 3
-	loop,12
-	{
-		GuiControl,4:,vkeyX%_col%%A_Index%,　
-	}
-	_col := 4
-	loop,11
-	{
-		GuiControl,4:,vkeyX%_col%%A_Index%,　
-	}
+	return
+
 ;-----------------------------------------------------------------------
-; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
+; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
-RefreshLayout:
-	Gui,4:Default
-	Gui, 4:Submit, NoHide
+SLRefreshLayout:
+	Gui, Submit, NoHide
 	loop,4
 	{
 		_col := A_Index
-		loop,13
+		StringSplit org,LFNUL%_col%,`,
+		loop,%org0%
 		{
+			GuiControl,-Redraw,vkeyDN%_col%%A_Index%
+			GuiControl,,vkeyDN%_col%%A_Index%,　
 			GuiControl,-Redraw,vkeyRK%_col%%A_Index%
 			GuiControl,-Redraw,vkeyRN%_col%%A_Index%
 			GuiControl,-Redraw,vkeyRL%_col%%A_Index%
@@ -329,7 +525,7 @@ RefreshLayout:
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,4:,vkeyRK%_col%%A_Index%,%_ch%
+			GuiControl,,vkeyRK%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
@@ -346,7 +542,7 @@ RefreshLayout:
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,4:,vkeyRN%_col%%A_Index%,%_ch%
+			GuiControl,,vkeyRN%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
@@ -363,7 +559,7 @@ RefreshLayout:
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,4:,vkeyRL%_col%%A_Index%,%_ch%
+			GuiControl,,vkeyRL%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
@@ -380,15 +576,16 @@ RefreshLayout:
 		loop,%org0%
 		{
 			_ch := org%A_Index%
-			GuiControl,4:,vkeyRR%_col%%A_Index%,%_ch%
+			GuiControl,,vkeyRR%_col%%A_Index%,%_ch%
 		}
 	}
 	loop,4
 	{
 		_col := A_Index
-		loop,13
+		StringSplit org,LFNUL%_col%,`,
+		loop,%org0%
 		{
-			GuiControl,+Redraw,vkeyX%_col%%A_Index%
+			GuiControl,+Redraw,vkeyDN%_col%%A_Index%
 			GuiControl,+Redraw,vkeyRK%_col%%A_Index%
 			GuiControl,+Redraw,vkeyRN%_col%%A_Index%
 			GuiControl,+Redraw,vkeyRL%_col%%A_Index%
@@ -397,415 +594,4 @@ RefreshLayout:
 	}
 	return
 
-;-----------------------------------------------------------------------
-; 機能：LCTRLキーの読取
-;-----------------------------------------------------------------------
-ReadKeyState:
-	Critical
-	_vkey := 0x31
-	_keyname := "11"
-	Gosub,SetKeyGui
-	_vkey := 0x32
-	_keyname := "12"
-	Gosub,SetKeyGui
-	_vkey := 0x33
-	_keyname := "13"
-	Gosub,SetKeyGui
-	_vkey := 0x34
-	_keyname := "14"
-	Gosub,SetKeyGui
-	_vkey := 0x35
-	_keyname := "15"
-	Gosub,SetKeyGui
-	_vkey := 0x36
-	_keyname := "16"
-	Gosub,SetKeyGui
-	_vkey := 0x37
-	_keyname := "17"
-	Gosub,SetKeyGui
-	_vkey := 0x38
-	_keyname := "18"
-	Gosub,SetKeyGui
-	_vkey := 0x39
-	_keyname := "19"
-	Gosub,SetKeyGui
-	_vkey := 0x30
-	_keyname := "110"
-	Gosub,SetKeyGui
-	_vkey := 0xBD			;-
-	_keyname := "111"
-	Gosub,SetKeyGui
-	_vkey := 0xDE			;^
-	_keyname := "112"
-	Gosub,SetKeyGui
-	_vkey := 0xDC			;\
-	_keyname := "113"
-	Gosub,SetKeyGui
-
-	_vkey := 0x51			;q
-	_keyname := "21"
-	Gosub,SetKeyGui
-	_vkey := 0x57			;w
-	_keyname := "22"
-	Gosub,SetKeyGui
-	_vkey := 0x45			;e
-	_keyname := "23"
-	Gosub,SetKeyGui
-	_vkey := 0x52			;r
-	_keyname := "24"
-	Gosub,SetKeyGui
-	_vkey := 0x54			;t
-	_keyname := "25"
-	Gosub,SetKeyGui
-	_vkey := 0x59			;y
-	_keyname := "26"
-	Gosub,SetKeyGui
-	_vkey := 0x55			;u
-	_keyname := "27"
-	Gosub,SetKeyGui
-	_vkey := 0x49			;i
-	_keyname := "28"
-	Gosub,SetKeyGui
-	_vkey := 0x4F			;o
-	_keyname := "29"
-	Gosub,SetKeyGui
-	_vkey := 0x50			;p
-	_keyname := "210"
-	Gosub,SetKeyGui
-	_vkey := 0xC0			;@
-	_keyname := "211"
-	Gosub,SetKeyGui
-	_vkey := 0xDB			;[
-	_keyname := "212"
-	Gosub,SetKeyGui
-
-	critical,off
-	return
-
-SetKeyGui:
-	stCurr := DllCall("GetKeyState", "UInt", _vkey) & 128
-	if(stCurr != 0) 
-	{
-		_ch := "　"
-	}
-	else
-	{
-		_ch := "■"
-	}
-	if(_ch != vkeyD%_keyname%)
-	{
-		GuiControl,,vkeyX%_keyname%,%_ch%
-	}
-	vkeyD%_keyname% := _ch
-	return
-
-ReadKeyState2:
-	Critical
-	_key := "1"
-	_keyname := "11"
-	Gosub,SetKeyGuiX
-	_key := "2"
-	_keyname := "12"
-	Gosub,SetKeyGuiX
-	_key := "3"
-	_keyname := "13"
-	Gosub,SetKeyGuiX
-	_key := "4"
-	_keyname := "14"
-	Gosub,SetKeyGuiX
-	_key := "5"
-	_keyname := "15"
-	Gosub,SetKeyGuiX
-	_key := "6"
-	_keyname := "16"
-	Gosub,SetKeyGuiX
-	_key := "7"
-	_keyname := "17"
-	Gosub,SetKeyGuiX
-	_key := "8"
-	_keyname := "18"
-	Gosub,SetKeyGuiX
-	_key := "9"
-	_keyname := "19"
-	Gosub,SetKeyGuiX
-	_key := "0"
-	_keyname := "110"
-	Gosub,SetKeyGuiX
-	_key := "-"			;-
-	_keyname := "111"
-	Gosub,SetKeyGuiX
-	_key := "^"			;^
-	_keyname := "112"
-	Gosub,SetKeyGuiX
-	_key := "\"			;\
-	_keyname := "113"
-	Gosub,SetKeyGuiX
-
-	_key := "q"			;q
-	_keyname := "21"
-	Gosub,SetKeyGuiX
-	_key := "w"			;w
-	_keyname := "22"
-	Gosub,SetKeyGuiX
-	_key := "e"			;e
-	_keyname := "23"
-	Gosub,SetKeyGuiX
-	_key := "r"			;r
-	_keyname := "24"
-	Gosub,SetKeyGuiX
-	_key := "t"			;t
-	_keyname := "25"
-	Gosub,SetKeyGuiX
-	_key := "y"			;y
-	_keyname := "26"
-	Gosub,SetKeyGuiX
-	_key := "u"			;u
-	_keyname := "27"
-	Gosub,SetKeyGuiX
-	_key := "i"			;i
-	_keyname := "28"
-	Gosub,SetKeyGuiX
-	_key := "o"			;o
-	_keyname := "29"
-	Gosub,SetKeyGuiX
-	_key := "p"			;p
-	_keyname := "210"
-	Gosub,SetKeyGuiX
-	_key := "@"			;@
-	_keyname := "211"
-	Gosub,SetKeyGuiX
-	_key := "["			;[
-	_keyname := "212"
-	Gosub,SetKeyGuiX
-	critical,off
-	return
-
-SetKeyGuiX:
-	stCurr := GetKeyState(_key)
-	if(stCurr != 0) 
-	{
-		_ch := "・"
-	}
-	else
-	{
-		_ch := "■"
-	}
-	if(_ch != vkeyD%_keyname%)
-	{
-		GuiControl,,vkeyX%_keyname%,%_ch%
-	}
-	vkeyD%_keyname% := _ch
-	return
-
-ReadKeyState3:
-	_keyname := "11"
-	Gosub,SetKeyGui3
-	_keyname := "12"
-	Gosub,SetKeyGui3
-	_keyname := "13"
-	Gosub,SetKeyGui3
-	_keyname := "14"
-	Gosub,SetKeyGui3
-	_keyname := "15"
-	Gosub,SetKeyGui3
-	_keyname := "16"
-	Gosub,SetKeyGui3
-	_keyname := "17"
-	Gosub,SetKeyGui3
-	_keyname := "18"
-	Gosub,SetKeyGui3
-	_keyname := "19"
-	Gosub,SetKeyGui3
-	_keyname := "110"
-	Gosub,SetKeyGui3
-	_keyname := "111"
-	Gosub,SetKeyGui3
-	_keyname := "112"
-	Gosub,SetKeyGui3
-	_keyname := "113"
-	Gosub,SetKeyGui3
-	
-	_keyname := "21"
-	Gosub,SetKeyGui3
-	_keyname := "22"
-	Gosub,SetKeyGui3
-	_keyname := "23"
-	Gosub,SetKeyGui3
-	_keyname := "24"
-	Gosub,SetKeyGui3
-	_keyname := "25"
-	Gosub,SetKeyGui3
-	_keyname := "26"
-	Gosub,SetKeyGui3
-	_keyname := "27"
-	Gosub,SetKeyGui3
-	_keyname := "28"
-	Gosub,SetKeyGui3
-	_keyname := "29"
-	Gosub,SetKeyGui3
-	_keyname := "210"
-	Gosub,SetKeyGui3
-	_keyname := "211"
-	Gosub,SetKeyGui3
-	_keyname := "212"
-	Gosub,SetKeyGui3
-
-	_keyname := "31"
-	Gosub,SetKeyGui3
-	_keyname := "32"
-	Gosub,SetKeyGui3
-	_keyname := "33"
-	Gosub,SetKeyGui3
-	_keyname := "34"
-	Gosub,SetKeyGui3
-	_keyname := "35"
-	Gosub,SetKeyGui3
-	_keyname := "36"
-	Gosub,SetKeyGui3
-	_keyname := "37"
-	Gosub,SetKeyGui3
-	_keyname := "38"
-	Gosub,SetKeyGui3
-	_keyname := "39"
-	Gosub,SetKeyGui3
-	_keyname := "310"
-	Gosub,SetKeyGui3
-	_keyname := "311"
-	Gosub,SetKeyGui3
-	_keyname := "312"
-	Gosub,SetKeyGui3
-	
-	_keyname := "41"
-	Gosub,SetKeyGui3
-	_keyname := "42"
-	Gosub,SetKeyGui3
-	_keyname := "43"
-	Gosub,SetKeyGui3
-	_keyname := "44"
-	Gosub,SetKeyGui3
-	_keyname := "45"
-	Gosub,SetKeyGui3
-	_keyname := "46"
-	Gosub,SetKeyGui3
-	_keyname := "47"
-	Gosub,SetKeyGui3
-	_keyname := "48"
-	Gosub,SetKeyGui3
-	_keyname := "49"
-	Gosub,SetKeyGui3
-	_keyname := "410"
-	Gosub,SetKeyGui3
-	_keyname := "411"
-	Gosub,SetKeyGui3
-	return
-
-SetKeyGui3:
-	if(vkeyD%_keyname% != vkeyE%_keyname%) 
-	{
-		_ch := vkeyD%_keyname%
-		GuiControl,,vkeyX%_keyname%,%_ch%
-		vkeyE%_keyname% := _ch
-	}
-	return
-
-ReadKeyboardState:
-	Critical
-
-	VarSetCapacity(stKtbl, cbSize:=256, 0)
-	NumPut(cbSize, stKtbl,  0, "UChar")   ;   DWORD   cbSize;	
-	stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
-	_vkey := 0x31
-	_keyname := "11"
-	Gosub,SetKeyGui2
-	_vkey := 0x32
-	_keyname := "12"
-	Gosub,SetKeyGui2
-	_vkey := 0x33
-	_keyname := "13"
-	Gosub,SetKeyGui2
-	_vkey := 0x34
-	_keyname := "14"
-	Gosub,SetKeyGui2
-	_vkey := 0x35
-	_keyname := "15"
-	Gosub,SetKeyGui2
-	_vkey := 0x36
-	_keyname := "16"
-	Gosub,SetKeyGui2
-	_vkey := 0x37
-	_keyname := "17"
-	Gosub,SetKeyGui2
-	_vkey := 0x38
-	_keyname := "18"
-	Gosub,SetKeyGui2
-	_vkey := 0x39
-	_keyname := "19"
-	Gosub,SetKeyGui2
-	_vkey := 0x30
-	_keyname := "110"
-	Gosub,SetKeyGui2
-	_vkey := 0xBD			;-
-	_keyname := "111"
-	Gosub,SetKeyGui2
-	_vkey := 0xDE			;^
-	_keyname := "112"
-	Gosub,SetKeyGui2
-	_vkey := 0xDC			;\
-	_keyname := "113"
-	Gosub,SetKeyGui2
-	
-	_vkey := 0x51			;q
-	_keyname := "21"
-	Gosub,SetKeyGui2
-	_vkey := 0x59			;w
-	_keyname := "22"
-	Gosub,SetKeyGui2
-	_vkey := 0x45			;e
-	_keyname := "23"
-	Gosub,SetKeyGui2
-	_vkey := 0x52			;r
-	_keyname := "24"
-	Gosub,SetKeyGui2
-	_vkey := 0x54			;t
-	_keyname := "25"
-	Gosub,SetKeyGui2
-	_vkey := 0x59			;y
-	_keyname := "26"
-	Gosub,SetKeyGui2
-	_vkey := 0x55			;u
-	_keyname := "27"
-	Gosub,SetKeyGui2
-	_vkey := 0x49			;i
-	_keyname := "28"
-	Gosub,SetKeyGui2
-	_vkey := 0x4F			;o
-	_keyname := "29"
-	Gosub,SetKeyGui2
-	_vkey := 0x50			;p
-	_keyname := "210"
-	Gosub,SetKeyGui2
-	_vkey := 0xC0			;@
-	_keyname := "211"
-	Gosub,SetKeyGui2
-	_vkey := 0xDB			;[
-	_keyname := "212"
-	Gosub,SetKeyGui2
-	critical,off
-	return
-
-SetKeyGui2:
-	if((NumGet(stKtbl,_vkey,"UChar") & 0x80)!= 0) 
-	{
-		_ch := "・"
-	}
-	else
-	{
-		_ch := "■"
-	}
-	if(_ch != vkeyD%_keyname%)
-	{
-		GuiControl,,vkeyX%_keyname%,%_ch%
-	}
-	vkeyD%_keyname% := _ch
-	return
 

@@ -46,6 +46,24 @@ InitLayout2:
 	LFRNK := 0
 	LFRLK := 0
 	LFRRK := 0
+	loop,4
+	{
+		LFANN%A_Index% := ""
+		LFALN%A_Index% := ""
+		LFARN%A_Index% := ""
+
+		LFANK%A_Index% := ""
+		LFALK%A_Index% := ""
+		LFARK%A_Index% := ""
+
+		LFRNN%A_Index% := ""
+		LFRLN%A_Index% := ""
+		LFRRN%A_Index% := ""
+
+		LFRNK%A_Index% := ""
+		LFRLK%A_Index% := ""
+		LFRRK%A_Index% := ""
+	}
 	; デフォルトテーブル
 	LFADN1 := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
 	LFADN2 := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
@@ -119,6 +137,7 @@ ReadLayoutFile:
 		_error := "ファイルが存在しません " . %vLayoutFile%
 		return
 	}
+	Gosub,InitLayout2
 	_mode := ""
 	_mline := 0
 	Loop
@@ -318,8 +337,8 @@ SetKeyTable:
 		ret := Kanji2KeySymbol(org%A_Index%,_symbol)
 		if(ret = 1)
 		{
-			kdn%_mode%%_col%%A_Index% := MnDown(_symbol)
-			kup%_mode%%_col%%A_Index% := MnUp(_symbol)
+			kdn%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " down}"
+			kup%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " up}"
 			continue
 		}
 		_vk := ConvVkey(org%A_Index%)

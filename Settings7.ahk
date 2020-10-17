@@ -8,6 +8,7 @@
 	g_LayoutFile := ".\NICOLA配列.bnz"
 	Gosub,ReadLayout
 	Gosub, Settings
+	Gosub, InitLayout2
 	return
 
 #include ReadLayout6.ahk
@@ -34,7 +35,7 @@ Init:
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 		g_KeySingle := "無効"
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
-		g_KeyRepeat := 0
+		g_KeyRepeat := 1
 		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
@@ -68,7 +69,7 @@ Init:
 		g_KeySingle := "無効"
 	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
 	if g_KeyRepeat not in 1,0
-		g_KeyRepeat := 0
+		g_KeyRepeat := 1
 	return
 	
 ;-----------------------------------------------------------------------
@@ -93,33 +94,44 @@ _Settings:
 	Gui,2:Default
 	Gui, 2:New
 	Gui, Font,s10 c000000
-	Gui, Add, Button,ggButtonOk X343 Y308 W77 H22,ＯＫ
-	Gui, Add, Button,ggButtonCancel X431 Y308 W77 H22,キャンセル
-	Gui, Add, Tab2,X12 Y8 W522 H291, 配列||親指シフト|管理者権限|紅皿について
-
+	Gui, Add, Button,ggButtonOk X530 Y405 W80 H22,ＯＫ
+	Gui, Add, Button,ggButtonCancel X620 Y405 W80 H22,キャンセル
+	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフト|管理者権限|紅皿について
+	g_TabName := "配列"
+	
 	Gui, Tab, 1
-	Gui, Font,s10 c000000
-	Gui, Add, Text,X40 Y57, 配列定義ファイル：
-	Gui, Add, Edit,vvFilePath ggDefFile X59 Y78 W375 H18 ReadOnly, %_LayoutFile%
-	Gui, Add, Button,ggFileSelect X453 Y78 W32 H19,…
+	Gui, Add, Text,X30 Y40, 配列定義ファイル：
+	Gui, Add, Edit,vvFilePath ggDefFile X150 Y40 W380 H20 ReadOnly, %_LayoutFile%
+	Gui, Add, Button,ggFileSelect X550 Y40 W32 H21,…
 
-	Gui, Add, Text,X40 Y110, 配列のモード：
-	Gui, Add, DropDownList,ggLayout vvLayout X128 Y110,%_allTheLayout%
-		;英数シフト無し|英数小指シフト|ローマ字シフト無し||ローマ字左親指シフト|ローマ字右親指シフト|ローマ字小指シフト
-	Gosub, DrawKeyFrame
-	StringSplit _thisLayout,_allTheLayout,|
-	vLayout := _thisLayout1
-	Gosub, gLayout
+	Gui, Add, Text,X30 Y70,親指シフトキー：
+	if(_OyaKey = "無変換－変換")
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換||無変換－空白|空白－変換|
+	else if(_OyaKey = "無変換－空白")
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白||空白－変換|
+	else
+		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白|空白－変換||
+
+	Gui, Add, Text,X290 Y70,単独打鍵：
+	if(_KeySingle = "無効")
+		Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効||有効|
+	else
+		Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
+	Gui, Font,s10 c000000,Meiryo UI
+	Gosub,G2DrawKeyFrame
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Edit,vvEdit X60 Y370 W600 H20 -Vscroll,
+	Gosub, G2RefreshLayout
 	
 	Gui, Tab, 2
 	Gui, Font,s10 c000000
-	Gui, Add, Text,X30 Y52,親指シフトキー：
-	if(_OyaKey = "無変換－変換")
-		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
-	else if(_OyaKey = "無変換－空白")
-		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
-	else
-		Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
+	;Gui, Add, Text,X30 Y52,親指シフトキー：
+	;if(_OyaKey = "無変換－変換")
+	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
+	;else if(_OyaKey = "無変換－空白")
+	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
+	;else
+	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
 	
 	;GuiControl,,vOyaKey,%_OyaKey%
 	Gui, Add, Checkbox,ggContinue vvContinue X292 Y52,連続シフト
@@ -129,35 +141,28 @@ _Settings:
 	GuiControl,,vZeroDelay,%_ZeroDelay%
 	
 	Gui, Font,s10 c000000
-	Gui, Add, Text,X57 Y92,単独打鍵：
-	if(_KeySingle = "無効")
-		Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
-	else
-		Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
+	;Gui, Add, Text,X57 Y92,単独打鍵：
+	;if(_KeySingle = "無効")
+	;	Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
+	;else
+	;	Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
 	
 	;GuiControl,Disable,vKeySingle
 
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X292 Y92,キーリピート
-	if(_KeySingle = "無効")
-	{
-		GuiControl,disable,vKeyRepeat
-		_KeyRepeat := 0
-		g_KeyRepeat := 0
-	} else {
-		GuiControl,,vKeyRepeat,%_KeyRepeat%
-	}
+	GuiControl,,_KeyRepeat,%_KeyRepeat%
 	
 	Gui, Font,s10 c000000
 	Gui, Add, Text,X30 Y132 c000000,文字と親指シフトの同時打鍵の割合：
-	Gui, Add, Edit,vvOverlapNum X263 Y130 W30 ReadOnly, %_Overlap%
-	Gui, Add, Text,X300 Y132 c000000,[`%]
+	Gui, Add, Edit,vvOverlapNum X263 Y130 W50 ReadOnly, %_Overlap%
+	Gui, Add, Text,X320 Y132 c000000,[`%]
 	
 	Gui, Add, Slider, X49 Y172 ggOlSlider w400 vvOlSlider Range20-80 line10 TickInterval10
 	GuiControl,,vOlSlider,%_Overlap%
 	
 	Gui, Add, Text,X30 Y212 c000000,文字と親指シフトの同時打鍵の判定時間：
-	Gui, Add, Edit,vvThresholdNum X263 Y210 W30 ReadOnly, %_Threshold%
-	Gui, Add, Text,X300 Y212 c000000,[mSEC]
+	Gui, Add, Edit,vvThresholdNum X263 Y210 W50 ReadOnly, %_Threshold%
+	Gui, Add, Text,X320 Y212 c000000,[mSEC]
 	
 	Gui, Add, Slider, X49 Y252 ggThSlider w400 vvThSlider Range10-400 line10 TickInterval10
 	GuiControl,,vThSlider,%_Threshold%
@@ -180,117 +185,469 @@ _Settings:
 	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
 	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / %g_Date%
 	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
-	Gui, Show, W547 H341, 紅皿設定
+	Gui, Show, W720 H440, 紅皿設定
+
+	SetTimer,G2PollingLayout,100
+	GuiControl,Focus,vEdit
 	return
 
 
 ;-----------------------------------------------------------------------
 ; 機能：キーレイアウトの表示
 ;-----------------------------------------------------------------------
-DrawKeyFrame:
+G2DrawKeyFrame:
+	Gui,Add,GroupBox,X20 Y90 W670 H270,キー配列
 	_col := 1
-	_ypos := 148 + 36*(_col - 1)
+	_ypos := 110
 	_cnt := 13
 	loop,%_cnt%
 	{
-		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
-		KeyRectangle(_xpos,_ypos)
-		Gui, Font,s10 c000000
-		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
+		Gosub, G2KeyRectangle
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		Gosub, G2KeyBorder
 	}
+
 	_col := 2
-	_ypos := 148 + 36*(_col - 1)
+	_ypos := _ypos + 48
 	_cnt := 12
 	loop,%_cnt%
 	{
-		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
-		KeyRectangle(_xpos,_ypos)
-		Gui, Font,s10 c000000
-		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
+		Gosub, G2KeyRectangle
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%		
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		Gosub, G2KeyBorder
 	}
 	_col := 3
-	_ypos := 148 + 36*(_col - 1)
+	_ypos := _ypos + 48
 	_cnt := 12
 	loop,%_cnt%
 	{
-		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
-		KeyRectangle(_xpos,_ypos)
-		Gui, Font,s10 c000000
-		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
+		Gosub, G2KeyRectangle
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+ 		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		Gosub, G2KeyBorder
 	}
 	_col := 4
-	_ypos := 148 + 36*(_col - 1)
+	_ypos := _ypos + 48
 	_cnt := 11
 	loop,%_cnt%
 	{
-		_xpos := 24+18*(_col-1) + 38*(A_Index - 1)
+		_row := A_Index
+		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 		_ch := " "
-		KeyRectangle(_xpos,_ypos)
-		Gui, Font,s10 c000000
-		Gui, Add, Text,vvkey%_col%%A_Index% X%_xpos% Y%_ypos% W34 +Center c000000 BackgroundTrans, %_ch%
+		Gosub, G2KeyRectangle
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 10
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 10
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		_xpos0 := _xpos + 30
+		_ypos0 := _ypos + 30
+		Gui, Font,s11 c000000,Meiryo UI
+		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+		Gosub, G2KeyBorder
 	}
+	_col := 5
+	_ypos := _ypos + 48
+	_row := 1
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
+	Gosub, G2KeyRectangle5
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,左親指
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
+	Gosub, G2KeyBorder
+
+	_row := 2
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
+	Gosub, G2KeyRectangle5
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
+	Gosub, G2KeyBorder
+
+	_row := 3
+	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
+	Gosub, G2KeyRectangle5
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 10
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,右親指
+	_xpos0 := _xpos + 6
+	_ypos0 := _ypos + 30
+	Gui, Font,s9 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
+	Gosub, G2KeyBorder
+
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：各キーの矩形表示
 ;-----------------------------------------------------------------------
-KeyRectangle( _xpos, _ypos ) {
-	Gui, Font,s36 c000000
-	_ypos0 := _ypos - 17
-	_xpos0 := _xpos - 7
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% W36 +Center BackgroundTrans, ■
-	if(A_Index = 1)
+G2KeyRectangle:
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 12
+	_xpos0 := _xpos - 3
+	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	if(_row = 1)
 	{
-		Gui, Font,s34 cFFC3E1
+		Gui, Font,s42 cFFC3E1,Yu Gothic UI
 	}
-	else if A_Index in 2,3
+	else if _row in 2,3
 	{
-		Gui, Font,s34 cFFFFC3
+		Gui, Font,s42 cFFFFC3,Yu Gothic UI
 	}
-	else if A_Index in 4,5
+	else if _row in 4,5
 	{
-		Gui, Font,s34 cC3FFC3
+		Gui, Font,s42 cC3FFC3,Yu Gothic UI
 	}
-	else if A_Index in 6,7
+	else if _row in 6,7
 	{
-		Gui, Font,s34 cC3FFFF
+		Gui, Font,s42 cC3FFFF,Yu Gothic UI
 	}
-	else if A_Index in 8,9
+	else if _row in 8,9
 	{
-		Gui, Font,s34 cE1C3FF
+		Gui, Font,s42 cE1C3FF,Yu Gothic UI
 	}
 	else
 	{
-		Gui, Font,s34 cC0C0C0
+		Gui, Font,s42 cC0C0C0,Yu Gothic UI
 	}
-	_ypos0 := _ypos - 16
-	_xpos0 := _xpos - 6
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% W34 +Center BackgroundTrans, ■
+	_ypos0 := _ypos - 8
+	_xpos0 := _xpos - 1
+	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
-}
+
 ;-----------------------------------------------------------------------
-; 機能：キー配列コンボポックスの切り替えとキー配列表示の切り替え
+; 機能：各キーの矩形表示・・・５列目
 ;-----------------------------------------------------------------------
-gLayout:
-	Gui, Submit, NoHide
-	_mode := Layout2Mode(vLayout)
-	if(_mode = "")
-		return
-	loop,4
+G2KeyRectangle5:
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 12
+	_xpos0 := _xpos - 3
+	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	if(_row == 1 && kOyaL=="sc07B")
 	{
-		_col := A_Index
-		StringSplit org,LF%_mode%%_col%,`,
-		loop,%org0%
+		Gui, Font,s42 cFFFF00,Yu Gothic UI
+	}
+	else 
+	if(_row == 2 && kOyaL=="Space")
+	{
+		Gui, Font,s42 cFFFF00,Yu Gothic UI
+	}
+	else
+	if(_row == 2 && kOyaR=="Space")
+	{
+		Gui, Font,s42 c00FFFF,Yu Gothic UI
+	}
+	else
+	if(_row == 3 && kOyaR=="sc079")
+	{
+		Gui, Font,s42 c00FFFF,Yu Gothic UI
+	}
+	else
+	{
+		Gui, Font,s42 cFFFFFF,Yu Gothic UI
+	}
+	_ypos0 := _ypos - 8
+	_xpos0 := _xpos - 1
+	Gui, Add, Text,vvkeyFC%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キーダウン表示
+;-----------------------------------------------------------------------
+G2KeyBorder:
+	Gui, Font,s45 c000000,Yu Gothic UI
+	_ypos0 := _ypos - 12
+	_xpos0 := _xpos - 3
+	Gui, Add, Text,vvkeyDN%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
+	vkeyDN%_col%%A_Index% := "　"
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キー配列変更に係る変数の監視
+;-----------------------------------------------------------------------
+G2PollingLayout:
+	Gui,2:Default
+	Gui, Submit, NoHide
+	if(g_TabName != "配列")
+	{
+		return
+	}
+	if(s_Romaji != g_Romaji) 
+	{
+		s_Romaji := g_Romaji
+		Gosub,G2RefreshLayout
+	}
+	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle)
+	{
+		s_kOyaL := kOyaL 
+		s_kOyaR := kOyaR
+		s_KeySingle := g_KeySingle
+		Gosub,G2RefreshLayout5
+	}
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キー配列表示の切り替え
+;-----------------------------------------------------------------------
+G2RefreshLayout5:
+	Gui, Submit, NoHide
+	if(s_kOyaL = "sc07B" && s_kOyaR = "sc079")
+	{
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		Gui, Font,s9 c000000,Meiryo UI
+		GuiControl,,vkeyFA51,左親指
+		GuiControl,,vkeyFA52,　　　
+		GuiControl,,vkeyFA53,右親指
+		if(s_KeySingle = "有効")
 		{
-			_ch := org%A_Index%
-			GuiControl,,vkey%_col%%A_Index%,%_ch%
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,　　　
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53,　　　
+		}
+	}
+	else if(s_kOyaL = "sc07B" && s_kOyaR = "Space")
+	{
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		GuiControl,,vkeyFA51,左親指
+		GuiControl,,vkeyFA52,右親指
+		GuiControl,,vkeyFA53,　　　
+		if(s_KeySingle = "有効")
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,　　　
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+	}
+	else	; 空白－変換
+	{
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 c00FFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		GuiControl,,vkeyFA51,　　　
+		GuiControl,,vkeyFA52,左親指
+		GuiControl,,vkeyFA53,右親指
+		if(s_KeySingle = "有効")
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53, 変換 
+		}
+		else
+		{
+			GuiControl,,vkeyFB51,無変換
+			GuiControl,,vkeyFB52, 空白 
+			GuiControl,,vkeyFB53,　　　
 		}
 	}
 	return
 
+;-----------------------------------------------------------------------
+; 機能：キー配列表示の切り替え
+;-----------------------------------------------------------------------
+G2RefreshLayout:
+	Gui, Submit, NoHide
+	loop,4
+	{
+		_col := A_Index
+		StringSplit org,LFNUL%_col%,`,
+		loop,%org0%
+		{
+			GuiControl,-Redraw,vkeyDN%_col%%A_Index%
+			GuiControl,,vkeyDN%_col%%A_Index%,　
+			GuiControl,-Redraw,vkeyRK%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRN%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRL%_col%%A_Index%
+			GuiControl,-Redraw,vkeyRR%_col%%A_Index%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%NK%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%NK%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFADK%_col%,`,
+		}
+		loop,%org0%
+		{
+			_ch := org%A_Index%
+			GuiControl,,vkeyRK%_col%%A_Index%,%_ch%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%NN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%NN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFADN%_col%,`,
+		}
+		loop,%org0%
+		{
+			_ch := org%A_Index%
+			GuiControl,,vkeyRN%_col%%A_Index%,%_ch%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%LN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%LN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFNUL%_col%,`,
+		}
+		loop,%org0%
+		{
+			_ch := org%A_Index%
+			GuiControl,,vkeyRL%_col%%A_Index%,%_ch%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		if(LF%g_Romaji%RN%_col% != "")
+		{
+			StringSplit org,LF%g_Romaji%RN%_col%,`,
+		}
+		else
+		{
+			StringSplit org,LFNUL%_col%,`,
+		}
+		loop,%org0%
+		{
+			_ch := org%A_Index%
+			GuiControl,,vkeyRR%_col%%A_Index%,%_ch%
+		}
+	}
+	loop,4
+	{
+		_col := A_Index
+		StringSplit org,LFNUL%_col%,`,
+		loop,%org0%
+		{
+			GuiControl,+Redraw,vkeyDN%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRK%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRN%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRL%_col%%A_Index%
+			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
+		}
+	}
+	return
+
+;-----------------------------------------------------------------------
+; 機能：タブ変更
+;-----------------------------------------------------------------------
+gTabChange:
+	Gui, Submit, NoHide
+	g_TabName := vTabName
+	GuiControl,Focus,vEdit
+	return
+	
 ;-----------------------------------------------------------------------
 ; 機能：同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
@@ -336,50 +693,26 @@ RemapOya:
 	{
 		kOyaR := "sc079"
 		kOyaL := "sc07B"
-		Gui,4:Default
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyY51
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY52
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY53
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
 		kOyaR := "Space"
 		kOyaL := "sc07B"
-		Gui,4:Default
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyY51
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY52
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY53
 	}
 	else	; 空白－変換
 	{
 		kOyaL := "Space"
 		kOyaR := "sc079"
-		Gui,4:Default
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY51
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyY52
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyY53
 	}
 	Return
 
 gKeySingle:
 	Gui, Submit, NoHide
 	_KeySingle := vKeySingle
-	if(vKeySingle = "有効")
+	g_KeySingle := vKeySingle
+	if(g_KeySingle = "有効")
 	{
-		fKeySingle := 1
-	}
-	else if(vKeySingle = "無効")
-	{
-		fKeySingle := 0
+		_KeyRepeat := 1
 	}
 	return
 
