@@ -179,7 +179,7 @@ _Settings:
 	s_kOyaL := "" 
 	s_kOyaR := ""
 	s_KeySingle := ""
-	SetTimer,G2PollingLayout,100
+	SetTimer,G2PollingLayout,50
 	GuiControl,Focus,vEdit
 	return
 
@@ -221,12 +221,14 @@ G2DrawKeyFrame:
 		_row := A_Index
 		Gosub,G2KeyRectChar
 	}
-	_col := 5
 	_ypos := _ypos + 48
+	_col := 5
 	_row := 1
 	Gosub,G2KeyRectChar5
+	_col := 5
 	_row := 2
 	Gosub,G2KeyRectChar5
+	_col := 5
 	_row := 3
 	Gosub,G2KeyRectChar5
 	return
@@ -317,7 +319,7 @@ G2KeyRectangle5:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	if(_row == 1 && kOyaL=="sc07B")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
@@ -353,7 +355,7 @@ G2KeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	Gui, Add, Text,vvkeyDN%_col%%_row% X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
+	Gui, Add, Text,vvkeyDN%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
 	vkeyDN%_col%%A_Index% := "　"
 	return
 
@@ -367,13 +369,17 @@ G2PollingLayout:
 	{
 		return
 	}
-	if(s_Romaji != g_Romaji) 
-	{
-		s_Romaji := g_Romaji
-		Gosub,G2RefreshLayout
+	if((g_Romaji="A" && LFA!=0x77)
+	|| (g_Romaji="R" && LFR!=0x77)) {
+		Gosub,ReadKeyboardState
 	}
-	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle)
+	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle || s_Romaji != g_Romaji)
 	{
+		if(s_Romaji != g_Romaji) 
+		{
+			s_Romaji := g_Romaji
+			Gosub,G2RefreshLayout
+		}
 		s_kOyaL := kOyaL 
 		s_kOyaR := kOyaR
 		s_KeySingle := g_KeySingle
@@ -386,6 +392,23 @@ G2PollingLayout:
 ;-----------------------------------------------------------------------
 G2RefreshLayout5:
 	Gui, Submit, NoHide
+	if((g_Romaji="A" && LFA!=0x77)
+	|| (g_Romaji="R" && LFR!=0x77)) {
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC51
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC52
+		Gui,Font,S42 cFFFFFF,Yu Gothic UI
+		GuiControl,Font,vkeyFC53
+		Gui, Font,s9 c000000,Meiryo UI
+		GuiControl,,vkeyFA51,　　　
+		GuiControl,,vkeyFA52,　　　
+		GuiControl,,vkeyFA53,　　　
+		GuiControl,,vkeyFB51,無変換
+		GuiControl,,vkeyFB52, 空白 
+		GuiControl,,vkeyFB53, 変換 
+	}
+	else
 	if(s_kOyaL = "sc07B" && s_kOyaR = "sc079")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
@@ -480,6 +503,9 @@ G2RefreshLayout:
 			GuiControl,-Redraw,vkeyRR%_col%%A_Index%
 		}
 	}
+	GuiControl,-Redraw,vkeyDN51
+	GuiControl,-Redraw,vkeyDN52
+	GuiControl,-Redraw,vkeyDN53
 	loop,4
 	{
 		_col := A_Index
@@ -560,6 +586,190 @@ G2RefreshLayout:
 			GuiControl,+Redraw,vkeyRL%_col%%A_Index%
 			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
 		}
+	}
+	GuiControl,+Redraw,vkeyDN51
+	GuiControl,+Redraw,vkeyDN52
+	GuiControl,+Redraw,vkeyDN53
+	return
+
+ReadKeyboardState:
+	Critical
+	VarSetCapacity(stKtbl, cbSize:=512, 0)
+	NumPut(cbSize, stKtbl,  0, "UChar")   ;	
+	stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
+	_vkey := 0x31
+	_keyname := "11"
+	Gosub,SetKeyGui2
+	_vkey := 0x32
+	_keyname := "12"
+	Gosub,SetKeyGui2
+	_vkey := 0x33
+	_keyname := "13"
+	Gosub,SetKeyGui2
+	_vkey := 0x34
+	_keyname := "14"
+	Gosub,SetKeyGui2
+	_vkey := 0x35
+	_keyname := "15"
+	Gosub,SetKeyGui2
+	_vkey := 0x36
+	_keyname := "16"
+	Gosub,SetKeyGui2
+	_vkey := 0x37
+	_keyname := "17"
+	Gosub,SetKeyGui2
+	_vkey := 0x38
+	_keyname := "18"
+	Gosub,SetKeyGui2
+	_vkey := 0x39
+	_keyname := "19"
+	Gosub,SetKeyGui2
+	_vkey := 0x30
+	_keyname := "110"
+	Gosub,SetKeyGui2
+	_vkey := 0xBD			;-
+	_keyname := "111"
+	Gosub,SetKeyGui2
+	_vkey := 0xDE			;^
+	_keyname := "112"
+	Gosub,SetKeyGui2
+	_vkey := 0xDC			;\
+	_keyname := "113"
+	Gosub,SetKeyGui2
+
+	_vkey := 0x51			;q
+	_keyname := "21"
+	Gosub,SetKeyGui2
+	_vkey := 0x57			;w
+	_keyname := "22"
+	Gosub,SetKeyGui2
+	_vkey := 0x45			;e
+	_keyname := "23"
+	Gosub,SetKeyGui2
+	_vkey := 0x52			;r
+	_keyname := "24"
+	Gosub,SetKeyGui2
+	_vkey := 0x54			;t
+	_keyname := "25"
+	Gosub,SetKeyGui2
+	_vkey := 0x59			;y
+	_keyname := "26"
+	Gosub,SetKeyGui2
+	_vkey := 0x55			;u
+	_keyname := "27"
+	Gosub,SetKeyGui2
+	_vkey := 0x49			;i
+	_keyname := "28"
+	Gosub,SetKeyGui2
+	_vkey := 0x4F			;o
+	_keyname := "29"
+	Gosub,SetKeyGui2
+	_vkey := 0x50			;p
+	_keyname := "210"
+	Gosub,SetKeyGui2
+	_vkey := 0xC0			;@
+	_keyname := "211"
+	Gosub,SetKeyGui2
+	_vkey := 0xDB			;[
+	_keyname := "212"
+	Gosub,SetKeyGui2
+	
+	_vkey := 0x41			;a
+	_keyname := "31"
+	Gosub,SetKeyGui2
+	_vkey := 0x53			;s
+	_keyname := "32"
+	Gosub,SetKeyGui2
+	_vkey := 0x44			;d
+	_keyname := "33"
+	Gosub,SetKeyGui2
+	_vkey := 0x46			;f
+	_keyname := "34"
+	Gosub,SetKeyGui2
+	_vkey := 0x47			;g
+	_keyname := "35"
+	Gosub,SetKeyGui2
+	_vkey := 0x48			;h
+	_keyname := "36"
+	Gosub,SetKeyGui2
+	_vkey := 0x4A			;j
+	_keyname := "37"
+	Gosub,SetKeyGui2
+	_vkey := 0x4B			;k
+	_keyname := "38"
+	Gosub,SetKeyGui2
+	_vkey := 0x4C			;l
+	_keyname := "39"
+	Gosub,SetKeyGui2
+	_vkey := 0xBB			;;
+	_keyname := "310"
+	Gosub,SetKeyGui2
+	_vkey := 0xBA			;:
+	_keyname := "311"
+	Gosub,SetKeyGui2
+	_vkey := 0xDD			;]
+	_keyname := "312"
+	Gosub,SetKeyGui2
+
+	_vkey := 0x5A			;z
+	_keyname := "41"
+	Gosub,SetKeyGui2
+	_vkey := 0x58			;x
+	_keyname := "42"
+	Gosub,SetKeyGui2
+	_vkey := 0x43			;c
+	_keyname := "43"
+	Gosub,SetKeyGui2
+	_vkey := 0x56			;v
+	_keyname := "44"
+	Gosub,SetKeyGui2
+	_vkey := 0x42			;b
+	_keyname := "45"
+	Gosub,SetKeyGui2
+	_vkey := 0x4E			;n
+	_keyname := "46"
+	Gosub,SetKeyGui2
+	_vkey := 0x4D			;m
+	_keyname := "47"
+	Gosub,SetKeyGui2
+	_vkey := 0xBC			;,
+	_keyname := "48"
+	Gosub,SetKeyGui2
+	_vkey := 0xBE			;.
+	_keyname := "49"
+	Gosub,SetKeyGui2
+	_vkey := 0xBF			;/
+	_keyname := "410"
+	Gosub,SetKeyGui2
+	_vkey := 0xE2			;\
+	_keyname := "411"
+	Gosub,SetKeyGui2
+	
+	_vkey := 0x1D			;無変換
+	_keyname := "51"
+	Gosub,SetKeyGui2
+	_vkey := 0x20			;スペース
+	_keyname := "52"
+	Gosub,SetKeyGui2
+	_vkey := 0x1C			;変換
+	_keyname := "53"
+	Gosub,SetKeyGui2
+	critical,off
+	return
+
+SetKeyGui2:
+	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)!= 0
+	&&   vkeyDN%_keyname% == "　")
+	{
+		vkeyDN%_keyname% := "□"
+		GuiControl,2:,vkeyDN%_keyname%,□
+	}
+	else
+	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)== 0
+	&&  vkeyDN%_keyname% == "□")
+	{
+		vkeyDN%_keyname% := "　"
+		GuiControl,2:,vkeyDN%_keyname%,　
 	}
 	return
 
