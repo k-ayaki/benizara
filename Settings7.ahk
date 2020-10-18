@@ -124,50 +124,37 @@ _Settings:
 	Gosub, G2RefreshLayout
 	
 	Gui, Tab, 2
-	Gui, Font,s10 c000000
-	;Gui, Add, Text,X30 Y52,親指シフトキー：
-	;if(_OyaKey = "無変換－変換")
-	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換||無変換－空白|空白－変換|
-	;else if(_OyaKey = "無変換－空白")
-	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白||空白－変換|
-	;else
-	;	Gui, Add, DropDownList,ggOya vvOyaKey X133 Y52 W125,無変換－変換|無変換－空白|空白－変換||
-	
-	;GuiControl,,vOyaKey,%_OyaKey%
-	Gui, Add, Checkbox,ggContinue vvContinue X292 Y52,連続シフト
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,親指シフトキーを押し続けながら文字キーを押したときを親指シフトとするか否かを設定します。
+	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y65,連続シフト
 	GuiControl,,vContinue,%_Continue%
 
-	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X392 Y52,零遅延モード
+	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,キー打鍵が確定する前に候補文字を表示する設定です。候補文字とは異なる打鍵であった場合、バックスペースで消去して、正しい文字で修正します。
+	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y135,零遅延モード
 	GuiControl,,vZeroDelay,%_ZeroDelay%
 	
-	Gui, Font,s10 c000000
-	;Gui, Add, Text,X57 Y92,単独打鍵：
-	;if(_KeySingle = "無効")
-	;	Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効||有効|
-	;else
-	;	Gui, Add, DropDownList,ggKeySingle vvKeySingle X137 Y92 W95,無効|有効||
+	Gui, Add, Edit,X20 Y180 W300 H60 ReadOnly -Vscroll,親指シフトキーの単独打鍵を受け付けた際に、無変換や変換をキーリピートさせるか否かを設定します。
+	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y205,キーリピート
+	GuiControl,,vKeyRepeat,%_KeyRepeat%
 	
-	;GuiControl,Disable,vKeySingle
-
-	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X292 Y92,キーリピート
-	GuiControl,,_KeyRepeat,%_KeyRepeat%
+	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,親指Aー文字Mー親指Bの順の打鍵の際に、親指Aから文字Mまで打鍵間隔が全体の何％のときに、親指Aのシフトであるかを決定します。
+	Gui, Add, Text,X+20 Y250 W230 H20,文字と親指シフトの同時打鍵の割合：
+	Gui, Add, Edit,vvOverlapNum X+3 Y248 W50 ReadOnly, %_Overlap%
+	Gui, Add, Text,X+10 Y250 c000000,[`%]
 	
-	Gui, Font,s10 c000000
-	Gui, Add, Text,X30 Y132 c000000,文字と親指シフトの同時打鍵の割合：
-	Gui, Add, Edit,vvOverlapNum X263 Y130 W50 ReadOnly, %_Overlap%
-	Gui, Add, Text,X320 Y132 c000000,[`%]
-	
-	Gui, Add, Slider, X49 Y172 ggOlSlider w400 vvOlSlider Range20-80 line10 TickInterval10
+	Gui, Add, Slider, X320 Y280 ggOlSlider w350 vvOlSlider Range20-80 line10 TickInterval10
 	GuiControl,,vOlSlider,%_Overlap%
 	
-	Gui, Add, Text,X30 Y212 c000000,文字と親指シフトの同時打鍵の判定時間：
-	Gui, Add, Edit,vvThresholdNum X263 Y210 W50 ReadOnly, %_Threshold%
-	Gui, Add, Text,X320 Y212 c000000,[mSEC]
+	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,親指ー文字の打鍵間隔や文字ー親指の打鍵間隔が何ミリ秒のときに親指シフトであるかを決定します。
+	Gui, Add, Text,X+20 Y320 W230 H20,文字と親指シフトの同時打鍵の判定時間：
+	Gui, Add, Edit,vvThresholdNum X+3 Y318 W50 ReadOnly, %_Threshold%
+	Gui, Add, Text,X+10 Y320 c000000,[mSEC]
 	
-	Gui, Add, Slider, X49 Y252 ggThSlider w400 vvThSlider Range10-400 line10 TickInterval10
+	Gui, Add, Slider, X320 Y350 ggThSlider w350 vvThSlider Range10-400 line10 TickInterval10
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
+	Gui, Font,s10 c000000,Meiryo UI
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
 	{
 		Gui, Add, Text,X30 Y52,管理者権限で動作しています。
@@ -179,14 +166,19 @@ _Settings:
 	}
 	
 	Gui, Tab, 4
-	Gui, Font,s10 c000000,ＭＳ ゴシック
+	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
-	Gui, Add, Text,X30 Y104,　　　キーボード配列エミュレーションソフト
-	Gui, Add, Text,X30 Y132,バージョン：%g_Ver% / %g_Date%
-	Gui, Add, Text,X30 Y172,作者：Ken'ichiro Ayaki
+	Gui, Add, Text,X30 Y114,　　　キーボード配列エミュレーションソフト
+	Gui, Add, Text,X30 Y142,バージョン：%g_Ver% / %g_Date%
+	Gui, Add, Text,X30 Y182,作者：Ken'ichiro Ayaki
 	Gui, Show, W720 H440, 紅皿設定
 
+
+	s_Romaji := ""
+	s_kOyaL := "" 
+	s_kOyaR := ""
+	s_KeySingle := ""
 	SetTimer,G2PollingLayout,100
 	GuiControl,Focus,vEdit
 	return
@@ -203,54 +195,15 @@ G2DrawKeyFrame:
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
-		_ch := " "
-		Gosub, G2KeyRectangle
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		Gosub, G2KeyBorder
+		Gosub,G2KeyRectChar
 	}
-
 	_col := 2
 	_ypos := _ypos + 48
 	_cnt := 12
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
-		_ch := " "
-		Gosub, G2KeyRectangle
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%		
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		Gosub, G2KeyBorder
+		Gosub,G2KeyRectChar
 	}
 	_col := 3
 	_ypos := _ypos + 48
@@ -258,26 +211,7 @@ G2DrawKeyFrame:
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
-		_ch := " "
-		Gosub, G2KeyRectangle
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
- 		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		Gosub, G2KeyBorder
+		Gosub,G2KeyRectChar
 	}
 	_col := 4
 	_ypos := _ypos + 48
@@ -285,68 +219,58 @@ G2DrawKeyFrame:
 	loop,%_cnt%
 	{
 		_row := A_Index
-		_xpos := 32*(_col-1) + 48*(_row - 1) + 40
-		_ch := " "
-		Gosub, G2KeyRectangle
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 10
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 10
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		_xpos0 := _xpos + 30
-		_ypos0 := _ypos + 30
-		Gui, Font,s11 c000000,Meiryo UI
-		Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-		Gosub, G2KeyBorder
+		Gosub,G2KeyRectChar
 	}
 	_col := 5
 	_ypos := _ypos + 48
 	_row := 1
-	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
-	Gosub, G2KeyRectangle5
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 10
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,左親指
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 30
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
-	Gosub, G2KeyBorder
-
+	Gosub,G2KeyRectChar5
 	_row := 2
-	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
-	Gosub, G2KeyRectangle5
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 10
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 30
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　　
-	Gosub, G2KeyBorder
-
+	Gosub,G2KeyRectChar5
 	_row := 3
+	Gosub,G2KeyRectChar5
+	return
+
+;-----------------------------------------------------------------------
+; 機能：１～４行目の各キーの矩形と入力文字の表示
+;-----------------------------------------------------------------------
+G2KeyRectChar:
+	_xpos := 32*(_col-1) + 48*(_row - 1) + 40
+	_ch := " "
+	Gosub, G2KeyRectangle
+	_xpos0 := _xpos + 10
+	_ypos0 := _ypos + 10
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 30
+	_ypos0 := _ypos + 10
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 10
+	_ypos0 := _ypos + 30
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 30
+	_ypos0 := _ypos + 30
+	Gui, Font,s11 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gosub, G2KeyBorder
+	return
+;-----------------------------------------------------------------------
+; 機能：１～４行目の各キーの矩形と入力文字の表示
+;-----------------------------------------------------------------------
+G2KeyRectChar5:
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, G2KeyRectangle5
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 10
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,右親指
+	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 30
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
 	Gosub, G2KeyBorder
-
 	return
 
 ;-----------------------------------------------------------------------
@@ -646,6 +570,14 @@ gTabChange:
 	Gui, Submit, NoHide
 	g_TabName := vTabName
 	GuiControl,Focus,vEdit
+	if(g_TabName == "配列")
+	{
+		SetTimer,G2PollingLayout,on
+	}
+	else
+	{
+		SetTimer,G2PollingLayout,off
+	}
 	return
 	
 ;-----------------------------------------------------------------------
@@ -671,6 +603,12 @@ gOlSlider:
 gContinue:
 	Gui, Submit, NoHide
 	_Continue := %A_GuiControl%
+	if(_Continue = 1)
+		_Threshold := 100
+	else
+		_Threshold := 200
+	GuiControl,,vThSlider,%_Threshold%
+	GuiControl,,vThresholdNum,%_Threshold%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -757,6 +695,7 @@ gFileSelect:
 		_allTheLayout := vAllTheLayout
 		_LayoutFile := vLayoutFile
 	}
+	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	Goto,_Settings
 
@@ -798,6 +737,7 @@ gButtonOk:
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 	IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
+	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	return
 
@@ -807,5 +747,7 @@ gButtonOk:
 gButtonCancel:
 GuiClose:
 	Gosub, Init
+	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	return
+

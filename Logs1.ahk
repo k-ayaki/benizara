@@ -29,22 +29,6 @@ Logs:
 	SetTimer,LogRedraw,100
 	return
 
-	loop
-	{
-        IfWinNotExist, 紅皿ログ
-        {
-            Gui, 3:Destroy
-            return
-        }
-		loop, 64
-		{
-			_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
-			_disp := aLog%_idx% . "                                                                "
-			GuiControl,,disp%A_Index%, %_disp%
-		}
-        Sleep,500
-	}
-	return
 
 LogRedraw:
 	loop, 64
@@ -81,7 +65,7 @@ gButtonSave:
 		file.close()
 	}
 	SetTimer LogRedraw,Off
-	Gui,3:Destroy
+	Gui,Destroy
 	Goto,Logs
 
 ;-----------------------------------------------------------------------
@@ -89,5 +73,5 @@ gButtonSave:
 ;-----------------------------------------------------------------------
 gButtonClose:
 	SetTimer LogRedraw,Off
-	Gui,3:Destroy
+	Gui,Destroy
 	return

@@ -31,6 +31,7 @@ ShowLayout:
 	_OyaKey := g_OyaKey
 	_KeySingle := g_KeySingle
 	_KeyRepeat := g_KeyRepeat
+	g_gui := 4
 _ShowLayout:
 	Gui,4:Default
 	Gui,4:New
