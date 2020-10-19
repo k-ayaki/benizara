@@ -125,7 +125,7 @@ _Settings:
 	
 	Gui, Tab, 2
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,親指シフトキーを押し続けながら文字キーを押したときを親指シフトとするか否かを設定します。
+	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,親指シフトキーを押し続けながら文字キーを押したときを親指シフトとするか否かを設定します。更に同時打鍵の判定時間を推奨値に設定します。
 	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y65,連続シフト
 	GuiControl,,vContinue,%_Continue%
 
@@ -155,16 +155,16 @@ _Settings:
 
 	Gui, Tab, 3
 	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
 	{
-		Gui, Add, Text,X30 Y52,管理者権限で動作しています。
+		Gui, Add, Text,X30 Y+30,紅皿は管理者権限で動作しています。
 	}
 	else
 	{
-		Gui, Add, Text,X30 Y52,通常権限で動作しています。
-		Gui, Add, Button,ggButtonAdmin X30 Y102 W140 H22,管理者権限に切替
+		Gui, Add, Text,X30 Y+30,紅皿は通常権限で動作しています。
+		Gui, Add, Button,ggButtonAdmin X30 Y+30 W140 H22,管理者権限に切替
 	}
-	
 	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
@@ -172,8 +172,10 @@ _Settings:
 	Gui, Add, Text,X30 Y114,　　　キーボード配列エミュレーションソフト
 	Gui, Add, Text,X30 Y142,バージョン：%g_Ver% / %g_Date%
 	Gui, Add, Text,X30 Y182,作者：Ken'ichiro Ayaki
+	Gui, Font, underline
+	Gui, Add, Text,X30 Y222 cBlue ggURLdownload,ダウンロードページ
+	Gui, Add, Text,X30 Y262 cBlue ggURLsupport,サポートページ
 	Gui, Show, W720 H440, 紅皿設定
-
 
 	s_Romaji := ""
 	s_kOyaL := "" 
@@ -183,6 +185,19 @@ _Settings:
 	GuiControl,Focus,vEdit
 	return
 
+;-----------------------------------------------------------------------
+; 機能：紅皿のダウンロードURLを開く
+;-----------------------------------------------------------------------
+gURLdownload:
+	Run, https://osdn.net/projects/benizara/releases/
+	return
+
+;-----------------------------------------------------------------------
+; 機能：紅皿のサポートURLを開く
+;-----------------------------------------------------------------------
+gURLsupport:
+	Run, https://benizara.hatenablog.com/
+	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キーレイアウトの表示
@@ -190,7 +205,7 @@ _Settings:
 G2DrawKeyFrame:
 	Gui,Add,GroupBox,X20 Y90 W670 H270,キー配列
 	_col := 1
-	_ypos := 110
+	_ypos := 105
 	_cnt := 13
 	loop,%_cnt%
 	{
@@ -369,10 +384,6 @@ G2PollingLayout:
 	{
 		return
 	}
-	if((g_Romaji="A" && LFA!=0x77)
-	|| (g_Romaji="R" && LFR!=0x77)) {
-		Gosub,ReadKeyboardState
-	}
 	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle || s_Romaji != g_Romaji)
 	{
 		if(s_Romaji != g_Romaji) 
@@ -385,6 +396,10 @@ G2PollingLayout:
 		s_KeySingle := g_KeySingle
 		Gosub,G2RefreshLayout5
 	}
+	if((g_Romaji="A" && LFA!=0x77)
+	|| (g_Romaji="R" && LFR!=0x77)) {
+		Gosub,ReadKeyboardState
+	}
 	return
 
 ;-----------------------------------------------------------------------
@@ -392,6 +407,9 @@ G2PollingLayout:
 ;-----------------------------------------------------------------------
 G2RefreshLayout5:
 	Gui, Submit, NoHide
+	GuiControl,-Redraw,vkeyDN51
+	GuiControl,-Redraw,vkeyDN52
+	GuiControl,-Redraw,vkeyDN53
 	if((g_Romaji="A" && LFA!=0x77)
 	|| (g_Romaji="R" && LFR!=0x77)) {
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
@@ -482,6 +500,15 @@ G2RefreshLayout5:
 			GuiControl,,vkeyFB53,　　　
 		}
 	}
+	vkeyDN51 := "　"
+	GuiControl,2:,vkeyDN51,　
+	vkeyDN52 := "　"
+	GuiControl,2:,vkeyDN52,　
+	vkeyDN53 := "　"
+	GuiControl,2:,vkeyDN53,　
+	GuiControl,+Redraw,vkeyDN51
+	GuiControl,+Redraw,vkeyDN52
+	GuiControl,+Redraw,vkeyDN53
 	return
 
 ;-----------------------------------------------------------------------
@@ -503,9 +530,6 @@ G2RefreshLayout:
 			GuiControl,-Redraw,vkeyRR%_col%%A_Index%
 		}
 	}
-	GuiControl,-Redraw,vkeyDN51
-	GuiControl,-Redraw,vkeyDN52
-	GuiControl,-Redraw,vkeyDN53
 	loop,4
 	{
 		_col := A_Index
@@ -587,9 +611,6 @@ G2RefreshLayout:
 			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
 		}
 	}
-	GuiControl,+Redraw,vkeyDN51
-	GuiControl,+Redraw,vkeyDN52
-	GuiControl,+Redraw,vkeyDN53
 	return
 
 ReadKeyboardState:
@@ -597,6 +618,10 @@ ReadKeyboardState:
 	VarSetCapacity(stKtbl, cbSize:=512, 0)
 	NumPut(cbSize, stKtbl,  0, "UChar")   ;	
 	stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
+	if(stCurr==0) 
+	{
+		return
+	}
 	_vkey := 0x31
 	_keyname := "11"
 	Gosub,SetKeyGui2
@@ -607,7 +632,7 @@ ReadKeyboardState:
 	_keyname := "13"
 	Gosub,SetKeyGui2
 	_vkey := 0x34
-	_keyname := "14"
+	_keyname := "14"  
 	Gosub,SetKeyGui2
 	_vkey := 0x35
 	_keyname := "15"
@@ -758,17 +783,16 @@ ReadKeyboardState:
 	return
 
 SetKeyGui2:
+	GuiControlGet,_val,,vkeyDN%_keyname%
 	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)!= 0
-	&&   vkeyDN%_keyname% == "　")
+	&&   _val != "□")
 	{
-		vkeyDN%_keyname% := "□"
 		GuiControl,2:,vkeyDN%_keyname%,□
 	}
 	else
 	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)== 0
-	&&  vkeyDN%_keyname% == "□")
+	&&  _val != "　")
 	{
-		vkeyDN%_keyname% := "　"
 		GuiControl,2:,vkeyDN%_keyname%,　
 	}
 	return
