@@ -406,6 +406,7 @@ G2PollingLayout:
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
 G2RefreshLayout5:
+	Critical
 	Gui, Submit, NoHide
 	GuiControl,-Redraw,vkeyDN51
 	GuiControl,-Redraw,vkeyDN52
@@ -509,12 +510,14 @@ G2RefreshLayout5:
 	GuiControl,+Redraw,vkeyDN51
 	GuiControl,+Redraw,vkeyDN52
 	GuiControl,+Redraw,vkeyDN53
+	Critical,off
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
 G2RefreshLayout:
+	Critical
 	Gui, Submit, NoHide
 	loop,4
 	{
@@ -611,6 +614,7 @@ G2RefreshLayout:
 			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
 		}
 	}
+	Critical,off
 	return
 
 ReadKeyboardState:
@@ -838,9 +842,9 @@ gContinue:
 	Gui, Submit, NoHide
 	_Continue := %A_GuiControl%
 	if(_Continue = 1)
-		_Threshold := 100
+		_Threshold := 50
 	else
-		_Threshold := 200
+		_Threshold := 150
 	GuiControl,,vThSlider,%_Threshold%
 	GuiControl,,vThresholdNum,%_Threshold%
 	Return
@@ -902,6 +906,7 @@ gDefFile:
 ; 機能：ファイル選択ボタンの押下
 ;-----------------------------------------------------------------------
 gFileSelect:
+	SetTimer,G2PollingLayout,off
 	SetWorkingDir, %A_ScriptDir%
 	FileSelectFile, vLayoutFileAbs,0,%A_ScriptDir%,,Layout File (*.bnz; *.yab)
 	
@@ -929,7 +934,6 @@ gFileSelect:
 		_allTheLayout := vAllTheLayout
 		_LayoutFile := vLayoutFile
 	}
-	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	Goto,_Settings
 
