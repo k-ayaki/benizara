@@ -1,12 +1,12 @@
 ;-----------------------------------------------------------------------
-; –¼‘OFBenizara / gŽM ver.0.1.4.2
+; –¼‘OFBenizara / gŽM ver.0.1.4.3
 ; ƒL[ƒ{[ƒh”z—ñƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ\ƒtƒgƒEƒFƒA
 ; ìŽÒFˆ»–Ø@Œ’ˆê˜Y
-; —ß˜a2”N10ŒŽ3“ú
+; —ß˜a2”N10ŒŽ20“ú
 ;-----------------------------------------------------------------------
 ‚PD	Žn‚ß‚É
 ‚PD‚PD‰½‚ð‚·‚é‚à‚Ì‚È‚Ì‚©
-@Benizara‚ÍAWindowsŠÂ‹«‚ÉÚ‘±‚³‚ê‚½JISƒL[ƒ{[ƒh‚ÅeŽwƒVƒtƒg (NICOLA”z—ñ) ‚É‚æ‚é“ü—Í‚ð‰Â”\‚É‚·‚éƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ\ƒtƒgƒEƒFƒA‚Å‚·BWindows7‚ÌMS-IME‚ÆATOK2011A‚¨‚æ‚ÑWindows10‚ÌMS-IME‚ÆGoogle“ú–{Œê“ü—Í‚Å“®ì‚ðŠm”F‚µ‚Ä‚¢‚Ü‚·B‚È‚¨ABenizara‚ÍAÝ’èƒtƒ@ƒCƒ‹‚ð“Ç‚Ýž‚Ü‚¹‚é‚±‚Æ‚É‚æ‚èAeŽwƒVƒtƒg‚ÉŒÀ‚ç‚¸A”CˆÓ‚ÉƒL[ƒ{[ƒh”z—ñ‚ÌƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ª‰Â”\‚Å‚·B
+@Benizara‚ÍAWindowsŠÂ‹«‚ÉÚ‘±‚³‚ê‚½JISƒL[ƒ{[ƒh‚ÅeŽwƒVƒtƒg (NICOLA”z—ñ) ‚É‚æ‚é“ü—Í‚ð‰Â”\‚É‚·‚éƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ƒ\ƒtƒgƒEƒFƒA‚Å‚·BWindows10‚ÌMS-IME‚Ægoogle“ú–{Œê“ü—Í‚Å“®ì‚ðŠm”F‚µ‚Ä‚¢‚Ü‚·B‚È‚¨ABenizara‚ÍAÝ’èƒtƒ@ƒCƒ‹‚ð“Ç‚Ýž‚Ü‚¹‚é‚±‚Æ‚É‚æ‚èAeŽwƒVƒtƒg‚ÉŒÀ‚ç‚¸A”CˆÓ‚ÌƒL[ƒ{[ƒh”z—ñ‚ÌƒGƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“‚ª‰Â”\‚Å‚·B
 @BenizaraigŽMj‚Ì–¼‘O‚ÍA‘¾“c“¹Ÿó‚ÌŽR“`à‚É—R—ˆ‚µ‚Ü‚·B
 
 ‚PD‚QD“Á’¥
@@ -22,8 +22,8 @@
 
 ‚PD‚RD–¢‚¾ŽÀ‘•‚µ‚Ä‚¢‚È‚¢‚±‚Æ
 E‹@”\ƒL[‚ÌØ‚è‘Ö‚¦‚Í–¢‚¾ŽÀ‘•‚µ‚Ä‚¢‚Ü‚¹‚ñB
-E’P“Æ‘ÅŒ®‚Ì—LŒøE–³Œø‚ÌØ‚è‘Ö‚¦‚ÍAver.0.1.3.2‚ÅŽÀ‘•‚µ‚Ü‚µ‚½B
 EŠe‚h‚l‚d‚Ì‚©‚È“ü—Íƒ‚[ƒh‚É‚Í‘Î‰ž‚µ‚Ä‚¢‚Ü‚¹‚ñB
+EŒ»ó‚ÌgŽM‚Ìu–³vƒL[‚ÍA‚â‚Ü‚Ô‚«‚Ìu–³vƒL[‚Æ‚ÍˆÙ‚È‚èA’P‚ÉƒL[o—Í‚µ‚È‚¢‚¾‚¯‚Å‚·B
 
 ‚PD‚SD“ü—Í‘¬“xƒxƒ“ƒ`ƒ}[ƒN
 E—ŽŒêu‚¶‚ã‚°‚Þv‚Ì–¼‘O‚ð“ü—Í‚·‚éƒxƒ“ƒ`ƒ}[ƒN‚Å•]‰¿‚µ‚Ü‚µ‚½B‹ï‘Ì“I‚É‚¢‚¤‚Æu‚¶‚ã‚°‚Þ‚¶‚ã‚°‚Þ‚²‚±‚¤‚Ì‚·‚è‚«‚ê@‚©‚¢‚¶‚á‚è‚·‚¢‚¬‚å‚Ì‚·‚¢‚¬‚å‚¤‚Ü‚Â‚¤‚ñ‚ç‚¢‚Ü‚Â‚Ó‚¤‚ç‚¢‚Ü‚Â@‚­‚¤‚Ë‚é‚Æ‚±‚ë‚É‚·‚Þ‚Æ‚±‚ë@‚â‚Ô‚ç‚±‚¤‚¶‚Ì‚Ô‚ç‚±‚¤‚¶@‚Ï‚¢‚Û‚Ï‚¢‚Û‚Ï‚¢‚Û‚Ì‚µ‚ã[‚è‚ñ‚ª‚ñ@‚µ‚ã[‚è‚ñ‚ª‚ñ‚Ì‚®[‚è‚ñ‚½‚¢@‚®[‚è‚ñ‚½‚¢‚Ì‚Û‚ñ‚Û‚±‚Ò[‚Ì‚Û‚ñ‚Û‚±‚È[‚Ì‚¿‚å‚¤‚«‚ã‚¤‚ß‚¢‚Ì‚¿‚å‚¤‚·‚¯v‚ð‰¼–¼“ü—Í‚·‚éŽžŠÔ‚ðŒv‘ª‚·‚é‚à‚Ì‚Å‚·B‚±‚Ìƒxƒ“ƒ`ƒ}[ƒN‚ÍA¡ˆäŽm˜Y‚³‚ñ‚ÌƒuƒƒO‚ðŽQl‚É‚µ‚Ü‚µ‚½B
@@ -36,10 +36,12 @@
 
 ‚QD‚QD“®ìŠÂ‹«
 @Windows7‚ÆWindows10‚Å“®ìŠm”F‚µ‚Ä‚¢‚Ü‚·‚ªANTŒn‚ÌWindows‚È‚ç‚ÎA‚Ç‚ÌŠÂ‹«‚Å‚à“®ì‚·‚é”¤‚Å‚·B
-@IME‚ÍAAtok11‚ÆMS-IME‚Å“®ìŠm”F‚µ‚Ä‚¢‚Ü‚·B
+@IME‚ÍAAtok11‚ÆMS-IME‚ÆGoogle“ú–{Œê“ü—Í‚Å“®ìŠm”F‚µ‚Ä‚¢‚Ü‚·B
+@ƒL[ƒ{[ƒh‚ÍJIS109ƒL[ƒ{[ƒh‚ÆeŽwƒVƒtƒg•\‹L•t‚«USBƒ‰ƒCƒgƒ^ƒbƒ`ƒL[ƒ{[ƒh‚É‘Î‰ž‚µ‚Ä‚¢‚Ü‚·BFMV-KB232‚âFKB7628-801‚É‚Í‘Î‰ž‚µ‚Ä‚¢‚Ü‚¹‚ñB
+
 ‚QD‚RDƒCƒ“ƒXƒg[ƒ‹•û–@
-i‚PjƒCƒ“ƒXƒg[ƒ‰”Å‚Å‚ÍABenizara_013.zip‚ðŠ–]‚ÌƒpƒX‚É‰ð“€‚µ‚ÄAsetup.exe ‚ðŽÀs‚µ‚Ä‚­‚¾‚³‚¢B‚¨Žg‚¢‚ÌJIS109ƒL[ƒ{[ƒh‚ªeŽwƒVƒtƒg (NICOLA”z—ñ) ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
-i‚QjŽÀsƒtƒ@ƒCƒ‹”Å‚Å‚ÍABenizaraEXE_013.zip‚ðŠ–]‚ÌƒpƒX‚É‰ð“€‚µ‚Ä‚­‚¾‚³‚¢Bbenizara.exe ‚ðŽÀs‚·‚é‚ÆA‚¨Žg‚¢‚ÌJIS109ƒL[ƒ{[ƒh‚ªeŽwƒVƒtƒg (NICOLA”z—ñ) ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
+i‚PjƒCƒ“ƒXƒg[ƒ‰”Å‚Å‚ÍABenizara_0143.zip‚ðŠ–]‚ÌƒpƒX‚É‰ð“€‚µ‚ÄAsetup.exe ‚ðŽÀs‚µ‚Ä‚­‚¾‚³‚¢B‚¨Žg‚¢‚ÌJIS109ƒL[ƒ{[ƒh‚ªeŽwƒVƒtƒg (NICOLA”z—ñ) ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
+i‚QjŽÀsƒtƒ@ƒCƒ‹”Å‚Å‚ÍABenizaraEXE_0143.zip‚ðŠ–]‚ÌƒpƒX‚É‰ð“€‚µ‚Ä‚­‚¾‚³‚¢Bbenizara.exe ‚ðŽÀs‚·‚é‚ÆA‚¨Žg‚¢‚ÌJIS109ƒL[ƒ{[ƒh‚ªeŽwƒVƒtƒg (NICOLA”z—ñ) ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
 SetBenizaraTask.exe‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰‚Ébenizara‚ªÝ’è‚³‚êAˆÈ~‚ÍƒƒOƒCƒ“‚²‚Æ‚ÉŽ©“®‹N“®‚µ‚Ü‚·B
 
 
@@ -47,28 +49,26 @@ SetBenizaraTask.exe‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰‚Ébenizara‚ªÝ’è‚³‚êAˆÈ~‚Íƒ
 ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAgŽMÝ’è‚ðƒNƒŠƒbƒN‚·‚é‚ÆˆÈ‰º‚ÌÝ’èƒ_ƒCƒAƒƒO‚ª•\Ž¦‚³‚ê‚Ü‚·BŠeƒ^ƒu‚Ì‰º‚ÌOKƒ{ƒ^ƒ“‚ðƒNƒŠƒbƒN‚·‚é‚Æ•ÏX‚ª”½‰f‚³‚êAƒLƒƒƒ“ƒZƒ‹ƒ{ƒ^ƒ“‚ðƒNƒŠƒbƒN‚·‚é‚Æ•ÏX‚ª”jŠü‚³‚ê‚Ü‚·B
 
 ‚RD‚PD”z—ñƒ^ƒu
-”z—ñ’è‹`ƒtƒ@ƒCƒ‹‚ð•\Ž¦‚µA‚©‚ÂØ‚è‘Ö‚¦‚é‹@”\‚ð”õ‚¦‚½ƒ^ƒu‚Å‚·B
-‚»‚Ì‰º‘¤‚É‚ÍA”z—ñ‚Ìƒ‚[ƒh‚ÆA‚»‚Ì‚Æ‚«‚Ìƒ‚[ƒh–¼‚ÆƒL[”z—ñ‚ª•\Ž¦‚³‚ê‚Ä‚¢‚Ü‚·B
- 
-ucvƒ{ƒ^ƒ“‚ðƒNƒŠƒbƒN‚·‚é‚ÆAƒtƒ@ƒCƒ‹‘I‘ðƒ_ƒCƒAƒƒO‚ªŠJ‚«A”z—ñ’è‹`ƒtƒ@ƒCƒ‹‚ð‘I‘ð‰Â”\‚Æ‚È‚è‚Ü‚·B
-”z—ñ‚Ìƒ‚[ƒh‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ð‘I‘ð‚·‚é‚±‚Æ‚ÅAƒL[”z—ñ‚Ì•\Ž¦‚ª‘I‘ð‚µ‚½ƒ‚[ƒh‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
-?
+E”z—ñ’è‹`ƒtƒ@ƒCƒ‹‚ð•\Ž¦‚µA‚©‚ÂØ‚è‘Ö‚¦‚é‹@”\‚ð”õ‚¦‚½ƒ^ƒu‚Å‚·B
+E‚»‚Ì‰º‘¤‚É‚ÍAeŽwƒVƒtƒgƒL[‚Ì‘I‘ðƒRƒ“ƒ{ƒ{ƒbƒNƒX‚Æ’P“Æ‘ÅŒ®ƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ª•\Ž¦‚³‚êX‚ÉƒL[”z—ñ‚ª•\Ž¦‚³‚ê‚Ä‚¢‚Ü‚·B‚±‚ÌƒL[”z—ñ‚ÍAƒŠƒAƒ‹ƒ^ƒCƒ€‚Å‘ÅŒ®‚ª•\Ž¦‚³‚ê‚Ü‚·B
+EeŽwƒVƒtƒgƒL[‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ÍA–³•ÏŠ·|•ÏŠ·‚Æ–³•ÏŠ·|‹ó”’‚Æ‹ó”’|•ÏŠ·‚Æ‚ª‘I‘ð‰Â”\‚Å‚·B–³•ÏŠ·|•ÏŠ·‚ð‘I‘ð‚µ‚½ê‡A–³•ÏŠ·ƒL[‚ª¶eŽwƒL[A•ÏŠ·ƒL[‚ª‰EeŽwƒL[‚Å‚·B–³•ÏŠ·|‹ó”’‚ð‘I‘ð‚µ‚½ê‡A–³•ÏŠ·ƒL[‚ª¶eŽwƒL[A‹ó”’ƒL[‚ª‰EeŽwƒL[‚Å‚ ‚èA‚©‚Â’P“Æ‘ÅŒ®Žž‚É‚Í‹ó”’‚ª‘ÅŒ®‚³‚ê‚Ü‚·B‚±‚Ì‚Æ‚«A•ÏŠ·ƒL[‚Ì‹@”\‚Í‚»‚Ì‚Ü‚Ü‚Å‚·B‹ó”’|•ÏŠ·‚ð‘I‘ð‚µ‚½ê‡A‹ó”’ƒL[‚ª¶eŽwƒL[A•ÏŠ·ƒL[‚ª‰EeŽwƒL[‚Å‚·B
+E’P“Æ‘ÅŒ®‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ÍA–³Œø‚Æ—LŒø‚ª‘I‘ð‰Â”\‚Å‚·B—LŒø‚Ìê‡‚É‚ÍA¶‰E‚ÌeŽwƒVƒtƒgƒL[‚ð’P“Æ‘ÅŒ®‚µ‚½ê‡A‘Î‰ž‚·‚éƒL[‚ª“ü—Í‚³‚ê‚Ü‚·B
+
+
 ‚RD‚QDeŽwƒVƒtƒgƒ^ƒu
 eŽwƒVƒtƒg‚ÉŠÖ‚·‚éÝ’è‰æ–Ê‚Å‚·B
-EeŽwƒVƒtƒgƒL[‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ÍA•ÏŠ·|–³•ÏŠ·‚Æ–³•ÏŠ·|‹ó”’‚Æ‹ó”’|•ÏŠ·‚Æ‚ª‘I‘ð‰Â”\‚Å‚·B
-@–³•ÏŠ·|•ÏŠ·‚ð‘I‘ð‚µ‚½ê‡A–³•ÏŠ·ƒL[‚ª¶eŽwƒL[A•ÏŠ·ƒL[‚ª‰EeŽwƒL[‚Å‚·B
-@–³•ÏŠ·|‹ó”’‚ð‘I‘ð‚µ‚½ê‡A–³•ÏŠ·ƒL[‚ª¶eŽwƒL[A‹ó”’ƒL[‚ª‰EeŽwƒL[‚Å‚·B
-@‹ó”’|•ÏŠ·‚ð‘I‘ð‚µ‚½ê‡A‹ó”’ƒL[‚ª¶eŽwƒL[A•ÏŠ·ƒL[‚ª‰EeŽwƒL[‚Å‚·B
 E˜A‘±ƒVƒtƒg‚Ìƒ`ƒFƒbƒNƒ|ƒbƒNƒX‚ÍAeŽwƒVƒtƒgƒL[‚Ì‰Ÿ‰º’†‚ÉA˜A‘±‚µ‚ÄƒVƒtƒgƒ‚[ƒh‚Ì•¶Žš‚ð“ü—Í‚·‚é‚½‚ß‚Ì‚à‚Ì‚Å‚·B„§Ý’è‚ÍƒIƒ“‚Å‚·B
 E—ë’x‰„ƒ‚[ƒh‚Ìƒ`ƒFƒbƒNƒ|ƒbƒNƒX‚ÍAƒL[‰Ÿ‰º‚Æ‹¤‚É’x‰„–³‚­•¶Žš‚ðo—Í‚·‚éu—ë’x‰„ƒ‚[ƒhv‚ðƒIƒ“‚·‚é‚à‚Ì‚Å‚ ‚èA„§Ý’è‚ÍƒIƒ“‚Å‚·B‚±‚Ì—ë’x‰„ƒ‚[ƒh‚ÍAeŽw‚Ì—FMk-2ƒL[ƒ{[ƒhƒhƒ‰ƒCƒoi¹l‚³‚Üìj‚Ì‹@”\‚ðŽQl‚Æ‚µ‚Ü‚µ‚½B
-E’P“Æ‘ÅŒ®‚ÍA—LŒø‚Æ–³Œø‚ÉÝ’è‰Â”\‚Å‚·BB
-EƒL[ƒŠƒs[ƒg‚Ìƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚ÍA’P“Æ‘ÅŒ®‚ª—LŒø‚Ì‚Æ‚«‚ÉA—LŒø‚Æ–³Œø‚ÉÝ’è‰Â”\‚Å‚·B
+EƒL[ƒŠƒs[ƒg‚Ìƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚ÍAƒ`ƒFƒbƒN—L‚èi—LŒøj‚Æ–³‚µi–³Œøj‚ÉÝ’è‰Â”\‚Å‚·B
 E•¶Žš‚ÆeŽwƒVƒtƒg‚Ì“¯Žž‘ÅŒ®‚ÌŠ„‡‚ÍA20`80[%]‚ÌŠÔ‚Å‰Â•Ï‚Å‚·BeŽwƒVƒtƒgƒL[‚Ì‰Ÿ‰º‚É‘Î‚µ‚Ä•¶ŽšƒL[‚Ì‰Ÿ‰º‚ªd‚È‚Á‚½‚Æ‚«A‚±‚ÌŠ„‡‚ð–ž‚½‚µ‚½‚È‚ç‚Î“¯Žž‘ÅŒ®‚Æ‚È‚è‚Ü‚·B„§’l‚Í40`60%‚Å‚·B
-E•¶Žš‚ÆeŽwƒVƒtƒg‚Ì“¯Žž‘ÅŒ®‚Ì”»’èŽžŠÔ‚ÍA10`400[mSEC]‚ÌŠÔ‚Å‰Â•Ï‚Å‚·BNICOLA‹KŠi‚Å‚ÍA50`200[mSEC]‚ª„§‚³‚ê‚Ä‚¢‚Ü‚·B@„§’l‚ÍA˜A‘±ƒVƒtƒg‚Ìê‡‚Å50[mSEC]A˜A‘±ƒVƒtƒg‚µ‚È‚¢ê‡‚Å150[mSEC]‚Å‚·B
+E•¶Žš‚ÆeŽwƒVƒtƒg‚Ì“¯Žž‘ÅŒ®‚Ì”»’èŽžŠÔ‚ÍA10`400[mSEC]‚ÌŠÔ‚Å‰Â•Ï‚Å‚·BNICOLA‹KŠi‚Å‚ÍA50`200[mSEC]‚ª„§‚³‚ê‚Ä‚¢‚Ü‚·B
+„§’l‚ÍA˜A‘±ƒVƒtƒg‚Ìê‡‚Å50[mSEC]A˜A‘±ƒVƒtƒg‚µ‚È‚¢ê‡‚Å150[mSEC]‚Å‚·B
+
  
 ‚RD‚RDŠÇ—ŽÒŒ ŒÀƒ^ƒu
 EgŽM‚ªŠÇ—ŽÒŒ ŒÀ‚Æ’ÊíŒ ŒÀ‚Ì‚¢‚¸‚ê‚Å“®ì‚µ‚Ä‚¢‚é‚©‚ðŽ¦‚·ƒ^ƒu‚Å‚·B
-E’ÊíŒ ŒÀ‚Ìê‡‚É‚ÍAuŠÇ—ŽÒŒ ŒÀ‚ÉØ‘Övƒ{ƒ^ƒ“‚©•\Ž¦‚³‚ê‚Ä‚¢‚Ü‚·B‚±‚ÌuŠÇ—ŽÒŒ ŒÀ‚ÉØ‘Övƒ{ƒ^ƒ“‚ðƒNƒŠƒbƒN‚·‚é‚ÆAŠÇ—ŽÒŒ ŒÀ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B
+E’ÊíŒ ŒÀ‚Ìê‡‚É‚ÍAuŠÇ—ŽÒŒ ŒÀ‚ÉØ‘Övƒ{ƒ^ƒ“‚©•\Ž¦‚³‚ê‚Ä‚¢‚Ü‚·B‚±‚ÌuŠÇ—ŽÒŒ ŒÀ‚ÉØ‘Övƒ{ƒ^ƒ“‚ðƒNƒŠƒbƒN‚·‚é‚ÆAŠÇ—ŽÒŒ ŒÀ‚ÉØ‚è‘Ö‚í‚è‚Ü‚·B‚±‚ê‚É‚æ‚èŠÇ—ŽÒŒ ŒÀ‚Å“®ì‚µ‚Ä‚¢‚éƒAƒvƒŠƒP[ƒVƒ‡ƒ“i—á‚¦‚Îƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰jã‚Å‚àeŽwƒVƒtƒg“ü—Í‚ª‰Â”\‚É‚È‚è‚Ü‚·B
+ŠÇ—ŽÒŒ ŒÀ‚©‚ç’ÊíŒ ŒÀ‚ÉØ‚è‘Ö‚¦‚é•û–@‚Í’ñ‹Ÿ‚µ‚Ä‚¢‚Ü‚¹‚ñB
 
 ‚RD‚SDgŽM‚É‚Â‚¢‚Äƒ^ƒu
 ƒo[ƒWƒ‡ƒ“î•ñ‚âgŽM‚ÌŠT—v‚ª‘‚©‚ê‚½ƒ^ƒu‚Å‚·B
@@ -85,9 +85,9 @@ SetBenizaraTask.exe‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰‚Ébenizara‚ªÝ’è‚³‚êAˆÈ~‚Íƒ
 ƒ[ƒ}ŽšƒVƒtƒg–³‚µ@@@b	ƒVƒtƒg–³‚µ
 ƒ[ƒ}Žš‰EeŽwƒVƒtƒg@@b	‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
 ƒ[ƒ}Žš¶eŽwƒVƒtƒg@@b	¶eŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
-ƒ[ƒ}Žš¬ŽwƒVƒtƒg@@@b	¬ŽwƒVƒtƒg
-ƒ[ƒ}Žš¬Žw‰EeŽwƒVƒtƒgb	¬ŽwƒVƒtƒg‚µ‚½ó‘Ô‚ÅA‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
-ƒ[ƒ}Žš¬Žw¶eŽwƒVƒtƒgb	¬ŽwƒVƒtƒg‚µ‚½ó‘Ô‚ÅA‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
+ƒ[ƒ}Žš¬ŽwƒVƒtƒg@@@b	¦‚P
+ƒ[ƒ}Žš¬Žw‰EeŽwƒVƒtƒgb	¦‚P
+ƒ[ƒ}Žš¬Žw¶eŽwƒVƒtƒgb	¦‚P
 ‰p”ƒVƒtƒg–³‚µ@@@@@b	ƒVƒtƒg–³‚µ
 ‰p”‰EeŽwƒVƒtƒg@@@@b	‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
 ‰p”¶eŽwƒVƒtƒg@@@@b	¶eŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
@@ -95,13 +95,15 @@ SetBenizaraTask.exe‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒNƒXƒPƒWƒ…[ƒ‰‚Ébenizara‚ªÝ’è‚³‚êAˆÈ~‚Íƒ
 ‰p”¬Žw‰EeŽwƒVƒtƒg@@b	¬ŽwƒVƒtƒg‚µ‚½ó‘Ô‚ÅA‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
 ‰p”¬Žw¶eŽwƒVƒtƒg@@b	¬ŽwƒVƒtƒg‚µ‚½ó‘Ô‚ÅA‰EeŽwƒL[‚Æ‹¤‚É•¶ŽšƒL[‘ÅŒ®
 
-@@ã‹L‚ÌƒŒƒCƒAƒEƒg‚ÍAgŽM‚ª“Ç‚Ýž‚ÞƒL[”z—ñƒtƒ@ƒCƒ‹‚É‚æ‚Á‚Ä•ÏX‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
+¦‚PFƒ[ƒ}Žšƒ‚[ƒh‚ÅƒVƒtƒgƒL[‚ð‘ÅŒ®‚·‚é‚ÆA‰p”ƒ‚[ƒh‚ÉˆêŽž“I‚É‘JˆÚ‚µ‚Ü‚·Bƒ[ƒ}Žšƒ‚[ƒh‚É‚¨‚¢‚ÄA‚±‚ÌƒŒƒCƒAƒEƒg‚Í‘S‚Ä¬ŽwƒVƒtƒg‚Æ‚µ‚Ä‹@”\‚µ‚Ü‚·B
+
+@ã‹L‚ÌƒŒƒCƒAƒEƒg‚ÍAgŽM‚ª“Ç‚Ýž‚ÞƒL[”z—ñƒtƒ@ƒCƒ‹‚É‚æ‚Á‚Ä•ÏX‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
 
 ‚TD	ƒAƒ“ƒCƒ“ƒXƒg[ƒ‹•û–@
 ‚TD‚PDƒCƒ“ƒXƒg[ƒ‰”Å
-ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAExit‚ðƒNƒŠƒbƒN‚µ‚Äbenizara‚ð’âŽ~‚³‚¹‚Ü‚·B‚»‚µ‚ÄAƒRƒ“ƒgƒ[ƒ‹ƒpƒlƒ‹‚ÌuƒvƒƒOƒ‰ƒ€‚ÌƒAƒ“ƒCƒ“ƒXƒg[ƒ‹v‚ð‘I‘ð‚µABenizara‚ðíœ‚µ‚Ä‚­‚¾‚³‚¢B
+ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAI—¹‚ðƒNƒŠƒbƒN‚µ‚Äbenizara‚ð’âŽ~‚³‚¹‚Ü‚·B‚»‚µ‚ÄAƒRƒ“ƒgƒ[ƒ‹ƒpƒlƒ‹‚ÌuƒvƒƒOƒ‰ƒ€‚ÌƒAƒ“ƒCƒ“ƒXƒg[ƒ‹v‚ð‘I‘ð‚µABenizara‚ðíœ‚µ‚Ä‚­‚¾‚³‚¢B
 ‚TD‚QDŽÀsƒtƒ@ƒCƒ‹”Å
-ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAExit‚ðƒNƒŠƒbƒN‚µ‚Äbenizara‚ð’âŽ~‚³‚¹‚Ü‚·B‚»‚µ‚ÄADelBenizaraTask.bat‚ðŽÀs‚µ‚½‚Ì‚¿‚ÉABenizara.exe‚ªŠi”[‚³‚ê‚½ƒtƒHƒ‹ƒ_‚ðíœ‚µ‚Ä‚­‚¾‚³‚¢B
+ƒ^ƒXƒNƒgƒŒƒC‚ÌgŽMƒAƒCƒRƒ“‚ð‰EƒNƒŠƒbƒN‚µ‚ÄAI—¹‚ðƒNƒŠƒbƒN‚µ‚Äbenizara‚ð’âŽ~‚³‚¹‚Ü‚·B‚»‚µ‚ÄADelBenizaraTask.bat‚ðŽÀs‚µ‚½‚Ì‚¿‚ÉABenizara.exe‚ªŠi”[‚³‚ê‚½ƒtƒHƒ‹ƒ_‚ðíœ‚µ‚Ä‚­‚¾‚³‚¢B
 
 ‚UD	ìŽÒ‚Ö‚Ì˜A—•û–@
 LinkedinFhttps://www.linkedin.com/in/ken-ichiro-ayaki-965b2a8a/
@@ -112,7 +114,6 @@ Benizara.exeEEE gŽM‚ÌŽÀsƒtƒ@ƒCƒ‹‚Å‚·B
 Benizara.iniEEEgŽM‚ÌÝ’èî•ñƒtƒ@ƒCƒ‹‚Å‚·B
 NICOLA”z—ñ.bnzEEENICOLA”z—ñ‚Ìƒtƒ@ƒCƒ‹‚Å‚·B
 Dvorak”z—ñ.bnzEEEDvorak”z—ñ‚Ìƒtƒ@ƒCƒ‹‚Å‚·B
-NICOLA-F”z—ñ.bnzEEENICOLA-F”z—ñ‚Ìƒtƒ@ƒCƒ‹‚Å‚·B
 orz”z—ñ.bnzEEEorz”z—ñ‚Ìƒtƒ@ƒCƒ‹‚Å‚·B
 eŽwƒVƒtƒg•\‹L•t‚«USBƒ‰ƒCƒgƒ^ƒbƒ`ƒL[ƒ{[ƒh”z—ñ.bnzEEEeŽwƒVƒtƒg•\‹L•t‚«USBƒ‰ƒCƒgƒ^ƒbƒ`ƒL[ƒ{[ƒhiƒ‰ƒCƒtƒ‰ƒ{ŽÐj‚ÌƒL[ƒ{[ƒh”z—ñ‚Å‚·B
 
@@ -129,4 +130,5 @@ ver.0.1.3.5@c@eŽwƒL[ƒIƒ“¨•¶ŽšƒL[ƒIƒ“¨‘¼‚ÌeŽwƒL[ƒIƒ“‚Ìˆ—B‚ÆAeŽwƒL[
 ver.0.1.3.6@c@“¯Žž•¡”‹N“®‚Ì—}Ž~AƒVƒtƒgƒL[‚ÆƒRƒ“ƒgƒ[ƒ‹ƒL[‚Æã‰º¶‰EƒJ[ƒ\ƒ‹ƒL[‚ÌƒtƒbƒN‚ðŠO‚·Agoogle“ú–{Œê“ü—Í‚Ö‚Ì‰¼‘Î‰žAƒ^ƒCƒvƒEƒFƒ‹‚Å‰¼–¼•¶Žš‚ð“ü—Í‚·‚éÛ‚Ì”z—ñ‚ðœŠOB
 Ver.0.1.4.0@c@‰p”ƒ‚[ƒh‚Ì‚æ‚¤‚ÉA“ü—ÍƒL[‚ÆƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Ö‚Ìo—ÍƒL[‚Æ‚ªˆê’v‚µ‚Ä‚¢‚éê‡‚ÉƒL[‚ðƒtƒbƒN‚µ‚È‚¢‚æ‚¤‚É•ÏXB“ü—ÍƒL[orz”z—ñ‚ÅA‚©‚È’·‰¹‚ª‚¨‚©‚µ‚­‚È‚éŒ‚É‘Î‰žBeŽwƒVƒtƒg•\‹L•t‚«USBƒ‰ƒCƒgƒ^ƒbƒ`ƒL[ƒ{[ƒh”z—ñ‚Ìu‚Ÿv‚Ì“ü—Í‚ª‚Å‚«‚È‚©‚Á‚½Œ‚É‘Î‰žB
 Ver.0.1.4.2@c@Windows 10 May 2020 Update‚É‘Î‰ž‚·‚é‚½‚ßAƒAƒvƒŠ‚Éo—Í‚·‚é•¶Žš‚ð‚·‚×‚Ä”¼Šp‚Ü‚½‚Í§Œä‹L†‚Æ‚µ‚½B
+Ver.0.1.4.3@c@ƒL[”z—ñƒtƒ@ƒCƒ‹‚É•½‰¼–¼‚ð‹LÚ‰Â”\‚Æ‚µAgŽMÝ’è‚ÌƒL[ƒŒƒCƒAƒEƒg‚ÉƒŠƒAƒ‹ƒ^ƒCƒ€‚ÌƒL[î•ñ‚ð•\Ž¦‚³‚¹‚½B
 ˆÈã
