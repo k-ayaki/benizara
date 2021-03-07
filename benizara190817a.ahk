@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.3 .... 2020/10/18
+;	ver.0.1.4.4 .... 2021/03/07
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -10,8 +10,8 @@
 	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
-	g_Ver := "ver.0.1.4.3"
-	g_Date := "2020/10/18"
+	g_Ver := "ver.0.1.4.4"
+	g_Date := "2021/03/07"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {

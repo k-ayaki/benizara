@@ -197,10 +197,11 @@ ReadLayoutFile:
 Mode2Key:
 	LF%_mode% := 1
 	_col := "1"
-	StringSplit org,LF%_mode%%_col%,`,
-	if(org0 <> 13)
+	;StringSplit org,LF%_mode%%_col%,`,
+	org := StrSplit(LF%_mode%%_col%,",")
+	if(org.MaxIndex() <> 13)
 	{
-		_cnt := org0
+		_cnt := org.MaxIndex()
 		_error := _LayoutName . "の１段目にエラーがあります。要素数が" . _cnt . "です。"
 		return
 	}
@@ -210,10 +211,11 @@ Mode2Key:
 		Gosub, SetAlphabet
 	
 	_col := "2"
-	StringSplit org,LF%_mode%%_col%,`,
-	if(org0 <> 12)
+	;StringSplit org,LF%_mode%%_col%,`,
+	org := StrSplit(LF%_mode%%_col%,",")
+	if(org.MaxIndex() <> 12)
 	{
-		_cnt := org0
+		_cnt := org.MaxIndex()
 		_error := _LayoutName . "の２段目にエラーがあります。要素数が" . _cnt . "です。"
 		return
 	}
@@ -223,10 +225,11 @@ Mode2Key:
 		Gosub, SetAlphabet
 	
 	_col := "3"
-	StringSplit org,LF%_mode%%_col%,`,
-	if(org0 <> 12)
+	;StringSplit org,LF%_mode%%_col%,`,
+	org := StrSplit(LF%_mode%%_col%,",")
+	if(org.MaxIndex() <> 12)
 	{
-		_cnt := org0
+		_cnt := org.MaxIndex()
 		_error := _LayoutName . "の３段目にエラーがあります。要素数が" . _cnt . "です。"
 		return
 	}
@@ -236,10 +239,11 @@ Mode2Key:
 		Gosub, SetAlphabet
 
 	_col := "4"
-	StringSplit org,LF%_mode%%_col%,`,
-	if(org0 <> 11)
+	;StringSplit org,LF%_mode%%_col%,`,
+	org := StrSplit(LF%_mode%%_col%,",")
+	if(org.MaxIndex() <> 11)
 	{
-		_cnt := org0
+		_cnt := org.MaxIndex()
 		_error := _LayoutName . "の４段目にエラーがあります。要素数が" . _cnt . "です。"
 		return
 	}
@@ -311,7 +315,9 @@ SetLayoutProperty:
 TrimSpace:
 	loop, %org0%
 	{
-		StringReplace, org%A_Index%, org%A_Index%, %A_Space%,, All
+		_tmp := org[A_Index]
+		StringReplace, _tmp, _tmp, %A_Space%,, All
+		org[A_Index] = _tmp
 	}
 	return
 
@@ -319,11 +325,11 @@ TrimSpace:
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetKeyTable:
-	kdn%_mode%0 := org0
-	kup%_mode%0 := org0
-	loop, %org0%
+	kdn%_mode%0 := org.MaxIndex()
+	kup%_mode%0 := org.MaxIndex()
+	loop, % org.MaxIndex()
 	{
-		_qstr := QuotedStr(org%A_Index%)
+		_qstr := QuotedStr(org[A_Index])
 		if(_error <> "")
 		{
 			break
@@ -334,21 +340,21 @@ SetKeyTable:
 			kup%_mode%%_col%%A_Index% := ""
 			continue
 		}
-		ret := Kanji2KeySymbol(org%A_Index%,_symbol)
+		ret := Kanji2KeySymbol(org[A_Index],_symbol)
 		if(ret = 1)
 		{
 			kdn%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " down}"
 			kup%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " up}"
 			continue
 		}
-		_vk := ConvVkey(org%A_Index%)
+		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
 			kdn%_mode%%_col%%A_Index% := "{" . _vk . "}"
 			kup%_mode%%_col%%A_Index% := ""
 			continue
 		}
-		ret := ConvKana(org%A_Index%, _nc)
+		ret := ConvKana(org[A_Index], _nc)
 		if(ret = 0)
 		{
 			GenSendStr(_nc,_dn,_up)
@@ -356,7 +362,7 @@ SetKeyTable:
 			kup%_mode%%_col%%A_Index% := _up
 			continue
 		}
-		ret := ConvNarrow(org%A_Index%, _nc)
+		ret := ConvNarrow(org[A_Index], _nc)
 		if(ret = 0)
 		{
 			if(substr(_mode,1,1)="A" && StrLen(aStr) >= 2)
@@ -378,9 +384,9 @@ SetKeyTable:
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetAlphabet:
-	mdn%_mode%0 := org0
-	mup%_mode%0 := org0
-	loop, %org0%
+	mdn%_mode%0 := org.MaxIndex()
+	mup%_mode%0 := org.MaxIndex()
+	loop, % org.MaxIndex()
 	{
 		mdn%_mode%%_col%%A_Index% := kdn%_mode%%_col%%A_Index%
 		mup%_mode%%_col%%A_Index% := kup%_mode%%_col%%A_Index%
