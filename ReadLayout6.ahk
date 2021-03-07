@@ -4,7 +4,10 @@
 ;	ver.0.1.4.0 .... 2019/8/18
 ;-----------------------------------------------------------------------
 ReadLayout:
-	Gosub, InitControl
+	kup := Object()
+	kdn := Object()
+	mup := Object()
+	mdn := Object()
 	romahash := MakeRomaHash()
 	SymbolHash := MakeSymbolHash()
 	
@@ -81,50 +84,6 @@ InitLayout2:
 	LFNUL4 := "　,　,　,　,　,　,　,　,　,　,　"
 	return
 
-
-;----------------------------------------------------------------------
-;	制御文字表の初期化
-;----------------------------------------------------------------------
-InitControl:
-	cout039 := "Space"			;Space
-	cout01C := "Enter"			;Enter
-	cout00E	:= "Backspace"		;BS
-	cout00F := "Tab"			;Tab
-	cout029 := "vkF3sc029"		;半角／全角
-	cout03A	:= "CapsLock"		;CapsLock
-	cout02A := "LShift"			;Left-Shift
-	cout136 := "RShift"			;Right-Shift
-	cout01D := "LCtrl"			;Left-Ctrl
-	cout038 := "LAlt"			;Left-Alt
-	cout138 := "RAlt"			;Right-Alt
-	cout11D := "RCtrl"			;Right-Ctrl
-	cout152 := "Insert"			;Insert
-	cout153 := "Delete"			;Delete
-	cout14B := "Left"			;←
-	cout147 := "Home"			;home
-	cout14F := "End"			;End
-	cout148 := "Up"				;↑
-	cout150 := "Down"			;↓
-	cout149 := "PgUp"			;Page up
-	cout151 := "PgDn"			;Page down
-	cout140 := "Right"			;→
-	cout001 := "Esc"			;Esc
-	cout03B := "F1"				;F1
-	cout03C := "F2"				;F2
-	cout03D := "F3"				;F3
-	cout03E := "F4"				;F4
-	cout03F := "F5"				;F5
-	cout040 := "F6"				;F6
-	cout041 := "F7"				;F7
-	cout042 := "F8"				;F8
-	cout043 := "F9"				;F9
-	cout044 := "F10"			;F10
-	cout057 := "F11"			;F11
-	cout058 := "F12"			;F12
-	cout137 := "PrintScreen"	;Print Screen
-	cout046 := "ScrollLock" 	;scroll rock
-	cout045 := "Pause"			;Pause
-	return
 
 ;----------------------------------------------------------------------
 ;	キー配列ファイル読み込み
@@ -325,8 +284,8 @@ TrimSpace:
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetKeyTable:
-	kdn%_mode%0 := org.MaxIndex()
-	kup%_mode%0 := org.MaxIndex()
+	kdn[_mode . "0"] := org.MaxIndex()
+	kup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
 		_qstr := QuotedStr(org[A_Index])
@@ -336,30 +295,30 @@ SetKeyTable:
 		}
 		if(_qstr <> "")
 		{
-			kdn%_mode%%_col%%A_Index% := _qstr
-			kup%_mode%%_col%%A_Index% := ""
+			kdn[_mode . _col . A_Index] := _qstr
+			kup[_mode . _col . A_Index] := ""
 			continue
 		}
 		ret := Kanji2KeySymbol(org[A_Index],_symbol)
 		if(ret = 1)
 		{
-			kdn%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " down}"
-			kup%_mode%%_col%%A_Index% := "{Blind}{" . _symbol . " up}"
+			kdn[_mode . _col . A_Index] := "{Blind}{" . _symbol . " down}"
+			kup[_mode . _col . A_Index] := "{Blind}{" . _symbol . " up}"
 			continue
 		}
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			kdn%_mode%%_col%%A_Index% := "{" . _vk . "}"
-			kup%_mode%%_col%%A_Index% := ""
+			kdn[_mode . _col . A_Index] := "{" . _vk . "}"
+			kup[_mode . _col . A_Index] := ""
 			continue
 		}
 		ret := ConvKana(org[A_Index], _nc)
 		if(ret = 0)
 		{
 			GenSendStr(_nc,_dn,_up)
-			kdn%_mode%%_col%%A_Index% := _dn
-			kup%_mode%%_col%%A_Index% := _up
+			kdn[_mode . _col . A_Index] := _dn
+			kup[_mode . _col . A_Index] := _up
 			continue
 		}
 		ret := ConvNarrow(org[A_Index], _nc)
@@ -370,12 +329,12 @@ SetKeyTable:
 				_error := "英数モードのキーに２文字以上が設定されています"
 			} else {
 				GenSendStr(_nc,_dn,_up)
-				kdn%_mode%%_col%%A_Index% := _dn
-				kup%_mode%%_col%%A_Index% := _up
+				kdn[_mode . _col . A_Index] := _dn
+				kup[_mode . _col . A_Index] := _up
 			}
 		} else {
-			kdn%_mode%%_col%%A_Index% := _nc
-			kup%_mode%%_col%%A_Index% := ""
+			kdn[_mode . _col . A_Index] := _nc
+			kup[_mode . _col . A_Index] := ""
 		}
 	}
 	return
@@ -384,12 +343,12 @@ SetKeyTable:
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetAlphabet:
-	mdn%_mode%0 := org.MaxIndex()
-	mup%_mode%0 := org.MaxIndex()
+	mdn[_mode . "0"] := org.MaxIndex()
+	mup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
-		mdn%_mode%%_col%%A_Index% := kdn%_mode%%_col%%A_Index%
-		mup%_mode%%_col%%A_Index% := kup%_mode%%_col%%A_Index%
+		mdn[_mode . _col . A_Index] := kdn[_mode . _col . A_Index]
+		mup[_mode . _col . A_Index] := kup[_mode . _col . A_Index]
 	}
 	return
 ;----------------------------------------------------------------------

@@ -73,7 +73,8 @@
 	Gosub,ReadLayout
 	g_allTheLayout := vAllTheLayout
 	g_LayoutFile := vLayoutFile
-	
+	kup_save := Object()
+
 	g_SendTick := ""
 	if(A_IsCompiled == 1)
 	{
@@ -529,8 +530,8 @@ RegLogs(thisLog)
 ; 保留キーの出力：セットされた文字のセットされた親指の出力
 ;----------------------------------------------------------------------
 SendOnHoldMO:
-	vOut :=                   kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
-	kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
+	vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -559,8 +560,8 @@ SendOnHoldMO:
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
-	vOut :=                   kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%
-	kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%
+	vOut :=                   kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
 
 	if(g_ZeroDelay = 1)
 	{
@@ -710,8 +711,8 @@ keydown:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		vOut               := mdnANN%MojiCode%
-		kup_save%MojiCode% := mupANN%MojiCode%
+		vOut               := mdn["ANN" . MojiCode]
+		kup_save[MojiCode] := mup["ANN" . MojiCode]
 		SubSend(vOut)
 		
 		g_MojiOnHold := ""
@@ -766,12 +767,12 @@ SendZeroDelay:
 	if(g_MojiOnHold<>"")	; 当該キーの保留
 	{
 		; 左右親指シフト面と非シフト面の文字キーが同一ならば、保留しない
-		if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% == kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%)
+		if(kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold] == kdn[g_RomajiOnHold . "R" . g_KoyubiOnHold . g_MojiOnHold])
 		{
-			if(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold% == kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%)
+			if(kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold] == kdn[g_RomajiOnHold . "L" . g_KoyubiOnHold . g_MojiOnHold])
 			{
-				vOut                   := kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
-				kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
+				vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+				kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 				SubSend(vOut)
 				g_MojiOnHold := ""
 				g_OyaOnHold  := "N"
@@ -781,10 +782,10 @@ SendZeroDelay:
 			}
 		}
 		; 左右親指シフト面と非シフト面の文字キーに制御コードが有れば、保留しない
-		if(mod(strlen(kdn%g_RomajiOnHold%N%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%R%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1)
+		if(mod(strlen(kdn[g_RomajiOnHold . N . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "R" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1)
 		{
-			vOut                   := kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
-			kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
+			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			SubSend(vOut)
 			g_MojiOnHold := ""
 			g_OyaOnHold  := "N"
@@ -798,8 +799,8 @@ SendZeroDelay:
 		if(g_ZeroDelay = 1)
 		{
 			; 保留キーがあれば先行出力（零遅延モード）
-			vOut :=                   kdn%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
-			kup_save%g_MojiOnHold% := kup%g_RomajiOnHold%%g_OyaOnHold%%g_KoyubiOnHold%%g_MojiOnHold%
+			vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 
 			g_ZeroDelayOut := vOut
 			SubSend(vOut)
@@ -865,9 +866,9 @@ keyup:
 		critical,off
 		return
 	}
-	vOut := kup_save%MojiCode%
+	vOut := kup_save[MojiCode]
 	SubSend(vOut)
-	kup_save%MojiCode% := ""
+	kup_save[MojiCode] := ""
 	critical,off
 	return
 	
