@@ -8,9 +8,32 @@ ReadLayout:
 	kdn := Object()
 	mup := Object()
 	mdn := Object()
+
+	_colcnv := Object()
+	_colcnv[1] := "E"
+	_colcnv[2] := "D"
+	_colcnv[3] := "C"
+	_colcnv[4] := "B"
+	_colcnv[5] := "A"
+	
+	_rowcnv := Object()
+	_rowcnv[1] := "01"
+	_rowcnv[2] := "02"
+	_rowcnv[3] := "03"
+	_rowcnv[4] := "04"
+	_rowcnv[5] := "05"
+	_rowcnv[6] := "06"
+	_rowcnv[7] := "07"
+	_rowcnv[8] := "08"
+	_rowcnv[9] := "09"
+	_rowcnv[10]:= "10"
+	_rowcnv[11]:= "11"
+	_rowcnv[12]:= "12"
+	_rowcnv[13]:= "13"
+	
 	romahash := MakeRomaHash()
 	SymbolHash := MakeSymbolHash()
-	
+	layoutHash := MakeLayoutHash()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -34,54 +57,55 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
-	LFANN := 0
-	LFALN := 0
-	LFARN := 0
+	LF := Object()
+	LF["ANN"] := 0
+	LF["ALN"] := 0
+	LF["ARN"] := 0
 
-	LFANK := 0
-	LFALK := 0
-	LFARK := 0
+	LF["ANK"] := 0
+	LF["ALK"] := 0
+	LF["ARK"] := 0
 
-	LFRNN := 0
-	LFRLN := 0
-	LFRRN := 0
+	LF["RNN"] := 0
+	LF["RLN"] := 0
+	LF["RRN"] := 0
 
-	LFRNK := 0
-	LFRLK := 0
-	LFRRK := 0
+	LF["RNK"] := 0
+	LF["RLK"] := 0
+	LF["RRK"] := 0
 	loop,4
 	{
-		LFANN%A_Index% := ""
-		LFALN%A_Index% := ""
-		LFARN%A_Index% := ""
+		LF["ANN" . A_Index] := ""
+		LF["ALN" . A_Index] := ""
+		LF["ARN" . A_Index] := ""
 
-		LFANK%A_Index% := ""
-		LFALK%A_Index% := ""
-		LFARK%A_Index% := ""
+		LF["ANK" . A_Index] := ""
+		LF["ALK" . A_Index] := ""
+		LF["ARK" . A_Index] := ""
 
-		LFRNN%A_Index% := ""
-		LFRLN%A_Index% := ""
-		LFRRN%A_Index% := ""
+		LF["RNN" . A_Index] := ""
+		LF["RLN" . A_Index] := ""
+		LF["RRN" . A_Index] := ""
 
-		LFRNK%A_Index% := ""
-		LFRLK%A_Index% := ""
-		LFRRK%A_Index% := ""
+		LF["RNK" . A_Index] := ""
+		LF["RLK" . A_Index] := ""
+		LF["RRK" . A_Index] := ""
 	}
 	; デフォルトテーブル
-	LFADN1 := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
-	LFADN2 := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
-	LFADN3 := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｋ,ｌ,ｌ,；,：,］"
-	LFADN4 := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+	LF["ADN1"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
+	LF["ADN2"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
+	LF["ADN3"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｋ,ｌ,ｌ,；,：,］"
+	LF["ADN4"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
 
-	LFADK1 := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
-	LFADK2 := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LFADK3 := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LFADK4 := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
+	LF["ADK1"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
+	LF["ADK2"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
+	LF["ADK3"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
+	LF["ADK4"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
 	; NULLテーブル
-	LFNUL1 := "　,　,　,　,　,　,　,　,　,　,　,　,　"
-	LFNUL2 := "　,　,　,　,　,　,　,　,　,　,　,　"
-	LFNUL3 := "　,　,　,　,　,　,　,　,　,　,　,　"
-	LFNUL4 := "　,　,　,　,　,　,　,　,　,　,　"
+	LF["NUL1"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NUL2"] := "　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NUL3"] := "　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NUL4"] := "　,　,　,　,　,　,　,　,　,　,　"
 	return
 
 
@@ -131,7 +155,7 @@ ReadLayoutFile:
 			{
 				if _mline between 1 and 4
 				{
-					LF%_mode%%_mline% := _line2
+					LF[_mode . _mline] := _line2
 				}
 				_mline += 1
 				if(_mline > 4)
@@ -154,10 +178,9 @@ ReadLayoutFile:
 ;	各モードのレイアウトを処理
 ;----------------------------------------------------------------------
 Mode2Key:
-	LF%_mode% := 1
+	LF[_mode] := 1
 	_col := "1"
-	;StringSplit org,LF%_mode%%_col%,`,
-	org := StrSplit(LF%_mode%%_col%,",")
+	org := StrSplit(LF[_mode . _col],",")
 	if(org.MaxIndex() <> 13)
 	{
 		_cnt := org.MaxIndex()
@@ -170,8 +193,7 @@ Mode2Key:
 		Gosub, SetAlphabet
 	
 	_col := "2"
-	;StringSplit org,LF%_mode%%_col%,`,
-	org := StrSplit(LF%_mode%%_col%,",")
+	org := StrSplit(LF[_mode . _col],",")
 	if(org.MaxIndex() <> 12)
 	{
 		_cnt := org.MaxIndex()
@@ -184,8 +206,7 @@ Mode2Key:
 		Gosub, SetAlphabet
 	
 	_col := "3"
-	;StringSplit org,LF%_mode%%_col%,`,
-	org := StrSplit(LF%_mode%%_col%,",")
+	org := StrSplit(LF[_mode . _col],",")
 	if(org.MaxIndex() <> 12)
 	{
 		_cnt := org.MaxIndex()
@@ -198,8 +219,7 @@ Mode2Key:
 		Gosub, SetAlphabet
 
 	_col := "4"
-	;StringSplit org,LF%_mode%%_col%,`,
-	org := StrSplit(LF%_mode%%_col%,",")
+	org := StrSplit(LF[_mode . _col],",")
 	if(org.MaxIndex() <> 11)
 	{
 		_cnt := org.MaxIndex()
@@ -219,22 +239,22 @@ Mode2Key:
 SetLayoutProperty:
 	vAllTheLayout := ""
 	LFA := 0
-	if(LFANN=1) {
+	if(LF["ANN"]=1) {
 		LFA := LFA | 1
 	}
-	if(LFALN=1) {
+	if(LF["ALN"]=1) {
 		LFA := LFA | 2
 	}
-	if(LFARN=1) {
+	if(LF["ARN"]=1) {
 		LFA := LFA | 4
 	}
-	if(LFANK=1) {
+	if(LF["ANK"]=1) {
 		LFA := LFA | 0x10
 	}
-	if(LFALK=1) {
+	if(LF["ALK"]=1) {
 		LFA := LFA | 0x20
 	}
-	if(LFARK=1) {
+	if(LF["ARK"]=1) {
 		LFA := LFA | 0x40
 	}
 	if(LFA=0x77) {
@@ -243,22 +263,22 @@ SetLayoutProperty:
 		msgbox,英数モードの６面ののうち、定義されていないモードがあります。
 	}
 	LFR := 0
-	if(LFRNN=1) {
+	if(LF["RNN"]=1) {
 		LFR := LFR | 1
 	}
-	if(LFRRN=1) {
+	if(LF["RRN"]=1) {
 		LFR := LFR | 2
 	}
-	if(LFRLN=1) {
+	if(LF["RLN"]=1) {
 		LFR := LFR | 4
 	}
-	if(LFRNK=1) {
+	if(LF["RNK"]=1) {
 		LFR := LFR | 0x10
 	}
-	if(LFRLK=1) {
+	if(LF["RLK"]=1) {
 		LFR := LFR | 0x20
 	}
-	if(LFRRK=1) {
+	if(LF["RRK"]=1) {
 		LFR := LFR | 0x40
 	}
 	if(LFR=0x77) {
@@ -704,6 +724,28 @@ Layout2Mode(_LayoutName)
 		return ""
 	return ""
 }
+
+
+;----------------------------------------------------------------------
+;	レイアウト名からモード名に変換
+;----------------------------------------------------------------------
+MakeLayoutHash() {
+	LayoutHash := Object()
+	LayoutHash["英数シフト無し"]           := "ANN"
+	LayoutHash["英数左親指シフト"]         := "ALN"
+	LayoutHash["英数右親指シフト"]         := "ARN"
+	LayoutHash["英数小指シフト"]           := "ANK"
+	LayoutHash["英数小指左親指シフト"]     := "ALK"
+	LayoutHash["英数小指右親指シフト"]     := "ARK"
+	LayoutHash["ローマ字シフト無し"]       := "RNN"
+	LayoutHash["ローマ字左親指シフト"]     := "RLN"
+	LayoutHash["ローマ字右親指シフト"]     := "RRN"
+	LayoutHash["ローマ字小指シフト"]       := "RNK"
+	LayoutHash["ローマ字小指左親指シフト"] := "RRK"
+	LayoutHash["ローマ字小指右親指シフト"] := "RLK"
+	return LayoutHash
+}
+
 ;----------------------------------------------------------------------
 ;	半角文字のうち制御コードをAutoHotKeyのシンボルに変換
 ;----------------------------------------------------------------------

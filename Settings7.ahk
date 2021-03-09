@@ -456,7 +456,7 @@ G2RefreshLayout5:
 	else if(s_kOyaL = "sc07B" && s_kOyaR = "Space")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC51
+		GuiControl,Font,vkeyFC51 
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
 		GuiControl,Font,vkeyFC52
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
@@ -522,7 +522,7 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		org := StrSplit(LFNUL%_col%,",")
+		org := StrSplit(LF["NUL" . _col],",")
 		loop,% org.MaxIndex()
 		{
 			GuiControl,-Redraw,vkeyDN%_col%%A_Index%
@@ -536,13 +536,13 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF%g_Romaji%NK%_col% != "")
+		if(LF[g_Romaji . "NK" . _col] != "")
 		{
-			org := StrSplit(LF%g_Romaji%NK%_col%,",")
+			org := StrSplit(LF[g_Romaji . "NK" . _col],",")
 		}
 		else
 		{
-			org := StrSplit(LFADK%_col%,",")
+			org := StrSplit(LF["ADK" . _col],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -553,13 +553,13 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF%g_Romaji%NN%_col% != "")
+		if(LF[g_Romaji . "NN" . _col] != "")
 		{
-			org := StrSplit(LF%g_Romaji%NN%_col%,",")
+			org := StrSplit(LF[g_Romaji . "NN" . _col],",")
 		}
 		else
 		{
-			org := StrSplit(LFADN%_col%,",")
+			org := StrSplit(LF["ADN" . _col],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -570,13 +570,13 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF%g_Romaji%LN%_col% != "")
+		if(LF[g_Romaji . "LN" . _col] != "")
 		{
-			org := StrSplit(LF%g_Romaji%LN%_col%,",")
+			org := StrSplit(LF[g_Romaji . "LN" . _col],",")
 		}
 		else
 		{
-			org := StrSplit(LFNUL%_col%,",")
+			org := StrSplit(LF["NUL" . _col],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -587,13 +587,13 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF%g_Romaji%RN%_col% != "")
+		if(LF[g_Romaji . "RN" . _col] != "")
 		{
-			org := StrSplit(LF%g_Romaji%RN%_col%,",")
+			org := StrSplit(LF[g_Romaji . "RN" . _col],",")
 		}
 		else
 		{
-			org := StrSplit(LFNUL%_col%,",")
+			org := StrSplit(LF["NUL" . _col],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -604,7 +604,7 @@ G2RefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		org := StrSplit(LFNUL%_col%,",")
+		org := StrSplit(LF["NUL" . _col],",")
 		loop,% org.MaxIndex()
 		{
 			GuiControl,+Redraw,vkeyDN%_col%%A_Index%
