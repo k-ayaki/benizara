@@ -501,7 +501,6 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		;StringSplit org,LFNUL%_col%,`,
 		org := StrSplit(LFNUL%_col%,",")
 		loop,% org.MaxIndex()
 		{
@@ -518,12 +517,10 @@ SLRefreshLayout:
 		_col := A_Index
 		if(LF%g_Romaji%NK%_col% != "")
 		{
-			;StringSplit org,LF%g_Romaji%NK%_col%,`,
 			org := StrSplit(LF%g_Romaji%NK%_col%,",")
 		}
 		else
 		{
-			;StringSplit org,LFADK%_col%,`,
 			org := StrSplit(LFADK%_col%,",")
 		}
 		loop,% org.MaxIndex()
@@ -537,12 +534,10 @@ SLRefreshLayout:
 		_col := A_Index
 		if(LF%g_Romaji%NN%_col% != "")
 		{
-			;StringSplit org,LF%g_Romaji%NN%_col%,`,
 			org := StrSplit(LF%g_Romaji%NN%_col%,",")
 		}
 		else
 		{
-			;StringSplit org,LFADN%_col%,`,
 			org := StrSplit(LFADN%_col%,",")
 		}
 		loop,% org.MaxIndex()
@@ -556,12 +551,10 @@ SLRefreshLayout:
 		_col := A_Index
 		if(LF%g_Romaji%LN%_col% != "")
 		{
-			;StringSplit org,LF%g_Romaji%LN%_col%,`,
 			org := StrSplit(LF%g_Romaji%LN%_col%,",")
 		}
 		else
 		{
-			;StringSplit org,LFNUL%_col%,`,
 			org := StrSplit(LFNUL%_col%,",")
 		}
 		loop,% org.MaxIndex()
@@ -575,12 +568,10 @@ SLRefreshLayout:
 		_col := A_Index
 		if(LF%g_Romaji%RN%_col% != "")
 		{
-			;StringSplit org,LF%g_Romaji%RN%_col%,`,
 			org := StrSplit(LF%g_Romaji%RN%_col%,",")
 		}
 		else
 		{
-			;StringSplit org,LFNUL%_col%,`,
 			org := StrSplit(LFNUL%_col%,",")
 		}
 		loop,% org.MaxIndex()
@@ -592,7 +583,6 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		;StringSplit org,LFNUL%_col%,`,
 		org := StrSplit(LFNUL%_col%,",")
 		loop,% org.MaxIndex()
 		{
