@@ -4,6 +4,7 @@
 ;	ver.0.1.4.4 .... 2021/3/10
 ;-----------------------------------------------------------------------
 ReadLayout:
+	ksf := Object()	; 表層形
 	kup := Object()
 	kdn := Object()
 	mup := Object()
@@ -32,9 +33,11 @@ ReadLayout:
 	_rowcnv[13]:= "13"
 	
 	romahash := MakeRomaHash()
+	roma2hash := MakeRoma2Hash()
 	SymbolHash := MakeSymbolHash()
 	layoutHash := MakeLayoutHash()
 	kanjiSymbolHash := MakeKanjiSymbolHash()
+	z2hHash := MakeZ2hHash()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -306,6 +309,9 @@ SetKeyTable:
 	loop, % org.MaxIndex()
 	{
 		_row2 := _rowcnv[A_Index]
+		ksf[_mode . _col . _row2] := org[A_Index]
+
+		; 引用符つき文字列を登録・・・2020年10月以降のWindows10ではダメになった
 		_qstr := QuotedStr(org[A_Index])
 		if(_error <> "")
 		{
@@ -317,13 +323,7 @@ SetKeyTable:
 			kup[_mode . _col . _row2] := ""
 			continue
 		}
-		ret := Kanji2KeySymbol(org[A_Index],_symbol)
-		if(ret = 1)
-		{
-			kdn[_mode . _col . _row2] := "{Blind}{" . _symbol . " down}"
-			kup[_mode . _col . _row2] := "{Blind}{" . _symbol . " up}"
-			continue
-		}
+		; vkeyならば vkeyとして登録
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
@@ -331,29 +331,28 @@ SetKeyTable:
 			kup[_mode . _col . _row2] := ""
 			continue
 		}
-		ret := ConvKana(org[A_Index], _nc)
-		if(ret = 0)
+		_surface := org[A_Index]
+		Loop, Parse, _surface
 		{
-			GenSendStr(_nc,_dn,_up)
-			kdn[_mode . _col . _row2] := _dn
-			kup[_mode . _col . _row2] := _up
-			continue
-		}
-		ret := ConvNarrow(org[A_Index], _nc)
-		if(ret = 0)
-		{
-			if(substr(_mode,1,1)="A" && StrLen(aStr) >= 2)
+			_symbol := z2hHash[A_LoopField]
+			if(_symbol <> "")
 			{
-				_error := "英数モードのキーに２文字以上が設定されています"
-			} else {
-				GenSendStr(_nc,_dn,_up)
-				kdn[_mode . _col . _row2] := _dn
-				kup[_mode . _col . _row2] := _up
+				kdn[_mode . _col . _row2] := "{Blind}"
+				kup[_mode . _col . _row2] := "{Blind}"
+				kdn[_mode . _col . _row2] := kdn[_mode . _col . _row2] . "{" . _symbol . " down}"
+				kup[_mode . _col . _row2] := kup[_mode . _col . _row2] . "{" . _symbol . " up}"
+				continue
 			}
-		} else {
-			kdn[_mode . _col . _row2] := _nc
-			kup[_mode . _col . _row2] := ""
+			; かな文字ならばローマ字変換して登録
+			_romaji := roma2hash[A_LoopField]
+			if(_romaji <> "")
+			{
+				GenSendStr(_romaji, _up, _down)
+				kdn[_mode . _col . _row2] := kdn[_mode . _col . _row2] . _up
+				kup[_mode . _col . _row2] := kup[_mode . _col . _row2] . _down
+			}
 		}
+		continue
 	}
 	return
 
@@ -479,29 +478,6 @@ ParseEscSeq(aQuo) {
 	return vOut
 }
 ;----------------------------------------------------------------------
-;	漢字シンボルをAutoHotKeyのシンボルに変更
-;----------------------------------------------------------------------
-Kanji2KeySymbol(_ch,BYREF vSymbol)
-{
-	global kanjiSymbolHash
-	vSymbol := ""
-	ret := 0
-	if(_ch = "")
-		return 0
-	if(StrLen(_ch) <> 1)
-		return 0
-
-	vSymbol := kanjiSymbolHash[_ch]
-	if(StrLen(vSymbol)>0) {
-		ret := 1
-	} else
-	if(_ch = "無") {
-		ret := 1
-	}
-	return ret
-}
-
-;----------------------------------------------------------------------
 ;	bnz/yabファイルの仮想キーコードを、AutoHotKeyでsendできる形式に変換
 ;	入力：v??
 ;	出力：vk??
@@ -527,6 +503,30 @@ ConvVkey(aStr) {
 	}
 	return
 }
+
+;----------------------------------------------------------------------
+;	漢字シンボルをAutoHotKeyのシンボルに変更
+;----------------------------------------------------------------------
+Kanji2KeySymbol(_ch,BYREF vSymbol)
+{
+	global kanjiSymbolHash
+	vSymbol := ""
+	ret := 0
+	if(_ch = "")
+		return 0
+	if(StrLen(_ch) <> 1)
+		return 0
+
+	vSymbol := kanjiSymbolHash[_ch]
+	if(StrLen(vSymbol)>0) {
+		ret := 1
+	} else
+	if(_ch = "無") {
+		ret := 1
+	}
+	return ret
+}
+
 ;----------------------------------------------------------------------
 ; 全角平仮名をローマ字に変換
 ; 引数　：aStr：変換前の文字列
@@ -535,7 +535,7 @@ ConvVkey(aStr) {
 ConvKana(aStr,BYREF nStr) {
 	global romahash
 	nStr := ""
-	rVal := 0
+	rVal := 1
 	StringLen _len,aStr
 	if(_len == 1) 
 	{
@@ -544,12 +544,12 @@ ConvKana(aStr,BYREF nStr) {
 		StringLen _len2,nStr
 		if(_len2 == 0) 
 		{
-			rVal := 1
+			rVal := 0
 		}
 	}
 	else
 	{
-		rVal := 1
+		rVal := 0
 	}
 	return rVal
 }
@@ -621,6 +621,40 @@ GenSendStr(aStr,BYREF _dn,BYREF _up)
 		StringMid, _ch, aStr, A_Index, 1
 		_code := Asc(_ch)
 		_c2 := SymbolHash[_code]
+		if(_c2 <> "")
+		{
+			if(A_Index = _len)
+			{
+				_dn := _dn .  "{" . _c2 . " Down}"
+				_up := "{Blind}{" . _c2 . " up}"
+			} else {
+				_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
+			}
+		}
+	}
+	if(_dn = "{Blind}")
+		_dn := ""
+	return _dn
+}
+
+;----------------------------------------------------------------------
+; 通常のキーdown時にSendする引数の文字列を設定する
+; 引数　：aStr：対応するキー入力
+; 戻り値：Sendの引数
+;----------------------------------------------------------------------
+GenSendStr2(aStr,BYREF _dn,BYREF _up)
+{
+	global SymbolHash
+	_len := strlen(aStr)	; 全角
+	if(_len = 0)
+	{
+		return ""
+	}
+	_dn := "{Blind}"
+	_up := ""
+	loop,Parse, aStr
+	{
+		_c2 := z2hHash[A_LoopField]
 		if(_c2 <> "")
 		{
 			if(A_Index = _len)
@@ -793,6 +827,132 @@ MakeSymbolHash() {
 }
 
 ;----------------------------------------------------------------------
+;	全角を半角に変換
+;----------------------------------------------------------------------
+MakeZ2hHash() {
+	hash := Object()
+	hash["後"] := "Backspace"
+	hash["逃"] := "Esc"
+	hash["入"] := "Enter"
+	hash["空"] := "Space"
+	hash["消"] := "Delete"
+	hash["挿"] := "Insert"
+	hash["上"] := "Up"
+	hash["左"] := "Left"
+	hash["右"] := "Right"
+	hash["下"] := "Down"
+	hash["家"] := "Home"
+	hash["終"] := "End"
+	hash["前"] := "PgUp"
+	hash["次"] := "PgDn"
+	hash["無"] := ""
+	hash[chr(65509)] := "\"
+	hash[chr(8220)]  := """"
+	hash[chr(8221)]  := """"	; 二重引用符
+	hash[chr(8217)]  := "'"		; 一重引用符
+	hash[chr(8216)]  := "``"
+	hash[chr(12288)] := " "		;全角スペース
+	hash["　"] := "Space"
+	hash["！"] := "!"
+	hash["”"] := """"
+	hash["“"] := """"
+	hash["＃"] := "#"
+	hash["＄"] := "$"
+	hash["％"] := "%"
+	hash["＆"] := "&"
+	hash["’"] := "'"
+	hash["′"] := "'"
+	hash["（"] := "("
+	hash["）"] := ")"
+	hash["＊"] := "*"
+	hash["＋"] := "+"
+	hash["，"] := ","
+	hash["－"] := "-"
+	hash["．"] := "."
+	hash["／"] := "/"
+	hash["０"] := "0"
+	hash["１"] := "1"
+	hash["２"] := "2"
+	hash["３"] := "3"
+	hash["４"] := "4"
+	hash["５"] := "5"
+	hash["６"] := "6"
+	hash["７"] := "7"
+	hash["８"] := "8"
+	hash["９"] := "9"
+	hash["："] := ":"
+	hash["；"] := ";"
+	hash["＜"] := "<"
+	hash["＝"] := "="
+	hash["＞"] := ">"
+	hash["？"] := "?"
+	hash["＠"] := "@"
+	hash["Ａ"] := "A"
+	hash["Ｂ"] := "B"
+	hash["Ｃ"] := "C"
+	hash["Ｄ"] := "D"
+	hash["Ｅ"] := "E"
+	hash["Ｆ"] := "F"
+	hash["Ｇ"] := "G"
+	hash["Ｈ"] := "H"
+	hash["Ｉ"] := "I"
+	hash["Ｊ"] := "J"
+	hash["Ｋ"] := "K"
+	hash["Ｌ"] := "L"
+	hash["Ｍ"] := "M"
+	hash["Ｎ"] := "N"
+	hash["Ｏ"] := "O"
+	hash["Ｐ"] := "P"
+	hash["Ｑ"] := "Q"
+	hash["Ｒ"] := "R"
+	hash["Ｓ"] := "S"
+	hash["Ｔ"] := "T"
+	hash["Ｕ"] := "U"
+	hash["Ｖ"] := "V"
+	hash["Ｗ"] := "W"
+	hash["Ｘ"] := "X"
+	hash["Ｙ"] := "Y"
+	hash["Ｚ"] := "Z"
+	hash["［"] := "["
+	hash["￥"] := "\"
+	hash["］"] := "]"
+	hash["＾"] := "^"
+	hash["＿"] := "_"
+	hash["｀"] := "`"
+	hash["ａ"] := "a"
+	hash["ｂ"] := "b"
+	hash["ｃ"] := "c"
+	hash["ｄ"] := "d"
+	hash["ｅ"] := "e"
+	hash["ｆ"] := "f"
+	hash["ｇ"] := "g"
+	hash["ｈ"] := "h"
+	hash["ｉ"] := "i"
+	hash["ｊ"] := "j"
+	hash["ｋ"] := "k"
+	hash["ｌ"] := "l"
+	hash["ｍ"] := "m"
+	hash["ｎ"] := "n"
+	hash["ｏ"] := "o"
+	hash["ｐ"] := "p"
+	hash["ｑ"] := "q"
+	hash["ｒ"] := "r"
+	hash["ｓ"] := "s"
+	hash["ｔ"] := "t"
+	hash["ｕ"] := "u"
+	hash["ｖ"] := "v"
+	hash["ｗ"] := "w"
+	hash["ｘ"] := "x"
+	hash["ｙ"] := "y"
+	hash["ｚ"] := "z"
+	hash["｛"] := "{"
+	hash["｜"] := "|"
+	hash["｝"] := "}"
+	hash["～"] := "~"
+	return hash
+}
+
+;----------------------------------------------------------------------
 ; ローマ字変換用ハッシュを生成
 ; 戻り値：モード名
 ;----------------------------------------------------------------------
@@ -885,5 +1045,244 @@ MakeRomaHash()
 	hash[0x3094] := "vu"	;ゔ
 	hash[0x3095] := "lka"	;ゕ
 	hash[0x3096] := "lke"	;ゖ
+	return hash
+}
+;----------------------------------------------------------------------
+; ローマ字変換用ハッシュを生成
+; 戻り値：モード名
+;----------------------------------------------------------------------
+MakeRoma2Hash()
+{
+	hash := Object()
+	hash["ぁ"] := "la"
+	hash["あ"] := "a"
+	hash["ぃ"] := "xi"	
+	hash["い"] := "i"	
+	hash["ぅ"] := "lu"	
+	hash["う"] := "u"	
+	hash["ぇ"] := "le"	
+	hash["え"] := "e"	
+	hash["ぉ"] := "lo"	
+	hash["お"] := "o"	
+	hash["か"] := "ka"	
+	hash["が"] := "ga"	
+	hash["き"] := "ki"	
+	hash["ぎ"] := "gi"	
+	hash["く"] := "ku"	
+	hash["ぐ"] := "gu"	
+	hash["け"] := "ke"	
+	hash["げ"] := "ge"	
+	hash["こ"] := "ko"	
+	hash["ご"] := "go"	
+	hash["さ"] := "sa"	
+	hash["ざ"] := "za"	
+	hash["し"] := "si"	
+	hash["じ"] := "zi"	
+	hash["す"] := "su"	
+	hash["ず"] := "zu"	
+	hash["せ"] := "se"	
+	hash["ぜ"] := "ze"	
+	hash["そ"] := "so"	
+	hash["ぞ"] := "zo"	
+	hash["た"] := "ta"	
+	hash["だ"] := "da"	
+	hash["ち"] := "ti"	
+	hash["ぢ"] := "di"	
+	hash["っ"] := "ltu"	
+	hash["つ"] := "tu"	
+	hash["づ"] := "du"	
+	hash["て"] := "te"	
+	hash["で"] := "de"	
+	hash["と"] := "to"	
+	hash["ど"] := "do"	
+	hash["な"] := "na"	
+	hash["に"] := "ni"	
+	hash["ぬ"] := "nu"	
+	hash["ね"] := "ne"	
+	hash["の"] := "no"	
+	hash["は"] := "ha"	
+	hash["ば"] := "ba"	
+	hash["ぱ"] := "pa"	
+	hash["ひ"] := "hi"	
+	hash["び"] := "bi"	
+	hash["ぴ"] := "pi"	
+	hash["ふ"] := "fu"	
+	hash["ぶ"] := "bu"	
+	hash["ぷ"] := "pu"	
+	hash["へ"] := "he"	
+	hash["べ"] := "be"	
+	hash["ぺ"] := "pe"	
+	hash["ほ"] := "ho"	
+	hash["ぼ"] := "bo"	
+	hash["ぽ"] := "po"	
+	hash["ま"] := "ma"	
+	hash["み"] := "mi"	
+	hash["む"] := "mu"	
+	hash["め"] := "me"	
+	hash["も"] := "mo"	
+	hash["ゃ"] := "lya"	
+	hash["や"] := "ya"	
+	hash["ゅ"] := "lyu"	
+	hash["ゆ"] := "yu"	
+	hash["ょ"] := "lyo"	
+	hash["よ"] := "yo"	
+	hash["ら"] := "ra"	
+	hash["り"] := "ri"	
+	hash["る"] := "ru"	
+	hash["れ"] := "re"	
+	hash["ろ"] := "ro"	
+	hash["ゎ"] := "lwa"	
+	hash["わ"] := "wa"	
+	hash["ゐ"] := "wi"	
+	hash["ゑ"] := "we"	
+	hash["を"] := "wo"	
+	hash["ん"] := "nn"	
+	hash["ゔ"] := "vu"	
+	hash["ゕ"] := "lka"	
+	hash["ゖ"] := "lke"	
+
+	hash["うぁ"] := "wha"
+	hash["うぃ"] := "wi"
+	hash["うぇ"] := "we"
+	hash["うぉ"] := "who"
+
+	hash["きゃ"] := "kya"
+	hash["きぃ"] := "kyi"
+	hash["きゅ"] := "kyu"
+	hash["きぇ"] := "kye"
+	hash["きょ"] := "kyo"
+
+	hash["ぎゃ"] := "gya"
+	hash["ぎぃ"] := "gyi"
+	hash["ぎゅ"] := "gyu"
+	hash["ぎぇ"] := "gye"
+	hash["ぎょ"] := "gyo"
+
+	hash["くゃ"] := "qya"
+	hash["くぃ"] := "qyi"
+	hash["くゅ"] := "qyu"
+	hash["くぇ"] := "qye"
+	hash["くょ"] := "qyo"
+
+	hash["ぐぁ"] := "gwa"
+	hash["ぐぃ"] := "gwi"
+	hash["ぐぅ"] := "gwu"
+	hash["ぐぇ"] := "gwe"
+	hash["ぐぉ"] := "gwo"
+
+	hash["しゃ"] := "sha"
+	hash["しゅ"] := "shu"
+	hash["しぇ"] := "she"
+	hash["しょ"] := "sho"
+
+	hash["しゃ"] := "sya"
+	hash["しゅ"] := "syu"
+	hash["しぇ"] := "sye"
+	hash["しょ"] := "syo"
+
+	hash["じゃ"] := "jya"
+	hash["じぃ"] := "jyi"
+	hash["じゅ"] := "jyu"
+	hash["じぇ"] := "jye"
+	hash["じょ"] := "jyo"
+
+	hash["すぁ"] := "swa"
+	hash["すぃ"] := "swi"
+	hash["すぅ"] := "swu"
+	hash["すぇ"] := "swe"
+	hash["すぉ"] := "swo"
+	
+	hash["ちゃ"] := "tya"
+	hash["ちぃ"] := "tyi"
+	hash["ちゅ"] := "tyu"
+	hash["ちぇ"] := "tye"
+	hash["ちょ"] := "tyo"
+
+	hash["ぢゃ"] := "dya"
+	hash["ぢぃ"] := "dyi"
+	hash["ぢゅ"] := "dyu"
+	hash["ぢぇ"] := "dye"
+	hash["ぢょ"] := "dyo"
+
+	hash["つぁ"] := "tsa"
+	hash["つぃ"] := "tsi"
+	hash["つぇ"] := "tse"
+	hash["つぉ"] := "tso"
+
+	hash["てゃ"] := "tha"
+	hash["てぃ"] := "thi"
+	hash["てゅ"] := "thu"
+	hash["てぇ"] := "the"
+	hash["てょ"] := "tho"
+
+	hash["でゃ"] := "dha"
+	hash["でぃ"] := "dhi"
+	hash["でゅ"] := "dhu"
+	hash["でぇ"] := "dhe"
+	hash["でょ"] := "dho"
+
+	hash["とぁ"] := "twa"
+	hash["とぃ"] := "twi"
+	hash["とぅ"] := "twu"
+	hash["とぇ"] := "twe"
+	hash["とぉ"] := "two"
+	
+	hash["どぁ"] := "dwa"
+	hash["どぃ"] := "dwi"
+	hash["どぅ"] := "dwu"
+	hash["どぇ"] := "dwe"
+	hash["どぉ"] := "dwo"
+	
+	hash["にゃ"] := "nya"
+	hash["にぃ"] := "nyi"
+	hash["にゅ"] := "nyu"
+	hash["にぇ"] := "nye"
+	hash["にょ"] := "nyo"
+
+	hash["ひゃ"] := "hya"
+	hash["ひぃ"] := "hyi"
+	hash["ひゅ"] := "hyu"
+	hash["ひぇ"] := "hye"
+	hash["ひょ"] := "hyo"
+
+	hash["びゃ"] := "bya"
+	hash["びぃ"] := "byi"
+	hash["びゅ"] := "byu"
+	hash["びぇ"] := "bye"
+	hash["びょ"] := "byo"
+
+	hash["ぴゃ"] := "pya"
+	hash["ぴぃ"] := "pyi"
+	hash["ぴゅ"] := "pyu"
+	hash["ぴぇ"] := "pye"
+	hash["ぴょ"] := "pyo"
+
+	hash["ふぁ"] := "fa"
+	hash["ふぃ"] := "fi"
+	hash["ふぅ"] := "fwu"
+	hash["ふぇ"] := "fe"
+	hash["ふぉ"] := "fo"
+
+	hash["ふゃ"] := "fya"
+	hash["ふゅ"] := "fyu"
+	hash["ふょ"] := "fyo"
+
+	hash["ゔゃ"] := "vya"
+	hash["ゔぃ"] := "vyi"
+	hash["ゔゅ"] := "vyu"
+	hash["ゔぇ"] := "vye"
+	hash["ゔょ"] := "vyo"
+
+	hash["みゃ"] := "mya"
+	hash["みぃ"] := "myi"
+	hash["みゅ"] := "myu"
+	hash["みぇ"] := "mye"
+	hash["みょ"] := "myo"
+
+	hash["りゃ"] := "rya"
+	hash["りぃ"] := "ryi"
+	hash["りゅ"] := "ryu"
+	hash["りぇ"] := "rye"
+	hash["りょ"] := "ryo"
 	return hash
 }
