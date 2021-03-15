@@ -62,11 +62,10 @@
 	g_ZeroDelay := 1		; 零遅延モード
 	g_ZeroDelayOut := ""
 	g_Offset := 20
-	g_OyaR := 0
-	g_OyaRDown := 0
-	g_OyaL := 0	
-	g_OyaLDown := 0
-	g_trigger := ""
+	g_OyaRState := 0
+	g_OyaRKeyOn := 0
+	g_OyaLState := 0	
+	g_OyaLKeyOn := 0
 	vLayoutFile := g_LayoutFile
 	g_Tau := 0
 	GoSub,Init
@@ -117,61 +116,71 @@ Menu_Exit:
 ; スペースキーに割り当てられていれば連続打鍵
 ;-----------------------------------------------------------------------
 
-gOyaR:
+keydownR:
 	Critical
-	g_trigger := "R"
+	GuiControl,2:,vkeyDN%MojiCode%,□
+
 	gosub,Polling
-	RegLogs("R down")
-	if(g_OyaR = 1 && (g_KeyRepeat = 1 || kOyaR = "Space"))
+	RegLogs(g_metaKey . " down")
+	if(keyState[MojiCode] == 1 && (g_KeyRepeat = 1 || kName = "Space"))
 	{
-		g_OyaR := 1
-		g_OyaRDown := 1
+	 	; キーリピートの処理
+		g_OyaRKeyOn := 1
 		g_OyaRTick := Pf_Count()				; A_TickCount
 		g_MRInterval := g_OyaRTick - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
-		g_Oya := "R"
+		g_Oya := g_metaKey
 
 		Gosub, SendOnHoldO	; 保留キーの打鍵
-		g_OyaOnHold := g_Oya
-		g_SendTick := g_OyaRTick + g_Threshold
-		g_KeyInPtn := g_Oya
+		; 連続モードでなければ押されていない状態に
+		if(g_Continue == 1)
+		{
+			g_OyaOnHold := g_metaKey
+			g_SendTick := g_OyaRTick + g_Threshold
+			g_KeyInPtn := g_metaKey
+		}
 		critical,off
 		return
 	}
-	if(g_OyaR != 1) 	; キーリピートの抑止
+	if(keyState[MojiCode] != 1) 	; キーリピートの抑止
 	{
-		g_OyaR := 1
-		g_OyaRDown := 1
+		keyState[MojiCode] := 1
+		g_OyaRState := 1
+		g_OyaRKeyOn := 1
 		g_OyaRTick := Pf_Count()				;A_TickCount
 		g_MRInterval := g_OyaRTick - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
-		g_Oya := "R"
+		g_Oya := g_metaKey
 		
-		if(g_KeyInPtn = "") 			;初期状態
+		if(g_KeyInPtn = "") 		;S1)初期状態
 		{
-			g_OyaOnHold := g_Oya
+			g_OyaOnHold := g_metaKey
 			g_SendTick := g_OyaRTick + g_Threshold
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			g_KeyInPtn := g_KeyInPtn . g_metaKey	;S3に遷移
 		}
-		else if(g_KeyInPtn = "M")		;Mオン状態
+		else if(g_KeyInPtn = "M")	;S2)Mオン状態
 		{
-			g_OyaOnHold := g_Oya
+			g_OyaOnHold := g_metaKey
 			g_SendTick := g_OyaRTick + g_MRInterval
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			g_KeyInPtn := g_KeyInPtn . g_metaKey
 		}
-		else if(g_KeyInPtn = "L")		;Oオン状態
+		else if(g_KeyInPtn = "L")	;S3)Oオン状態
 		{
 			Gosub, SendOnHoldO	; 保留キーの打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaRTick + g_Threshold
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaRTick + g_Threshold
+				g_KeyInPtn := g_KeyInPtn . g_metaKey	;S3に遷移
+			}
 		}
-		else if(g_KeyInPtn = "ML")	; M-Oオン状態
+		else if(g_KeyInPtn = "ML")	;S4)M-Oオン状態
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaRTick + g_Threshold
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaRTick + g_Threshold
+				g_KeyInPtn := g_KeyInPtn . g_metaKey
+			}
 		}
-		else if(g_KeyInPtn = "LM")		; O-Mオン状態
+		else if(g_KeyInPtn = "LM")	;S5)O-Mオン状態
 		{
 			; 処理B 3キー判定
 			g_LMInterval := g_MojiTick - g_OyaLTick		; 左親指キー押しから文字キー押しまでの期間
@@ -179,9 +188,11 @@ gOyaR:
 			if(g_MRInterval > g_LMInterval)
 			{
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
-				g_OyaOnHold := g_Oya
-				g_SendTick := g_OyaRTick + g_Threshold
-				g_KeyInPtn := g_KeyInPtn . g_Oya
+				if(g_Continue == 1) {
+					g_OyaOnHold := g_metaKey
+					g_SendTick := g_OyaRTick + g_Threshold
+					g_KeyInPtn := g_KeyInPtn . g_metaKey
+				}
 			}
 			else
 			{
@@ -190,48 +201,54 @@ gOyaR:
 					SubSend(MnDown("Backspace") . MnUp("Backspace"))
 				}
 				Gosub, SendOnHoldO	; 保留キーの打鍵
-				g_OyaOnHold := g_Oya
-				g_SendTick := g_OyaRTick + g_MRInterval
-				g_KeyInPtn := g_KeyInPtn . g_Oya
+				if(g_Continue == 1) {
+					g_OyaOnHold := g_metaKey
+					g_SendTick := g_OyaRTick + g_MRInterval
+					g_KeyInPtn := g_KeyInPtn . g_metaKey
+				}
 				Gosub,SendZeroDelay
 			}
 		}
-		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; O-M-Oオフ状態
+		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; S6)O-M-Oオフ状態
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaRTick + g_MRInterval
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaRTick + g_MRInterval
+				g_KeyInPtn := g_KeyInPtn . g_metaKey
+			}
 		}
 	}
 	critical,off
 	return  
 
-gOyaRUp:
+keyupR:
 	Critical
-	g_trigger := "R up"
+	GuiControl,2:,vkeyDN%MojiCode%,　
+
 	gosub,Polling
-	if(g_OyaR = 1)	; 右親指シフトキーの単独シフト
+	if(keyState[MojiCode] == 1)	; 右親指シフトキーの単独シフト
 	{
-		RegLogs("R up")
-		g_OyaR := 0
+		RegLogs(g_metaKey . " up")
+		keyState[MojiCode] := 0
+		g_OyaRState := 0
 		g_OyarTick := Pf_Count()				;A_TickCount
 		g_MrInterval := g_OyarTick - g_MojiTick	; 文字キー押しから右親指キー解除までの期間
 		g_RrInterval := g_OyarTick - g_OyaRTick	; 右親指キー押しから右親指キー解除までの期間
 
 		if(g_Continue = 1)
 		{
-			if(g_OyaL = 1)
+			if(g_OyaLState = 1)
 				g_Oya := "L"
 			else
 				g_Oya := "N"
 		}
 		
-		if(g_KeyInPtn = "R")		; Oオン状態
+		if(g_KeyInPtn = "R")		;S3)Oオン状態
 		{
-			Gosub, SendOnHoldO		; 保留親指キーの打鍵
+			Gosub, SendOnHoldO	;保留親指キーの打鍵
 		}
-		else if(g_KeyInPtn = "MR")	; M-Oオン状態
+		else if(g_KeyInPtn = "MR")	;S4)M-Oオン状態
 		{
 			if(g_RrInterval > g_Threshold)
 			{
@@ -249,7 +266,7 @@ gOyaRUp:
 				}
 			}
 		}
-		else if(g_KeyInPtn = "RM")		; O-Mオン状態
+		else if(g_KeyInPtn = "RM")	;S5)O-Mオン状態
 		{
 			if(g_MrInterval > g_Threshold)
 			{
@@ -262,78 +279,84 @@ gOyaRUp:
 				{
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
 				} else {
-					;g_MrTimeout := g_MrInterval*(100-g_Overlap)/g_Overlap
-					;g_MrTimeout := g_MrInterval/2
 					g_MrTimeout := g_MrInterval
 					g_SendTick := g_OyarTick + g_MrTimeout
 					g_KeyInPtn := "RMr"
 				}
 			}
 		}
-		else if(g_KeyInPtn="M" || g_KeyInPtn="RMr" || g_KeyInPtn="LMl") 		; O-M-Oオフ状態
+		else if(g_KeyInPtn="M" || g_KeyInPtn="RMr" || g_KeyInPtn="LMl") ; S2)Mオン状態 S6)O-M-Oオフ状態
 		{
 			; 何もしない
 		}
-		g_OyaRDown := 0
+		g_OyaRKeyOn := 0
 	}
 	critical,off
 	return
 
-gOyaL:	; 無変換
+keydownL:	; 無変換
 	Critical
-	g_trigger := "L"
+	GuiControl,2:,vkeyDN%MojiCode%,□
+
 	gosub,Polling
-	RegLogs("L down")
-	if(g_OyaL = 1 && (g_KeyRepeat = 1 || kOyaL = "Space"))
+	RegLogs(g_metaKey . " down")
+	if(keyState[MojiCode] == 1 && (g_KeyRepeat = 1 || kName = "Space"))
 	{
-		g_OyaL := 1
-		g_OyaLDown := 1
+		; キーリピート
+		g_OyaLKeyOn := 1
 		g_OyaLTick := Pf_Count()	;A_TickCount
 		g_MLInterval := g_OyaLTick - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
-		g_Oya := "L"
+		g_Oya := g_metaKey
 		
 		Gosub, SendOnHoldO	; 保留キーの打鍵
-		g_OyaOnHold := g_Oya
-		g_SendTick := g_OyaLTick + g_Threshold
-		g_KeyInPtn := g_Oya
+		if(g_Continue == 1) {
+			g_OyaOnHold := g_metaKey
+			g_SendTick := g_OyaLTick + g_Threshold
+			g_KeyInPtn := g_metaKey
+		}
 		critical,off
 		return
 	}
-	if(g_OyaL != 1)	; キーリピートの抑止
+	if(keyState[MojiCode] != 1)	; キーリピートの抑止
 	{
-		g_OyaL := 1
-		g_OyaLDown := 1
+		g_OyaLState := 1
+		keyState[MojiCode] := 1
+		g_OyaLKeyOn := 1
 		g_OyaLTick := Pf_Count()	;A_TickCount
 		g_MLInterval := g_OyaLTick - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
-		g_Oya := "L"
+		g_Oya := g_metaKey
 				
-		if(g_KeyInPtn = "")				; 初期状態
+		if(g_KeyInPtn = "")			;S1)初期状態
 		{
-			g_OyaOnHold := g_Oya
+			g_OyaOnHold := g_metaKey
 			g_SendTick := g_OyaLTick + g_Threshold
-			g_KeyInPtn := g_Oya
+			g_KeyInPtn := g_metaKey
 		}
-		else if(g_KeyInPtn = "M")		; Mオン状態
+		else if(g_KeyInPtn = "M")	;S2)Mオン状態
 		{
-			g_OyaOnHold := g_Oya
+			g_OyaOnHold := g_metaKey
 			g_SendTick := g_OyaLTick + g_MLInterval
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			g_KeyInPtn := g_KeyInPtn . g_metaKey
 		}
-		else if(g_KeyInPtn = "R")		; Oオン状態
+		else if(g_KeyInPtn = "R")	;S3)Oオン状態
 		{
 			Gosub, SendOnHoldO	; 保留キーの打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaLTick + g_Threshold
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaLTick + g_Threshold
+				g_KeyInPtn := g_KeyInPtn . g_metaKey
+			}
 		}
-		else if(g_KeyInPtn = "MR")		; M-Oオン状態
+		else if(g_KeyInPtn = "MR")	;S4)M-Oオン状態
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaLTick + g_Threshold
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaLTick + g_Threshold
+				g_KeyInPtn := g_KeyInPtn . g_metaKey
+			}
 		}
-		else if(g_KeyInPtn = "RM")		; O-Mオン状態
+		else if(g_KeyInPtn = "RM")	;S5)O-Mオン状態
 		{
 			; 処理B 3キー判定
 			g_RMInterval := g_MojiTick - g_OyaRTick		; 右親指キー押しから文字キー押しまでの期間
@@ -341,57 +364,65 @@ gOyaL:	; 無変換
 			if(g_MRInterval > g_LMInterval)
 			{
 				Gosub, SendOnHoldMO	; 文字キーを親指シフトして打鍵
-				g_OyaOnHold := g_Oya
-				g_SendTick := g_OyaLTick + g_Threshold
-				g_KeyInPtn := g_KeyInPtn . g_Oya
+				if(g_Continue == 1) {
+					g_OyaOnHold := g_metaKey
+					g_SendTick := g_OyaLTick + g_Threshold
+					g_KeyInPtn := g_KeyInPtn . g_metaKey
+				}
 			} else {
 				if(g_ZeroDelayOut<>"")
 				{
 					SubSend(MnDown("Backspace") . MnUp("Backspace"))
 				}
 				Gosub, SendOnHoldO	; 親指キーの単独打鍵
-				g_OyaOnHold := g_Oya
-				g_SendTick := g_OyaLTick + g_MLInterval
-				g_KeyInPtn := g_KeyInPtn . g_Oya
+				if(g_Continue == 1) {
+					g_OyaOnHold := g_metaKey
+					g_SendTick := g_OyaLTick + g_MLInterval
+					g_KeyInPtn := g_KeyInPtn . g_metaKey
+				}
 				Gosub,SendZeroDelay
 			}
 		}
-		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")		; O-M-Oオフ状態
+		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S6)O-M-Oオフ状態
 		{
 			Gosub, SendOnHoldMO		; 文字キーを親指シフトして打鍵
-			g_OyaOnHold := g_Oya
-			g_SendTick := g_OyaLTick + g_MLInterval
-			g_KeyInPtn := g_KeyInPtn . g_Oya
+			if(g_Continue == 1) {
+				g_OyaOnHold := g_metaKey
+				g_SendTick := g_OyaLTick + g_MLInterval
+				g_KeyInPtn := g_KeyInPtn . g_metaKey
+			}
 		}
 	}
 	critical,off
  	return
 
-gOyaLUp:
+keyupL:
 	Critical
-	g_trigger := "L up"
+	GuiControl,2:,vkeyDN%MojiCode%,　
+
 	gosub,Polling
-	if(g_OyaL != 0)	; 右親指シフトキーの単独シフト
+	if(keyState[MojiCode] != 0)	; 右親指シフトキーの単独シフト
 	{
-		RegLogs("L up")
-		g_OyaL := 0
+		RegLogs(g_metaKey . " up")
+		keyState[MojiCode] := 0
+		g_OyaLState := 0
 		g_OyalTick := Pf_Count()				;A_TickCount
 		g_MlInterval := g_OyalTick - g_MojiTick	; 文字キー押しから左親指キー解除までの期間
 		g_LlInterval := g_OyalTick - g_OyaLTick	; 右親指キー押しから右親指キー解除までの期間
 
 		if(g_Continue = 1) 
 		{
-			if(g_OyaR = 1)
+			if(g_OyaRState = 1)
 				g_Oya := "R"
 			else
 				g_Oya := "N"
 		}
 
-		if(g_KeyInPtn = "L")			; Oオン状態
+		if(g_KeyInPtn = "L")			;S3)Oオン状態
 		{
 			Gosub, SendOnHoldO		; 保留親指キーの打鍵
 		}
-		else if(g_KeyInPtn = "ML")		;M-Oオン状態
+		else if(g_KeyInPtn = "ML")		;S4)M-Oオン状態
 		{
 			if(g_LlInterval > g_Threshold)
 			{
@@ -409,7 +440,7 @@ gOyaLUp:
 				}
 			}
 		}
-		else if(g_KeyInPtn = "LM")		;O-Mオン状態
+		else if(g_KeyInPtn = "LM")		;S5)O-Mオン状態
 		{
 			if(g_MlInterval > g_Threshold)
 			{
@@ -423,19 +454,17 @@ gOyaLUp:
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
 					g_KeyInPtn := "M"
 				} else {
-					;g_MlTimeout := g_MlInterval*(100-g_Overlap)/g_Overlap
-					;g_MlTimeout := g_MlInterval/2
 					g_MlTimeout := g_MlInterval
 					g_SendTick := g_OyalTick + g_MlTimeout
 					g_KeyInPtn := "LMl"
 				}
 			}
 		}
-		else if(g_KeyInPtn="M" || g_KeyInPtn="RMr" || g_KeyInPtn="LMl")
+		else if(g_KeyInPtn="M" || g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S2)Mオン状態 S6)O-M-Oオフ状態
 		{
 			; 何もしない
 		}
-		g_OyaLDown := 0
+		g_OyaLKeyOn := 0
 	}
 	critical,off
 	return
@@ -550,10 +579,6 @@ SendOnHoldMO:
 	g_KoyubiOnHold := "N"
 	g_SendTick := ""
 	g_KeyInPtn := ""
-	if(g_Continue = 0)	; 連続モードではない
-	{
-		g_Oya := "N"
-	}
 	return
 
 ;----------------------------------------------------------------------
@@ -605,12 +630,12 @@ SendOnHoldM:
 SendOnHoldO:
 	if(g_OyaOnHold = "R")
 	{
-		if(g_KeySingle = "有効" || kOyaR = "Space")
+		if(g_KeySingle = "有効" || kName = "Space")
 		{
-			if(g_OyaRDown=1)
+			if(g_OyaRKeyOn=1)
 			{
-				SubSend(MnDown(kOyaR) . MnUp(kOyaR))
-				g_OyaRDown := 0
+				SubSend(MnDown(kName) . MnUp(kName))
+				g_OyaRKeyOn := 0
 			}
 		}
 		if(g_KeyInPtn="RM" || g_KeyInPtn="RMr" || g_KeyInPtn="MR")
@@ -624,12 +649,12 @@ SendOnHoldO:
 	}
 	else if(g_OyaOnHold = "L")
 	{
-		if(g_KeySingle = "有効" || kOyaL = "Space")
+		if(g_KeySingle = "有効" || kName = "Space")
 		{
-			if(g_OyaLDown=1)
+			if(g_OyaLKeyOn=1)
 			{
-				SubSend(MnDown(kOyaL) . MnUp(kOyaL))
-				g_OyaLDown := 0
+				SubSend(MnDown(kName) . MnUp(kName))
+				g_OyaLKeyOn := 0
 			}
 		}
 		if(g_KeyInPtn ="LM" || g_KeyInPtn ="LMl" || g_KeyInPtn ="ML")
@@ -641,43 +666,26 @@ SendOnHoldO:
 			g_keyInPtn := ""
 		}
 	}
-	; 連続モードでなければ押されていない状態に
-	if(g_Continue = 0)
-	{
-		g_OyaOnHold := "N"
-		g_Oya := "N"
-	}
 	return
 
 ;----------------------------------------------------------------------
-; キー押下
+; 文字キー押下
 ;----------------------------------------------------------------------
-keydown:
+keydownM:
 	Critical
 	GuiControl,2:,vkeyDN%MojiCode%,□
 	
-	g_trigger := kName
 	RegLogs(kName . " down")
-
 	gosub,Polling
-	if(MojiCode = 0)	; 文字キー以外(space,tab,Enter,Ctrl)
-	{
-		g_ModifierTick := Pf_Count()	;A_TickCount
-		Gosub,ModeInitialize
-
-		SubSend(MnDown(kName))
-		g_KeyInPtn := ""
-		critical,off
-		return
-	}
+	keyState[MojiCode] := 1
 	if(g_MojiOnHold<>"")
 	{
 		; 文字キーダウン
-		if(g_KeyInPtn = "M")
+		if(g_KeyInPtn = "M")	; S2)Mオン状態
 		{
 			Gosub, SendOnHoldM
 		}
-		else if(g_KeyInPtn="ML" || g_KeyInPtn="MR")
+		else if(g_KeyInPtn="ML" || g_KeyInPtn="MR")	; S4)M-Oオン状態
 		{
 			; 処理A 3キー判定
 			if(g_KeyInPtn = "MR")
@@ -695,11 +703,11 @@ keydown:
 				Gosub, SendOnHoldMO		; 保留キーの同時打鍵
 			}
 		}
-		else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")
+		else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")		;S5)O-Mオン状態
 		{
 			Gosub, SendOnHoldMO
 		}
-		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")
+		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S6)O-M-Oオフ状態
 		{
 			Gosub, SendOnHoldMO			; 同時打鍵
 		}
@@ -782,7 +790,7 @@ SendZeroDelay:
 			}
 		}
 		; 左右親指シフト面と非シフト面の文字キーに制御コードが有れば、保留しない
-		if(mod(strlen(kdn[g_RomajiOnHold . N . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "R" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn%g_RomajiOnHold%L%g_KoyubiOnHold%%g_MojiOnHold%),14)!=1)
+		if(mod(strlen(kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "R" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "L" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1)
 		{
 			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
@@ -813,16 +821,32 @@ SendZeroDelay:
 	return
 
 ;----------------------------------------------------------------------
+; 修飾キー押下
+;----------------------------------------------------------------------
+keydownX:
+	Critical
+	GuiControl,2:,vkeyDN%MojiCode%,□
+
+	RegLogs(kName . " down")
+	gosub,Polling
+	keyState[MojiCode] := 1
+	g_ModifierTick := Pf_Count()	;A_TickCount
+	Gosub,ModeInitialize
+	SubSend(MnDown(kName))
+	g_KeyInPtn := ""
+	critical,off
+	return
+
+;----------------------------------------------------------------------
 ; キーアップ（押下終了）
 ;----------------------------------------------------------------------
-keyup:
+keyupM:
 	Critical
 	GuiControl,2:,vkeyDN%MojiCode%,　
 
-	g_trigger := kName
 	RegLogs(kName . " up")
-
 	gosub,Polling
+	keyState[MojiCode] := 0
 	g_MojiUpTick := Pf_Count()	;A_TickCount
 	if(MojiCode = g_MojiOnHold)	; 保留キーがアップされた
 	{
@@ -859,19 +883,29 @@ keyup:
 			Gosub, SendOnHoldMO
 		}
 	}
-	if(MojiCode = 0)	; 文字キー以外（Space,Tab,Insert,...)
-	{
-		vOut := MnUp(kName)
-		SubSend(vOut)
-		critical,off
-		return
-	}
 	vOut := kup_save[MojiCode]
 	SubSend(vOut)
 	kup_save[MojiCode] := ""
 	critical,off
 	return
-	
+
+
+;----------------------------------------------------------------------
+; 文字コード以外のキーアップ（押下終了）
+;----------------------------------------------------------------------
+keyupX:
+	Critical
+	GuiControl,2:,vkeyDN%MojiCode%,　
+
+	RegLogs(kName . " up")
+	gosub,Polling
+	keyState[MojiCode] := 0
+	g_MojiUpTick := Pf_Count()	;A_TickCount
+	vOut := MnUp(kName)
+	SubSend(vOut)
+	critical,off
+	return
+
 ;----------------------------------------------------------------------
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
@@ -937,7 +971,6 @@ ScanModifier:
 	} else {
 		g_Koyubi := "N"
 	}
-	g_trigger := "Int"
 	Critical
 	g_Modifier := 0x00
 	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
@@ -1275,6 +1308,12 @@ SetHook(flg)
 		Hotkey,*sc07B,%flg%
 		Hotkey,*sc07B up,%flg%
 	}
+	if(flg="off") {
+		g_OyaRState := 0
+		g_OyaRKeyOn := 0
+		g_OyaLState := 0	
+		g_OyaLKeyOn := 0
+	}
 	Critical,off
 	return
 }
@@ -1282,499 +1321,574 @@ SetHook(flg)
 ; １段目
 gSC002:	;1
 	kName := "1"
-	MojiCode := 11
-	Goto, keydown
+	MojiCode := "E01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC002up:
 	kName := "1"
-	MojiCode := 11
-	Goto, keyup
+	MojiCode := "E01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC003:	;2
 	kName := "2"
-	MojiCode := 12
-	Goto, keydown
+	MojiCode := "E02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC003up:
 	kName := "2"
-	MojiCode := 12
-	Goto, keyup
+	MojiCode := "E02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC004:	;3
 	kName := "3"
-	MojiCode := 13
-	Goto, keydown
+	MojiCode := "E03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC004up:
 	kName := "3"
-	MojiCode := 13
-	Goto, keyup
+	MojiCode := "E03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC005:	;4
 	kName := "4"
-	MojiCode := 14
-	Goto, keydown
+	MojiCode := "E04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC005up:
 	kName := "4"
-	MojiCode := 14
-	Goto, keyup
+	MojiCode := "E04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC006:	;5
 	kName := "5"
-	MojiCode := 15
-	Goto, keydown
+	MojiCode := "E05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC006up:
 	kName := "5"
-	MojiCode := 15
-	Goto, keyup
+	MojiCode := "E05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC007:	;6
 	kName := "6"
-	MojiCode := 16
-	Goto, keydown
+	MojiCode := "E06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC007up:
 	kName := "6"
-	MojiCode := 16
-	Goto, keyup
+	MojiCode := "E06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC008:	;7
 	kName := "7"
-	MojiCode := 17
-	Goto, keydown
+	MojiCode := "E07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC008up:
 	kName := "7"
-	MojiCode := 17
-	Goto, keyup
+	MojiCode := "E07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC009:	;8
 	kName := "8"
-	MojiCode := 18
-	Goto, keydown
+	MojiCode := "E08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC009up:
 	kName := "8"
-	MojiCode := 18
-	Goto, keyup
+	MojiCode := "E08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC00A:	;9
 	kName := "9"
-	MojiCode := 19
-	Goto, keydown
+	MojiCode := "E09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC00Aup:
 	kName := "9"
-	MojiCode := 19
-	Goto, keyup
+	MojiCode := "E09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC00B:	;0
 	kName := "10"
-	MojiCode := 110
-	Goto, keydown
+	MojiCode := "E10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC00Bup:
 	kName := "10"
-	MojiCode := 110
-	Goto, keyup
+	MojiCode := "E10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC00C:	;-
 	kName := "-"
-	MojiCode := 111
-	Goto, keydown
+	MojiCode := "E11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC00Cup:
 	kName := "-"
-	MojiCode := 111
-	Goto, keyup
+	MojiCode := "E11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC00D:	;^
 	kName := "^"
-	MojiCode := 112
-	Goto, keydown
+	MojiCode := "E12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC00Dup:
 	kName := "^"
-	MojiCode := 112
-	Goto, keyup
+	MojiCode := "E12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC07D:	;\
 	kName := "\"
-	MojiCode := 113
-	Goto, keydown
+	MojiCode := "E13"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC07Dup:
 	kName := "\"
-	MojiCode := 113
-	Goto, keyup
+	MojiCode := "E13"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 ;　２段目
 gSC010:	;q
 	kName := "q"
-	MojiCode := 21
-	Goto, keydown
+	MojiCode := "D01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC010up:
 	kName := "q"
-	MojiCode := 21
-	Goto, keyup
+	MojiCode := "D01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC011:	;w
 	kName := "w"
-	MojiCode := 22
-	Goto, keydown
+	MojiCode := "D02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC011up:	;w
 	kName := "w"
-	MojiCode := 22
-	Goto, keyup
+	MojiCode := "D02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC012:	;e
 	kName := "e"
-	MojiCode := 23
-	Goto, keydown
+	MojiCode := "D03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC012up:	;e
 	kName := "e"
-	MojiCode := 23
-	Goto, keyup
+	MojiCode := "D03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC013:	;r
 	kName := "r"
-	MojiCode := 24
-	Goto, keydown
+	MojiCode := "D04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC013up:	;r
 	kName := "r"
-	MojiCode := 24
-	Goto, keyup
+	MojiCode := "D04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC014:	;t
 	kName := "t"
-	MojiCode := 25
-	Goto, keydown
+	MojiCode := "D05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC014up:	;t
 	kName := "t"
-	MojiCode := 25
-	Goto, keyup
+	MojiCode := "D05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC015:	;y
 	kName := "y"
-	MojiCode := 26
-	Goto, keydown
+	MojiCode := "D06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC015up:	;y
 	kName := "y"
-	MojiCode := 26
-	Goto, keyup
+	MojiCode := "D06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC016:	;u
 	kName := "u"
-	MojiCode := 27
-	Goto, keydown
+	MojiCode := "D07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC016up:	;u
 	kName := "u"
-	MojiCode := 27
-	Goto, keyup
+	MojiCode := "D07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC017:	;i
 	kName := "i"
-	MojiCode := 28
-	Goto, keydown
+	MojiCode := "D08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC017up:	;i
 	kName := "i"
-	MojiCode := 28
-	Goto, keyup
+	MojiCode := "D08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC018:	;o
 	kName := "o"
-	MojiCode := 29
-	Goto, keydown
+	MojiCode := "D09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC018up:	;o
 	kName := "o"
-	MojiCode := 29
-	Goto, keyup
+	MojiCode := "D09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC019:	;p
 	kName := "p"
-	MojiCode := 210
-	Goto, keydown
+	MojiCode := "D10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC019up:	;p
 	kName := "p"
-	MojiCode := 210
-	Goto, keyup
+	MojiCode := "D10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC01A:	;@
 	kName := "@"
-	MojiCode := 211
-	Goto, keydown
+	MojiCode := "D11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC01Aup:	;@
 	kName := "@"
-	MojiCode := 211
-	Goto, keyup
+	MojiCode := "D11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC01B:	;[
 	kName := "["
-	MojiCode := 212
-	Goto, keydown
+	MojiCode := "D12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC01Bup:	;[
 	kName := "["
-	MojiCode := 212
-	Goto, keyup
+	MojiCode := "D12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 ; ３段目
 gSC01E:	;a
 	kName := "a"
-	MojiCode := 31
-	Goto, keydown
+	MojiCode := "C01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC01Eup:	;a
 	kName := "a"
-	MojiCode := 31
-	Goto, keyup
+	MojiCode := "C01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC01F:	;s
 	kName := "s"
-	MojiCode := 32
-	Goto, keydown
+	MojiCode := "C02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC01Fup:	;s
 	kName := "s"
-	MojiCode := 32
-	Goto, keyup
+	MojiCode := "C02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC020:	;d
 	kName := "d"
-	MojiCode := 33
-	Goto, keydown
+	MojiCode := "C03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC020up:	;d
 	kName := "d"
-	MojiCode := 33
-	Goto, keyup
+	MojiCode := "C03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC021:	;f
 	kName := "f"
-	MojiCode := 34
-	Goto, keydown
+	MojiCode := "C04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC021up:	;f
 	kName := "f"
-	MojiCode := 34
-	Goto, keyup
+	MojiCode := "C04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC022:	;g
 	kName := "g"
-	MojiCode := 35
-	Goto, keydown
+	MojiCode := "C05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC022up:	;g
 	kName := "g"
-	MojiCode := 35
-	Goto, keyup
+	MojiCode := "C05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC023:	;h
 	kName := "h"
-	MojiCode := 36
-	Goto, keydown
+	MojiCode := "C06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC023up:	;h
 	kName := "h"
-	MojiCode := 36
-	Goto, keyup
+	MojiCode := "C06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC024: ;j
 	kName := "j"
-	MojiCode := 37
-	Goto, keydown
+	MojiCode := "C07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC024up: ;j
 	kName := "j"
-	MojiCode := 37
-	Goto, keyup
+	MojiCode := "C07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC025: ;k
 	kName := "k"
-	MojiCode := 38
-	Goto, keydown
+	MojiCode := "C08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC025up: ;k
 	kName := "k"
-	MojiCode := 38
-	Goto, keyup
+	MojiCode := "C08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC026: ;l
 	kName := "l"
-	MojiCode := 39
-	Goto, keydown
+	MojiCode := "C09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC026up: ;l
 	kName := "l"
-	MojiCode := 39
-	Goto, keyup
+	MojiCode := "C09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC027: ;';'
 	kName := ";"
-	MojiCode := 310
-	Goto, keydown
+	MojiCode := "C10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC027up: ;';'
 	kName := ";"
-	MojiCode := 310
-	Goto, keyup
+	MojiCode := "C10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC028: ;'*'
 	kName := "*"
-	MojiCode := 311
-	Goto, keydown
+	MojiCode := "C11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC028up: ;'*'
 	kName := "*"
-	MojiCode := 311
-	Goto, keyup
+	MojiCode := "C11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC02B: ;']'
 	kName := "]"
-	MojiCode := 312
-	Goto, keydown
+	MojiCode := "C12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC02Bup: ;']'
 	kName := "]"
-	MojiCode := 312
-	Goto, keyup
+	MojiCode := "C12"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 ;４段目
 gSC02C:	;z
 	kName := "z"
-	MojiCode := 41
-	Goto, keydown
+	MojiCode := "B01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC02Cup:	;z
 	kName := "z"
-	MojiCode := 41
-	Goto, keyup
+	MojiCode := "B01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC02D:	;x
 	kName := "x"
-	MojiCode := 42
-	Goto, keydown
+	MojiCode := "B02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC02Dup:	;x
 	kName := "x"
-	MojiCode := 42
-	Goto, keyup
+	MojiCode := "B02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC02E:	;c
 	kName := "c"
-	MojiCode := 43
-	Goto, keydown
+	MojiCode := "B03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC02Eup:	;c
 	kName := "c"
-	MojiCode := 43
-	Goto, keyup
+	MojiCode := "B03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC02F:	;v
 	kName := "v"
-	MojiCode := 44
-	Goto, keydown
+	MojiCode := "B04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC02Fup:	;v
 	kName := "v"
-	MojiCode := 44
-	Goto, keyup
+	MojiCode := "B04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC030:	;b
 	kName := "b"
-	MojiCode := 45
-	Goto, keydown
+	MojiCode := "B05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC030up:	;b
 	kName := "b"
-	MojiCode := 45
-	Goto, keyup
+	MojiCode := "B05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC031:	;n
 	kName := "n"
-	MojiCode := 46
-	Goto, keydown
+	MojiCode := "B06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC031up:	;n
 	kName := "n"
-	MojiCode := 46
-	Goto, keyup
+	MojiCode := "B06"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC032:	;m
 	kName := "m"
-	MojiCode := 47
-	Goto, keydown
+	MojiCode := "B07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC032up:	;m
 	kName := "m"
-	MojiCode := 47
-	Goto, keyup
+	MojiCode := "B07"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC033:	;,
 	kName := "`,"
-	MojiCode := 48
-	Goto, keydown
+	MojiCode := "B08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC033up:	;,
 	kName := "`,"
-	MojiCode := 48
-	Goto, keyup
+	MojiCode := "B08"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC034:	;.
 	kName := "."
-	MojiCode := 49
-	Goto, keydown
+	MojiCode := "B09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC034up:	;.
 	kName := "."
-	MojiCode := 49
-	Goto, keyup
+	MojiCode := "B09"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC035:	;/
 	kName := "/"
-	MojiCode := 410
-	Goto, keydown
+	MojiCode := "B10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC035up:	;/
 	kName := "/"
-	MojiCode := 410
-	Goto, keyup
+	MojiCode := "B10"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC073:	;\
 	kName := "\"
-	MojiCode := 411
-	Goto, keydown
+	MojiCode := "B11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC073up:	;_
 	kName := "\"
-	MojiCode := 411
-	Goto, keyup
+	MojiCode := "B11"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 
 gTAB:
 	kName := "Tab"
-	MojiCode := 0
-	Goto, keydown
+	MojiCode := "D00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gTABup:
 	kName := "Tab"
-	MojiCode := 0
-	Goto, keyup
+	MojiCode := "D00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gENTER:
 	kName := "Enter"
-	MojiCode := 0
-	Goto, keydown
+	MojiCode := "C13"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gENTERup:
 	kName := "Enter"
-	MojiCode := 0
-	Goto, keyup
+	MojiCode := "C13"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gBACKSPACE:
 	kName := "Backspace"
-	MojiCode := 0
-	Goto, keydown
+	MojiCode := "E14"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gBACKSPACEup:
 	kName := "Backspace"
-	MojiCode := 0
-	Goto, keyup
+	MojiCode := "E14"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC029:	;半角／全角
 	kName := "sc029"
-	MojiCode := 0
-	Goto, keydown
+	MojiCode := "E00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC029up:	;半角／全角
 	kName := "sc029"
-	MojiCode := 0
-	Goto, keyup
+	MojiCode := "E00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gSC070:	;ひらがな／カタカナ
 	kName := "sc070"
-	MojiCode := 0
-	Goto, keydown
+	MojiCode := "A04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gSC070up:	;ひらがな／カタカナ
 	kName := "sc070"
-	MojiCode := 0
-	Goto, keyup
+	MojiCode := "A04"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 
 gSpace:
 	kName := "Space"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN52,□
-	if(kOyaL==kName) {
-		Goto, gOyaL
-	}
-	if(kOyaR==kName) {
-		Goto, gOyaR
-	}
-	Goto, keydown
+	MojiCode := "A02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
+
 gSpaceUp:
 	kName := "Space"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN52,　
-	if(kOyaL=="Space") {
-		Goto, gOyaLUp
-	}
-	if(kOyaR=="Space") {
-		Goto, gOyaRUp
-	}
-	Goto, keyup
+	MojiCode := "A02"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
+
 gSC07B:					; 無変換キー（左）
 	kName := "sc07B"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN51,□
-	if(kOyaL==kName) {
-		Goto, gOyaL
-	}
-	if(kOyaR==kName) {
-		Goto, gOyaR
-	}
-	Goto, keydown
+	MojiCode := "A01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
+
 gSC07Bup:
 	kName := "sc07B"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN51,　
-	if(kOyaL==kName) {
-		Goto, gOyaLUp
-	}
-	if(kOyaR==kName) {
-		Goto, gOyaRUp
-	}
-	Goto, keyup
+	MojiCode := "A01"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
+
 gSC079:				; 変換キー（右）
 	kName := "sc079"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN53,□
-	if(kOyaL==kName) {
-		Goto, gOyaL
-	}
-	if(kOyaR==kName) {
-		Goto, gOyaR
-	}
-	Goto, keydown
+	MojiCode := "A03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
+
 gSC079up:
 	kName := "sc079"
-	MojiCode := 0
-	GuiControl,2:,vkeyDN53,　
-	if(kOyaL=kName) {
-		Goto, gOyaLUp
-	}
-	if(kOyaR=kName) {
-		Goto, gOyaRUp
-	}
-	Goto, keyup
+	MojiCode := "A03"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 
 ;-----------------------------------------------------------------------
 ; 機能：モディファイアキー
@@ -1787,17 +1901,22 @@ gSC079up:
 
 gLCTRL:
 	kName := "LCtrl"
-	MojiCode = 0
-	Goto, keydown
+	MojiCode := "A00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gLCTRLup:
 	kName := "LCtrl"
-	MojiCode = 0
-	Goto, keyup
+	MojiCode := "A00"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
 gRCTRL:
 	kName := "RCtrl"
-	MojiCode = 0
-	Goto, keydown
+	MojiCode := "A05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keydown%g_metaKey%
 gRCTRLup:
 	kName := "RCtrl"
-	MojiCode = 0
-	Goto, keyup
+	MojiCode := "A05"
+	g_metaKey := keyAttributeHash[MojiCode]
+	goto, keyup%g_metaKey%
+

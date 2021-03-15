@@ -501,7 +501,7 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		org := StrSplit(LF["NUL" . _col],",")
+		org := StrSplit(LF["NUL" . _colcnv[_col]],",")
 		loop,% org.MaxIndex()
 		{
 			GuiControl,-Redraw,vkeyDN%_col%%A_Index%
@@ -515,13 +515,13 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF[g_Romaji . "NK" . _col] != "")
+		if(LF[g_Romaji . "NK" . _colcnv[_col]] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "NK" . _col],",")
+			org := StrSplit(LF[g_Romaji . "NK" . _colcnv[_col]],",")
 		}
 		else
 		{
-			org := StrSplit(LF["ADK" . _col],",")
+			org := StrSplit(LF["ADK" . _colcnv[_col]],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -532,13 +532,13 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF[g_Romaji . "NN" . _col] != "")
+		if(LF[g_Romaji . "NN" . _colcnv[_col]] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "NN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "NN" . _colcnv[_col]],",")
 		}
 		else
 		{
-			org := StrSplit(LF["ADN" . _col],",")
+			org := StrSplit(LF["ADN" . _colcnv[_col]],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -549,13 +549,13 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF[g_Romaji . "LN" . _col] != "")
+		if(LF[g_Romaji . "LN" . _colcnv[_col]] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "LN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "LN" . _colcnv[_col]],",")
 		}
 		else
 		{
-			org := StrSplit(LF["NUL" . _col],",")
+			org := StrSplit(LF["NUL" . _colcnv[_col]],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -566,13 +566,13 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		if(LF[g_Romaji . "RN" . _col] != "")
+		if(LF[g_Romaji . "RN" . _colcnv[_col]] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "RN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "RN" . _colcnv[_col]],",")
 		}
 		else
 		{
-			org := StrSplit(LF["NUL" . _col],",")
+			org := StrSplit(LF["NUL" . _colcnv[_col]],",")
 		}
 		loop,% org.MaxIndex()
 		{
@@ -583,7 +583,7 @@ SLRefreshLayout:
 	loop,4
 	{
 		_col := A_Index
-		org := StrSplit(LF["NUL" . _col],",")
+		org := StrSplit(LF["NUL" . _colcnv[_col]],",")
 		loop,% org.MaxIndex()
 		{
 			GuiControl,+Redraw,vkeyDN%_col%%A_Index%

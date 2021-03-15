@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.3 .... 2020/10/5
+;	ver.0.1.4.4 .... 2021/3/14
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -18,6 +18,8 @@
 ; Iniファイルの読み込み
 ;-----------------------------------------------------------------------
 Init:
+	keyAttributeHash := MakeKeyAttributeHash()
+	keyState := MakeKeyState()
 	g_IniFile := ".\benizara.ini"
 	if(Path_FileExists(g_IniFile) = 0)
 	{
@@ -178,8 +180,6 @@ _Settings:
 	Gui, Show, W720 H440, 紅皿設定
 
 	s_Romaji := ""
-	s_kOyaL := "" 
-	s_kOyaR := ""
 	s_KeySingle := ""
 	SetTimer,G2PollingLayout,50
 	GuiControl,Focus,vEdit
@@ -249,7 +249,7 @@ G2DrawKeyFrame:
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：１～４行目の各キーの矩形と入力文字の表示
+; 機能：E～B段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
 G2KeyRectChar:
 	_xpos := 32*(_col-1) + 48*(_row - 1) + 40
@@ -257,36 +257,40 @@ G2KeyRectChar:
 	Gosub, G2KeyRectangle
 	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 10
+	_col2 := _colcnv[_col]
+	_row2 := _rowcnv[_row]
 	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRK%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Add, Text,vvkeyRK%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 30
 	_ypos0 := _ypos + 10
 	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRR%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Add, Text,vvkeyRR%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 30
 	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRL%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Add, Text,vvkeyRL%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 30
 	_ypos0 := _ypos + 30
 	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRN%_col%%_row% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Add, Text,vvkeyRN%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 	Gosub, G2KeyBorder
 	return
 ;-----------------------------------------------------------------------
-; 機能：１～４行目の各キーの矩形と入力文字の表示
+; 機能：A段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
 G2KeyRectChar5:
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
 	Gosub, G2KeyRectangle5
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 10
+	_col2 := _colcnv[_col]
+	_row2 := _rowcnv[_row]
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFA%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
+	Gui, Add, Text,vvkeyFA%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 30
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFB%_col%%_row% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
+	Gui, Add, Text,vvkeyFB%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
 	Gosub, G2KeyBorder
 	return
 
@@ -335,22 +339,22 @@ G2KeyRectangle5:
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(_row == 1 && kOyaL=="sc07B")
+	if(_row == 1 && keyAttributeHash["A01"] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else 
-	if(_row == 2 && kOyaL=="Space")
+	if(_row == 2 && keyAttributeHash["A02"] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else
-	if(_row == 2 && kOyaR=="Space")
+	if(_row == 2 && keyAttributeHash["A02"] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
 	else
-	if(_row == 3 && kOyaR=="sc079")
+	if(_row == 3 && keyAttributeHash["A03"] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
@@ -360,7 +364,9 @@ G2KeyRectangle5:
 	}
 	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	Gui, Add, Text,vvkeyFC%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
+	_col2 := _colcnv[_col]
+	_row2 := _rowcnv[_row]
+	Gui, Add, Text,vvkeyFC%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
 ;-----------------------------------------------------------------------
@@ -370,8 +376,12 @@ G2KeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	Gui, Add, Text,vvkeyDN%_col%%_row% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
-	vkeyDN%_col%%A_Index% := "　"
+	_col2 := _colcnv[_col]
+	_row2 := _rowcnv[_row]
+	
+	Gui, Add, Text,vvkeyDN%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
+	;_row2 := _rowcnv[A_Index]
+	;vkeyDN%_col2%%_row2% := "　"
 	return
 
 ;-----------------------------------------------------------------------
@@ -384,15 +394,13 @@ G2PollingLayout:
 	{
 		return
 	}
-	if(s_kOyaL != kOyaL || s_kOyaR != kOyaR || s_KeySingle != g_KeySingle || s_Romaji != g_Romaji)
+	if(s_KeySingle != g_KeySingle || s_Romaji != g_Romaji)
 	{
 		if(s_Romaji != g_Romaji) 
 		{
 			s_Romaji := g_Romaji
 			Gosub,G2RefreshLayout
 		}
-		s_kOyaL := kOyaL 
-		s_kOyaR := kOyaR
 		s_KeySingle := g_KeySingle
 		Gosub,G2RefreshLayout5
 	}
@@ -408,108 +416,108 @@ G2PollingLayout:
 G2RefreshLayout5:
 	Critical
 	Gui, Submit, NoHide
-	GuiControl,-Redraw,vkeyDN51
-	GuiControl,-Redraw,vkeyDN52
-	GuiControl,-Redraw,vkeyDN53
+	GuiControl,-Redraw,vkeyDNA01
+	GuiControl,-Redraw,vkeyDNA02
+	GuiControl,-Redraw,vkeyDNA03
 	if((g_Romaji="A" && LFA!=0x77)
 	|| (g_Romaji="R" && LFR!=0x77)) {
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC51
+		GuiControl,Font,vkeyFCA01
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC52
+		GuiControl,Font,vkeyFCA02
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC53
+		GuiControl,Font,vkeyFCA03
 		Gui, Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFA51,　　　
-		GuiControl,,vkeyFA52,　　　
-		GuiControl,,vkeyFA53,　　　
-		GuiControl,,vkeyFB51,無変換
-		GuiControl,,vkeyFB52, 空白 
-		GuiControl,,vkeyFB53, 変換 
+		GuiControl,,vkeyFAA01,　　　
+		GuiControl,,vkeyFAA02,　　　
+		GuiControl,,vkeyFAA03,　　　
+		GuiControl,,vkeyFBA01,無変換
+		GuiControl,,vkeyFBA02, 空白 
+		GuiControl,,vkeyFBA03, 変換 
 	}
 	else
-	if(s_kOyaL = "sc07B" && s_kOyaR = "sc079")
+	if(keyAttributeHash["A01"] == "L" && keyAttributeHash["A03"] == "R")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC51
+		GuiControl,Font,vkeyFCA01
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC52
+		GuiControl,Font,vkeyFCA02
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC53
+		GuiControl,Font,vkeyFCA03
 		Gui, Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFA51,左親指
-		GuiControl,,vkeyFA52,　　　
-		GuiControl,,vkeyFA53,右親指
+		GuiControl,,vkeyFAA01,左親指
+		GuiControl,,vkeyFAA02,　　　
+		GuiControl,,vkeyFAA03,右親指
 		if(s_KeySingle = "有効")
 		{
-			GuiControl,,vkeyFB51,無変換
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53, 変換 
+			GuiControl,,vkeyFBA01,無変換
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03, 変換 
 		}
 		else
 		{
-			GuiControl,,vkeyFB51,　　　
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53,　　　
+			GuiControl,,vkeyFBA01,　　　
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03,　　　
 		}
 	}
-	else if(s_kOyaL = "sc07B" && s_kOyaR = "Space")
+	else if(keyAttributeHash["A01"] == "L" && keyAttributeHash["A02"] == "R")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC51 
+		GuiControl,Font,vkeyFCA01 
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC52
+		GuiControl,Font,vkeyFCA02
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC53
-		GuiControl,,vkeyFA51,左親指
-		GuiControl,,vkeyFA52,右親指
-		GuiControl,,vkeyFA53,　　　
+		GuiControl,Font,vkeyFCA03
+		GuiControl,,vkeyFAA01,左親指
+		GuiControl,,vkeyFAA02,右親指
+		GuiControl,,vkeyFAA03,　　　
 		if(s_KeySingle = "有効")
 		{
-			GuiControl,,vkeyFB51,無変換
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53, 変換 
+			GuiControl,,vkeyFBA01,無変換
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03, 変換 
 		}
 		else
 		{
-			GuiControl,,vkeyFB51,　　　
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53, 変換 
+			GuiControl,,vkeyFBA01,　　　
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03, 変換 
 		}
 	}
 	else	; 空白－変換
 	{
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC51
+		GuiControl,Font,vkeyFCA01
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC52
+		GuiControl,Font,vkeyFCA02
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC53
-		GuiControl,,vkeyFA51,　　　
-		GuiControl,,vkeyFA52,左親指
-		GuiControl,,vkeyFA53,右親指
+		GuiControl,Font,vkeyFCA03
+		GuiControl,,vkeyFAA01,　　　
+		GuiControl,,vkeyFAA02,左親指
+		GuiControl,,vkeyFAA03,右親指
 		if(s_KeySingle = "有効")
 		{
-			GuiControl,,vkeyFB51,無変換
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53, 変換 
+			GuiControl,,vkeyFBA01,無変換
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03, 変換 
 		}
 		else
 		{
-			GuiControl,,vkeyFB51,無変換
-			GuiControl,,vkeyFB52, 空白 
-			GuiControl,,vkeyFB53,　　　
+			GuiControl,,vkeyFBA01,無変換
+			GuiControl,,vkeyFBA02, 空白 
+			GuiControl,,vkeyFBA03,　　　
 		}
 	}
-	vkeyDN51 := "　"
-	GuiControl,2:,vkeyDN51,　
-	vkeyDN52 := "　"
-	GuiControl,2:,vkeyDN52,　
-	vkeyDN53 := "　"
-	GuiControl,2:,vkeyDN53,　
-	GuiControl,+Redraw,vkeyDN51
-	GuiControl,+Redraw,vkeyDN52
-	GuiControl,+Redraw,vkeyDN53
+	vkeyDNA01 := "　"
+	GuiControl,2:,vkeyDNA01,　
+	vkeyDNA02 := "　"
+	GuiControl,2:,vkeyDNA02,　
+	vkeyDNA03 := "　"
+	GuiControl,2:,vkeyDNA03,　
+	GuiControl,+Redraw,vkeyDNA01
+	GuiControl,+Redraw,vkeyDNA02
+	GuiControl,+Redraw,vkeyDNA03
 	Critical,off
 	return
 
@@ -521,97 +529,103 @@ G2RefreshLayout:
 	Gui, Submit, NoHide
 	loop,4
 	{
-		_col := A_Index
-		org := StrSplit(LF["NUL" . _col],",")
+		_col2 := _colcnv[A_Index]
+		org := StrSplit(LF["NUL" . _col2],",")
 		loop,% org.MaxIndex()
 		{
-			GuiControl,-Redraw,vkeyDN%_col%%A_Index%
-			GuiControl,,vkeyDN%_col%%A_Index%,　
-			GuiControl,-Redraw,vkeyRK%_col%%A_Index%
-			GuiControl,-Redraw,vkeyRN%_col%%A_Index%
-			GuiControl,-Redraw,vkeyRL%_col%%A_Index%
-			GuiControl,-Redraw,vkeyRR%_col%%A_Index%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,-Redraw,vkeyDN%_col2%%_row2%
+			GuiControl,,vkeyDN%_col2%%_row2%,　
+			GuiControl,-Redraw,vkeyRK%_col2%%_row2%
+			GuiControl,-Redraw,vkeyRN%_col2%%_row2%
+			GuiControl,-Redraw,vkeyRL%_col2%%_row2%
+			GuiControl,-Redraw,vkeyRR%_col2%%_row2%
 		}
 	}
 	loop,4
 	{
-		_col := A_Index
-		if(LF[g_Romaji . "NK" . _col] != "")
+		_col2 := _colcnv[A_Index]
+		if(LF[g_Romaji . "NK" . _col2] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "NK" . _col],",")
+			org := StrSplit(LF[g_Romaji . "NK" . _col2],",")
 		}
 		else
 		{
-			org := StrSplit(LF["ADK" . _col],",")
+			org := StrSplit(LF["ADK" . _col2],",")
 		}
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			GuiControl,,vkeyRK%_col%%A_Index%,%_ch%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,,vkeyRK%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col := A_Index
-		if(LF[g_Romaji . "NN" . _col] != "")
+		_col2 := _colcnv[A_Index]
+		if(LF[g_Romaji . "NN" . _col2] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "NN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "NN" . _col2],",")
 		}
 		else
 		{
-			org := StrSplit(LF["ADN" . _col],",")
+			org := StrSplit(LF["ADN" . _col2],",")
 		}
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			GuiControl,,vkeyRN%_col%%A_Index%,%_ch%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,,vkeyRN%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col := A_Index
-		if(LF[g_Romaji . "LN" . _col] != "")
+		_col2 := _colcnv[A_Index]
+		if(LF[g_Romaji . "LN" . _col2] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "LN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "LN" . _col2],",")
 		}
 		else
 		{
-			org := StrSplit(LF["NUL" . _col],",")
+			org := StrSplit(LF["NUL" . _col2],",")
 		}
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			GuiControl,,vkeyRL%_col%%A_Index%,%_ch%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,,vkeyRL%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col := A_Index
-		if(LF[g_Romaji . "RN" . _col] != "")
+		_col2 := _colcnv[A_Index]
+		if(LF[g_Romaji . "RN" . _col2] != "")
 		{
-			org := StrSplit(LF[g_Romaji . "RN" . _col],",")
+			org := StrSplit(LF[g_Romaji . "RN" . _col2],",")
 		}
 		else
 		{
-			org := StrSplit(LF["NUL" . _col],",")
+			org := StrSplit(LF["NUL" . _col2],",")
 		}
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			GuiControl,,vkeyRR%_col%%A_Index%,%_ch%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,,vkeyRR%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col := A_Index
-		org := StrSplit(LF["NUL" . _col],",")
+		_col2 := _colcnv[A_Index]
+		org := StrSplit(LF["NUL" . _col2],",")
 		loop,% org.MaxIndex()
 		{
-			GuiControl,+Redraw,vkeyDN%_col%%A_Index%
-			GuiControl,+Redraw,vkeyRK%_col%%A_Index%
-			GuiControl,+Redraw,vkeyRN%_col%%A_Index%
-			GuiControl,+Redraw,vkeyRL%_col%%A_Index%
-			GuiControl,+Redraw,vkeyRR%_col%%A_Index%
+			_row2 := _rowcnv[A_Index]
+			GuiControl,+Redraw,vkeyDN%_col2%%_row2%
+			GuiControl,+Redraw,vkeyRK%_col2%%_row2%
+			GuiControl,+Redraw,vkeyRN%_col2%%_row2%
+			GuiControl,+Redraw,vkeyRL%_col2%%_row2%
+			GuiControl,+Redraw,vkeyRR%_col2%%_row2%
 		}
 	}
 	Critical,off
@@ -627,161 +641,161 @@ ReadKeyboardState:
 		return
 	}
 	_vkey := 0x31
-	_keyname := "11"
+	_keyname := "E01"
 	Gosub,SetKeyGui2
 	_vkey := 0x32
-	_keyname := "12"
+	_keyname := "E02"
 	Gosub,SetKeyGui2
 	_vkey := 0x33
-	_keyname := "13"
+	_keyname := "E03"
 	Gosub,SetKeyGui2
 	_vkey := 0x34
-	_keyname := "14"  
+	_keyname := "E04"  
 	Gosub,SetKeyGui2
 	_vkey := 0x35
-	_keyname := "15"
+	_keyname := "E05"
 	Gosub,SetKeyGui2
 	_vkey := 0x36
-	_keyname := "16"
+	_keyname := "E06"
 	Gosub,SetKeyGui2
 	_vkey := 0x37
-	_keyname := "17"
+	_keyname := "E07"
 	Gosub,SetKeyGui2
 	_vkey := 0x38
-	_keyname := "18"
+	_keyname := "E08"
 	Gosub,SetKeyGui2
 	_vkey := 0x39
-	_keyname := "19"
+	_keyname := "E09"
 	Gosub,SetKeyGui2
 	_vkey := 0x30
-	_keyname := "110"
+	_keyname := "E10"
 	Gosub,SetKeyGui2
 	_vkey := 0xBD			;-
-	_keyname := "111"
+	_keyname := "E11"
 	Gosub,SetKeyGui2
 	_vkey := 0xDE			;^
-	_keyname := "112"
+	_keyname := "E12"
 	Gosub,SetKeyGui2
 	_vkey := 0xDC			;\
-	_keyname := "113"
+	_keyname := "E13"
 	Gosub,SetKeyGui2
 
 	_vkey := 0x51			;q
-	_keyname := "21"
+	_keyname := "D01"
 	Gosub,SetKeyGui2
 	_vkey := 0x57			;w
-	_keyname := "22"
+	_keyname := "D02"
 	Gosub,SetKeyGui2
 	_vkey := 0x45			;e
-	_keyname := "23"
+	_keyname := "D03"
 	Gosub,SetKeyGui2
 	_vkey := 0x52			;r
-	_keyname := "24"
+	_keyname := "D04"
 	Gosub,SetKeyGui2
 	_vkey := 0x54			;t
-	_keyname := "25"
+	_keyname := "D05"
 	Gosub,SetKeyGui2
 	_vkey := 0x59			;y
-	_keyname := "26"
+	_keyname := "D06"
 	Gosub,SetKeyGui2
 	_vkey := 0x55			;u
-	_keyname := "27"
+	_keyname := "D07"
 	Gosub,SetKeyGui2
 	_vkey := 0x49			;i
-	_keyname := "28"
+	_keyname := "D08"
 	Gosub,SetKeyGui2
 	_vkey := 0x4F			;o
-	_keyname := "29"
+	_keyname := "D09"
 	Gosub,SetKeyGui2
 	_vkey := 0x50			;p
-	_keyname := "210"
+	_keyname := "D10"
 	Gosub,SetKeyGui2
 	_vkey := 0xC0			;@
-	_keyname := "211"
+	_keyname := "D11"
 	Gosub,SetKeyGui2
 	_vkey := 0xDB			;[
-	_keyname := "212"
+	_keyname := "D12"
 	Gosub,SetKeyGui2
 	
 	_vkey := 0x41			;a
-	_keyname := "31"
+	_keyname := "C01"
 	Gosub,SetKeyGui2
 	_vkey := 0x53			;s
-	_keyname := "32"
+	_keyname := "C02"
 	Gosub,SetKeyGui2
 	_vkey := 0x44			;d
-	_keyname := "33"
+	_keyname := "C03"
 	Gosub,SetKeyGui2
 	_vkey := 0x46			;f
-	_keyname := "34"
+	_keyname := "C04"
 	Gosub,SetKeyGui2
 	_vkey := 0x47			;g
-	_keyname := "35"
+	_keyname := "C05"
 	Gosub,SetKeyGui2
 	_vkey := 0x48			;h
-	_keyname := "36"
+	_keyname := "C06"
 	Gosub,SetKeyGui2
 	_vkey := 0x4A			;j
-	_keyname := "37"
+	_keyname := "C07"
 	Gosub,SetKeyGui2
 	_vkey := 0x4B			;k
-	_keyname := "38"
+	_keyname := "C08"
 	Gosub,SetKeyGui2
 	_vkey := 0x4C			;l
-	_keyname := "39"
+	_keyname := "C09"
 	Gosub,SetKeyGui2
 	_vkey := 0xBB			;;
-	_keyname := "310"
+	_keyname := "C10"
 	Gosub,SetKeyGui2
 	_vkey := 0xBA			;:
-	_keyname := "311"
+	_keyname := "C11"
 	Gosub,SetKeyGui2
 	_vkey := 0xDD			;]
-	_keyname := "312"
+	_keyname := "C12"
 	Gosub,SetKeyGui2
 
 	_vkey := 0x5A			;z
-	_keyname := "41"
+	_keyname := "B01"
 	Gosub,SetKeyGui2
 	_vkey := 0x58			;x
-	_keyname := "42"
+	_keyname := "B02"
 	Gosub,SetKeyGui2
 	_vkey := 0x43			;c
-	_keyname := "43"
+	_keyname := "B03"
 	Gosub,SetKeyGui2
 	_vkey := 0x56			;v
-	_keyname := "44"
+	_keyname := "B04"
 	Gosub,SetKeyGui2
 	_vkey := 0x42			;b
-	_keyname := "45"
+	_keyname := "B05"
 	Gosub,SetKeyGui2
 	_vkey := 0x4E			;n
-	_keyname := "46"
+	_keyname := "B06"
 	Gosub,SetKeyGui2
 	_vkey := 0x4D			;m
-	_keyname := "47"
+	_keyname := "B07"
 	Gosub,SetKeyGui2
 	_vkey := 0xBC			;,
-	_keyname := "48"
+	_keyname := "B08"
 	Gosub,SetKeyGui2
 	_vkey := 0xBE			;.
-	_keyname := "49"
+	_keyname := "B09"
 	Gosub,SetKeyGui2
 	_vkey := 0xBF			;/
-	_keyname := "410"
+	_keyname := "B10"
 	Gosub,SetKeyGui2
 	_vkey := 0xE2			;\
-	_keyname := "411"
+	_keyname := "B11"
 	Gosub,SetKeyGui2
 	
 	_vkey := 0x1D			;無変換
-	_keyname := "51"
+	_keyname := "A01"
 	Gosub,SetKeyGui2
 	_vkey := 0x20			;スペース
-	_keyname := "52"
+	_keyname := "A02"
 	Gosub,SetKeyGui2
 	_vkey := 0x1C			;変換
-	_keyname := "53"
+	_keyname := "A03"
 	Gosub,SetKeyGui2
 	critical,off
 	return
@@ -867,18 +881,21 @@ RemapOya:
 	_OyaKey := vOyaKey
 	if(vOyaKey = "無変換－変換")
 	{
-		kOyaR := "sc079"
-		kOyaL := "sc07B"
+		keyAttributeHash["A01"] := "L"
+		keyAttributeHash["A02"] := "X"
+		keyAttributeHash["A03"] := "R"
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
-		kOyaR := "Space"
-		kOyaL := "sc07B"
+		keyAttributeHash["A01"] := "L"
+		keyAttributeHash["A02"] := "R"
+		keyAttributeHash["A03"] := "X"
 	}
 	else	; 空白－変換
 	{
-		kOyaL := "Space"
-		kOyaR := "sc079"
+		keyAttributeHash["A01"] := "X"
+		keyAttributeHash["A02"] := "L"
+		keyAttributeHash["A03"] := "R"
 	}
 	Return
 
@@ -989,3 +1006,136 @@ GuiClose:
 	Gui,Destroy
 	return
 
+
+;----------------------------------------------------------------------
+;	キー名から処理関数に変換
+;	M:文字キー
+;	X:修飾キー
+;	L:左親指キー
+;	R:右親指キー
+;----------------------------------------------------------------------
+MakeKeyAttributeHash() {
+	keyAttributeHash := Object()
+	keyAttributeHash["E00"] := "X"	; 半角/全角
+	keyAttributeHash["E01"] := "M"
+	keyAttributeHash["E02"] := "M"
+	keyAttributeHash["E03"] := "M"
+	keyAttributeHash["E04"] := "M"
+	keyAttributeHash["E05"] := "M"
+	keyAttributeHash["E06"] := "M"
+	keyAttributeHash["E07"] := "M"
+	keyAttributeHash["E08"] := "M"
+	keyAttributeHash["E09"] := "M"
+	keyAttributeHash["E10"] := "M"
+	keyAttributeHash["E11"] := "M"
+	keyAttributeHash["E12"] := "M"
+	keyAttributeHash["E13"] := "M"
+	keyAttributeHash["E14"] := "X"	; Backspace
+	keyAttributeHash["D00"] := "X"	; Tab
+	keyAttributeHash["D01"] := "M"
+	keyAttributeHash["D02"] := "M"
+	keyAttributeHash["D03"] := "M"
+	keyAttributeHash["D04"] := "M"
+	keyAttributeHash["D05"] := "M"
+	keyAttributeHash["D06"] := "M"
+	keyAttributeHash["D07"] := "M"
+	keyAttributeHash["D08"] := "M"
+	keyAttributeHash["D09"] := "M"
+	keyAttributeHash["D10"] := "M"
+	keyAttributeHash["D11"] := "M"
+	keyAttributeHash["D12"] := "M"
+	keyAttributeHash["C01"] := "M"
+	keyAttributeHash["C02"] := "M"
+	keyAttributeHash["C03"] := "M"
+	keyAttributeHash["C04"] := "M"
+	keyAttributeHash["C05"] := "M"
+	keyAttributeHash["C06"] := "M"
+	keyAttributeHash["C07"] := "M"
+	keyAttributeHash["C08"] := "M"
+	keyAttributeHash["C09"] := "M"
+	keyAttributeHash["C10"] := "M"
+	keyAttributeHash["C11"] := "M"
+	keyAttributeHash["C12"] := "M"
+	keyAttributeHash["C13"] := "X"	; Enter
+	keyAttributeHash["B01"] := "M"
+	keyAttributeHash["B02"] := "M"
+	keyAttributeHash["B03"] := "M"
+	keyAttributeHash["B04"] := "M"
+	keyAttributeHash["B05"] := "M"
+	keyAttributeHash["B06"] := "M"
+	keyAttributeHash["B07"] := "M"
+	keyAttributeHash["B08"] := "M"
+	keyAttributeHash["B09"] := "M"
+	keyAttributeHash["B10"] := "M"
+	keyAttributeHash["B11"] := "M"
+	keyAttributeHash["A00"] := "X"	; LCtrl
+	keyAttributeHash["A01"] := "L"
+	keyAttributeHash["A02"] := "X"	; Space
+	keyAttributeHash["A03"] := "R"
+	keyAttributeHash["A04"] := "X"	; カタカナひらがな
+	keyAttributeHash["A05"] := "X"	; Rctrl
+	return keyAttributeHash
+}
+
+MakeKeyState() {
+	keyState := Object()
+	keyState["E00"] := 0	; 半角/全角
+	keyState["E01"] := 0
+	keyState["E02"] := 0
+	keyState["E03"] := 0
+	keyState["E04"] := 0
+	keyState["E05"] := 0
+	keyState["E06"] := 0
+	keyState["E07"] := 0
+	keyState["E08"] := 0
+	keyState["E09"] := 0
+	keyState["E10"] := 0
+	keyState["E11"] := 0
+	keyState["E12"] := 0
+	keyState["E13"] := 0
+	keyState["E14"] := 0	; Backspace
+	keyState["D00"] := 0	; Tab
+	keyState["D01"] := 0
+	keyState["D02"] := 0
+	keyState["D03"] := 0
+	keyState["D04"] := 0
+	keyState["D05"] := 0
+	keyState["D06"] := 0
+	keyState["D07"] := 0
+	keyState["D08"] := 0
+	keyState["D09"] := 0
+	keyState["D10"] := 0
+	keyState["D11"] := 0
+	keyState["D12"] := 0
+	keyState["C01"] := 0
+	keyState["C02"] := 0
+	keyState["C03"] := 0
+	keyState["C04"] := 0
+	keyState["C05"] := 0
+	keyState["C06"] := 0
+	keyState["C07"] := 0
+	keyState["C08"] := 0
+	keyState["C09"] := 0
+	keyState["C10"] := 0
+	keyState["C11"] := 0
+	keyState["C12"] := 0
+	keyState["C13"] := 0	; Enter
+	keyState["B01"] := 0
+	keyState["B02"] := 0
+	keyState["B03"] := 0
+	keyState["B04"] := 0
+	keyState["B05"] := 0
+	keyState["B06"] := 0
+	keyState["B07"] := 0
+	keyState["B08"] := 0
+	keyState["B09"] := 0
+	keyState["B10"] := 0
+	keyState["B11"] := 0
+	keyState["A00"] := 0	;LCtrl
+	keyState["A01"] := 0
+	keyState["A02"] := 0	; Space
+	keyState["A03"] := 0
+	keyState["A04"] := 0	; カタカナひらがな
+	keyState["A05"] := 0	; RCtrl
+	return keyState
+}

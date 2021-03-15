@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.0 .... 2019/8/18
+;	ver.0.1.4.4 .... 2021/3/10
 ;-----------------------------------------------------------------------
 ReadLayout:
 	kup := Object()
@@ -34,6 +34,7 @@ ReadLayout:
 	romahash := MakeRomaHash()
 	SymbolHash := MakeSymbolHash()
 	layoutHash := MakeLayoutHash()
+	kanjiSymbolHash := MakeKanjiSymbolHash()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -75,37 +76,37 @@ InitLayout2:
 	LF["RRK"] := 0
 	loop,4
 	{
-		LF["ANN" . A_Index] := ""
-		LF["ALN" . A_Index] := ""
-		LF["ARN" . A_Index] := ""
+		LF["ANN" . _colcnv[A_Index]] := ""
+		LF["ALN" . _colcnv[A_Index]] := ""
+		LF["ARN" . _colcnv[A_Index]] := ""
 
-		LF["ANK" . A_Index] := ""
-		LF["ALK" . A_Index] := ""
-		LF["ARK" . A_Index] := ""
+		LF["ANK" . _colcnv[A_Index]] := ""
+		LF["ALK" . _colcnv[A_Index]] := ""
+		LF["ARK" . _colcnv[A_Index]] := ""
 
-		LF["RNN" . A_Index] := ""
-		LF["RLN" . A_Index] := ""
-		LF["RRN" . A_Index] := ""
+		LF["RNN" . _colcnv[A_Index]] := ""
+		LF["RLN" . _colcnv[A_Index]] := ""
+		LF["RRN" . _colcnv[A_Index]] := ""
 
-		LF["RNK" . A_Index] := ""
-		LF["RLK" . A_Index] := ""
-		LF["RRK" . A_Index] := ""
+		LF["RNK" . _colcnv[A_Index]] := ""
+		LF["RLK" . _colcnv[A_Index]] := ""
+		LF["RRK" . _colcnv[A_Index]] := ""
 	}
 	; デフォルトテーブル
-	LF["ADN1"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
-	LF["ADN2"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
-	LF["ADN3"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｋ,ｌ,ｌ,；,：,］"
-	LF["ADN4"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+	LF["ADNE"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
+	LF["ADND"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
+	LF["ADNC"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｋ,ｌ,ｌ,；,：,］"
+	LF["ADNB"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
 
-	LF["ADK1"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
-	LF["ADK2"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
-	LF["ADK3"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
-	LF["ADK4"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
+	LF["ADKE"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
+	LF["ADKD"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
+	LF["ADKC"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
+	LF["ADKB"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
 	; NULLテーブル
-	LF["NUL1"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
-	LF["NUL2"] := "　,　,　,　,　,　,　,　,　,　,　,　"
-	LF["NUL3"] := "　,　,　,　,　,　,　,　,　,　,　,　"
-	LF["NUL4"] := "　,　,　,　,　,　,　,　,　,　,　"
+	LF["NULE"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NULD"] := "　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NULC"] := "　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NULB"] := "　,　,　,　,　,　,　,　,　,　,　"
 	return
 
 
@@ -142,10 +143,10 @@ ReadLayoutFile:
 		{
 			cpos0 := Instr(_line2,"[")
 			cpos1 := Instr(_line2,"]")
-			if(cpos0 = 1 && cpos1 > cpos0)
+			if(cpos0 >= 1 && cpos1 > cpos0)
 			{
 				_LayoutName := SubStr(_line2, cpos0+1, cpos1-cpos0-1)
-				_mode := Layout2Mode(_LayoutName)
+				_mode := layoutHash[_LayoutName]
 				if(_mode <> "")
 				{
 					_mline := 0
@@ -155,7 +156,7 @@ ReadLayoutFile:
 			{
 				if _mline between 1 and 4
 				{
-					LF[_mode . _mline] := _line2
+					LF[_mode . _colcnv[_mline]] := _line2
 				}
 				_mline += 1
 				if(_mline > 4)
@@ -179,12 +180,11 @@ ReadLayoutFile:
 ;----------------------------------------------------------------------
 Mode2Key:
 	LF[_mode] := 1
-	_col := "1"
-	org := StrSplit(LF[_mode . _col],",")
+	_col := "E"
+	org := StrSplit(LF[_mode . "E"],",")
 	if(org.MaxIndex() <> 13)
 	{
-		_cnt := org.MaxIndex()
-		_error := _LayoutName . "の１段目にエラーがあります。要素数が" . _cnt . "です。"
+		_error := _LayoutName . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, TrimSpace
@@ -192,12 +192,11 @@ Mode2Key:
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	
-	_col := "2"
-	org := StrSplit(LF[_mode . _col],",")
+	_col := "D"
+	org := StrSplit(LF[_mode . "D"],",")
 	if(org.MaxIndex() <> 12)
 	{
-		_cnt := org.MaxIndex()
-		_error := _LayoutName . "の２段目にエラーがあります。要素数が" . _cnt . "です。"
+		_error := _LayoutName . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, TrimSpace
@@ -205,12 +204,11 @@ Mode2Key:
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	
-	_col := "3"
-	org := StrSplit(LF[_mode . _col],",")
+	_col := "C"
+	org := StrSplit(LF[_mode . "C"],",")
 	if(org.MaxIndex() <> 12)
 	{
-		_cnt := org.MaxIndex()
-		_error := _LayoutName . "の３段目にエラーがあります。要素数が" . _cnt . "です。"
+		_error := _LayoutName . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, TrimSpace
@@ -218,12 +216,11 @@ Mode2Key:
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 
-	_col := "4"
-	org := StrSplit(LF[_mode . _col],",")
+	_col := "B"
+	org := StrSplit(LF[_mode . "B"],",")
 	if(org.MaxIndex() <> 11)
 	{
-		_cnt := org.MaxIndex()
-		_error := _LayoutName . "の４段目にエラーがあります。要素数が" . _cnt . "です。"
+		_error := _LayoutName . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, TrimSpace
@@ -292,7 +289,7 @@ SetLayoutProperty:
 ;	行内のスペースを除去
 ;----------------------------------------------------------------------
 TrimSpace:
-	loop, %org0%
+	loop, % org.MaxIndex()
 	{
 		_tmp := org[A_Index]
 		StringReplace, _tmp, _tmp, %A_Space%,, All
@@ -308,6 +305,7 @@ SetKeyTable:
 	kup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
+		_row2 := _rowcnv[A_Index]
 		_qstr := QuotedStr(org[A_Index])
 		if(_error <> "")
 		{
@@ -315,30 +313,30 @@ SetKeyTable:
 		}
 		if(_qstr <> "")
 		{
-			kdn[_mode . _col . A_Index] := _qstr
-			kup[_mode . _col . A_Index] := ""
+			kdn[_mode . _col . _row2] := _qstr
+			kup[_mode . _col . _row2] := ""
 			continue
 		}
 		ret := Kanji2KeySymbol(org[A_Index],_symbol)
 		if(ret = 1)
 		{
-			kdn[_mode . _col . A_Index] := "{Blind}{" . _symbol . " down}"
-			kup[_mode . _col . A_Index] := "{Blind}{" . _symbol . " up}"
+			kdn[_mode . _col . _row2] := "{Blind}{" . _symbol . " down}"
+			kup[_mode . _col . _row2] := "{Blind}{" . _symbol . " up}"
 			continue
 		}
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			kdn[_mode . _col . A_Index] := "{" . _vk . "}"
-			kup[_mode . _col . A_Index] := ""
+			kdn[_mode . _col . _row2] := "{" . _vk . "}"
+			kup[_mode . _col . _row2] := ""
 			continue
 		}
 		ret := ConvKana(org[A_Index], _nc)
 		if(ret = 0)
 		{
 			GenSendStr(_nc,_dn,_up)
-			kdn[_mode . _col . A_Index] := _dn
-			kup[_mode . _col . A_Index] := _up
+			kdn[_mode . _col . _row2] := _dn
+			kup[_mode . _col . _row2] := _up
 			continue
 		}
 		ret := ConvNarrow(org[A_Index], _nc)
@@ -349,12 +347,12 @@ SetKeyTable:
 				_error := "英数モードのキーに２文字以上が設定されています"
 			} else {
 				GenSendStr(_nc,_dn,_up)
-				kdn[_mode . _col . A_Index] := _dn
-				kup[_mode . _col . A_Index] := _up
+				kdn[_mode . _col . _row2] := _dn
+				kup[_mode . _col . _row2] := _up
 			}
 		} else {
-			kdn[_mode . _col . A_Index] := _nc
-			kup[_mode . _col . A_Index] := ""
+			kdn[_mode . _col . _row2] := _nc
+			kup[_mode . _col . _row2] := ""
 		}
 	}
 	return
@@ -367,8 +365,9 @@ SetAlphabet:
 	mup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
-		mdn[_mode . _col . A_Index] := kdn[_mode . _col . A_Index]
-		mup[_mode . _col . A_Index] := kup[_mode . _col . A_Index]
+		_row2 := _rowcnv[A_Index]
+		mdn[_mode . _col . _row2] := kdn[_mode . _col . _row2]
+		mup[_mode . _col . _row2] := kup[_mode . _col . _row2]
 	}
 	return
 ;----------------------------------------------------------------------
@@ -484,6 +483,7 @@ ParseEscSeq(aQuo) {
 ;----------------------------------------------------------------------
 Kanji2KeySymbol(_ch,BYREF vSymbol)
 {
+	global kanjiSymbolHash
 	vSymbol := ""
 	ret := 0
 	if(_ch = "")
@@ -491,43 +491,16 @@ Kanji2KeySymbol(_ch,BYREF vSymbol)
 	if(StrLen(_ch) <> 1)
 		return 0
 
-	if(_ch = "後")
-		vSymbol := "Backspace"
-	else if(_ch = "逃")
-		vSymbol := "Esc"
-	else if(_ch = "入")
-		vSymbol := "Enter"
-	else if(_ch = "空")
-		vSymbol := "Space"
-	else if(_ch = "消")
-		vSymbol := "Delete"
-	else if(_ch = "挿")
-		vSymbol := "Insert"
-	else if(_ch = "上")
-		vSymbol := "Up"
-	else if(_ch = "左")
-		vSymbol := "Left"
-	else if(_ch = "右")
-		vSymbol := "Right"
-	else if(_ch = "下")
-		vSymbol := "Down"
-	else if(_ch = "家")
-		vSymbol := "Home"
-	else if(_ch = "終")
-		vSymbol := "End"
-	else if(_ch = "前")
-		vSymbol := "PgUp"
-	else if(_ch = "次")
-		vSymbol := "PgDn"
+	vSymbol := kanjiSymbolHash[_ch]
 	if(StrLen(vSymbol)>0) {
 		ret := 1
-	}
+	} else
 	if(_ch = "無") {
-		vSymbol := ""
 		ret := 1
 	}
 	return ret
 }
+
 ;----------------------------------------------------------------------
 ;	bnz/yabファイルの仮想キーコードを、AutoHotKeyでsendできる形式に変換
 ;	入力：v??
@@ -664,67 +637,30 @@ GenSendStr(aStr,BYREF _dn,BYREF _up)
 	return _dn
 }
 
-;----------------------------------------------------------------------
-;	半角文字のうち制御コードをAutoHotKeyのシンボルに変換
-;----------------------------------------------------------------------
-Char2KeySymbol(vCh) {
-	if(vCh = "")
-		return
-		
-	_code := Asc(vCh)
-	if(_code = 0x7F)
-		return "Del"
-	if(_code > 32)
-		return vCh
-	if(_code= 32)
-		return "Space"
-	if(_code= 9)
-		return "Tab"
-	if(_code= 10 || _code=14)
-		return "Enter"
-	if(_code=0x1B)
-		return "Esc"
-	if(_code=0x08)
-		return "Backspace"
-	return
-}
 
 ;----------------------------------------------------------------------
-; レイアウト名からモード名を取得
-; 引数　：_LayoutName：レイアウト名
-; 戻り値：モード名
+;	漢字シンボルをAutohotkeyのコード名に変換
 ;----------------------------------------------------------------------
-Layout2Mode(_LayoutName) 
+MakeKanjiSymbolHash()
 {
-	if(_LayoutName = "英数シフト無し")
-		return "ANN"
-	else if(_LayoutName = "英数左親指シフト")
-		return "ALN"
-	else if(_LayoutName = "英数右親指シフト")
-		return "ARN"
-	else if(_LayoutName = "英数小指シフト")
-		return "ANK"
-	else if(_LayoutName = "英数小指左親指シフト")
-		return "ALK"
-	else if(_LayoutName = "英数小指右親指シフト")
-		return "ARK"
-	else if(_LayoutName = "ローマ字シフト無し")
-		return "RNN"
-	else if(_LayoutName = "ローマ字左親指シフト")
-		return "RLN"
-	else if(_LayoutName = "ローマ字右親指シフト")
-		return "RRN"
-	else if(_LayoutName = "ローマ字小指シフト")
-		return "RNK"
-	else if(_LayoutName = "ローマ字小指左親指シフト")
-		return "RRK"
-	else if(_LayoutName = "ローマ字小指右親指シフト")
-		return "RLK"
-	else
-		return ""
-	return ""
+	kanjiSymbolHash := Object()
+	kanjiSymbolHash["後"] := "Backspace"
+	kanjiSymbolHash["逃"] := "Esc"
+	kanjiSymbolHash["入"] := "Enter"
+	kanjiSymbolHash["空"] := "Space"
+	kanjiSymbolHash["消"] := "Delete"
+	kanjiSymbolHash["挿"] := "Insert"
+	kanjiSymbolHash["上"] := "Up"
+	kanjiSymbolHash["左"] := "Left"
+	kanjiSymbolHash["右"] := "Right"
+	kanjiSymbolHash["下"] := "Down"
+	kanjiSymbolHash["家"] := "Home"
+	kanjiSymbolHash["終"] := "End"
+	kanjiSymbolHash["前"] := "PgUp"
+	kanjiSymbolHash["次"] := "PgDn"
+	kanjiSymbolHash["無"] := ""
+	return kanjiSymbolHash
 }
-
 
 ;----------------------------------------------------------------------
 ;	レイアウト名からモード名に変換
@@ -745,6 +681,7 @@ MakeLayoutHash() {
 	LayoutHash["ローマ字小指右親指シフト"] := "RLK"
 	return LayoutHash
 }
+
 
 ;----------------------------------------------------------------------
 ;	半角文字のうち制御コードをAutoHotKeyのシンボルに変換
