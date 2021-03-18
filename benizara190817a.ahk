@@ -678,6 +678,33 @@ keydownM:
 	RegLogs(kName . " down")
 	gosub,Polling
 	keyState[MojiCode] := 1
+	
+	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
+		if(g_prefixshift <> "" )
+		{
+			g_MojiOnHold   := MojiCode
+			g_RomajiOnHold := g_Romaji
+			g_OyaOnHold    := g_prefixshift
+			g_KoyubiOnHold := g_Koyubi
+			vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			SubSend(vOut)
+			g_prefixshift := ""
+		}
+		else
+		{
+			g_MojiOnHold   := MojiCode
+			g_RomajiOnHold := g_Romaji
+			g_OyaOnHold    := "N"
+			g_KoyubiOnHold := g_Koyubi
+			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			SubSend(vOut)
+		}
+		critical,off
+		return
+	}
+	; 親指シフトの動作
 	if(g_MojiOnHold<>"")
 	{
 		; 文字キーダウン
@@ -831,12 +858,49 @@ keydownX:
 	RegLogs(kName . " down")
 	gosub,Polling
 	keyState[MojiCode] := 1
+	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
+		SubSend(MnDown(kName))
+		critical,off
+		return
+	}
 	g_ModifierTick := Pf_Count()	;A_TickCount
 	Gosub,ModeInitialize
 	SubSend(MnDown(kName))
 	g_KeyInPtn := ""
 	critical,off
 	return
+
+;----------------------------------------------------------------------
+; 月配列等のプレフィックスシフトキー押下
+;----------------------------------------------------------------------
+keydown1:
+keydown2:
+	Critical
+	GuiControl,2:,vkeyDN%MojiCode%,□
+	RegLogs(kName . " down")
+	gosub,Polling
+	keyState[MojiCode] := 1
+	if(g_prefixshift == "")
+	{
+		g_prefixshift := g_metaKey
+		;if(A_IsCompiled <> 1)
+		;{
+			;Tooltip, %g_prefixshift%, 0, 0, 2 ; debug
+		;}
+		critical,off
+		return
+	}
+	g_MojiOnHold   := MojiCode
+	g_RomajiOnHold := g_Romaji
+	g_OyaOnHold    := g_prefixshift
+	g_KoyubiOnHold := g_Koyubi
+	vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+	SubSend(vOut)
+	g_prefixshift := ""
+	critical,off
+	return
+
 
 ;----------------------------------------------------------------------
 ; キーアップ（押下終了）
@@ -849,6 +913,14 @@ keyupM:
 	gosub,Polling
 	keyState[MojiCode] := 0
 	g_MojiUpTick := Pf_Count()	;A_TickCount
+	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
+		vOut := kup_save[MojiCode]
+		SubSend(vOut)
+		kup_save[MojiCode] := ""
+		critical,off
+		return
+	}
+	; 親指シフトの動作
 	if(MojiCode = g_MojiOnHold)	; 保留キーがアップされた
 	{
 		if(g_KeyInPtn = "M")	; Mオン状態
@@ -909,22 +981,41 @@ keyupX:
 	return
 
 ;----------------------------------------------------------------------
+; 月配列等のプレフィックスシフトキー押下終了
+;----------------------------------------------------------------------
+keyup1:
+keyup2:
+	Critical
+	GuiControl,2:,vkeyDN%MojiCode%,　
+
+	RegLogs(kName . " up")
+	gosub,Polling
+	keyState[MojiCode] := 0
+	vOut := kup_save[MojiCode]
+	if(vOut <> "") 
+	{
+		SubSend(vOut)
+	}
+	kup_save[MojiCode] := ""
+	critical,off
+	return
+
+;----------------------------------------------------------------------
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
 Interrupt10:
 	Gosub,ScanModifier
-	if(A_IsCompiled <> 1)
-	{
+	;if(A_IsCompiled <> 1)
+	;{
 		;Tooltip, %g_Modifier%, 0, 0, 2 ; debug	
-	}
+	;}
 	if(g_Modifier!=0) 
 	{
 		Gosub,ModeInitialize
 		SetHook("off")
 	} else {
 		Gosub,ChkIME
-		if((g_Romaji="A" && LFA=0x77)
-		|| (g_Romaji="R" && LFR=0x77)) {
+		if(ShiftMode[g_Romaji] <> "") {
 			SetHook("on")
 		} else {
 			SetHook("off")
@@ -1324,572 +1415,572 @@ SetHook(flg)
 gSC002:	;1
 	kName := "1"
 	MojiCode := "E01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC002up:
 	kName := "1"
 	MojiCode := "E01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC003:	;2
 	kName := "2"
 	MojiCode := "E02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC003up:
 	kName := "2"
 	MojiCode := "E02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC004:	;3
 	kName := "3"
 	MojiCode := "E03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC004up:
 	kName := "3"
 	MojiCode := "E03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC005:	;4
 	kName := "4"
 	MojiCode := "E04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC005up:
 	kName := "4"
 	MojiCode := "E04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC006:	;5
 	kName := "5"
 	MojiCode := "E05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC006up:
 	kName := "5"
 	MojiCode := "E05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC007:	;6
 	kName := "6"
 	MojiCode := "E06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC007up:
 	kName := "6"
 	MojiCode := "E06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC008:	;7
 	kName := "7"
 	MojiCode := "E07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC008up:
 	kName := "7"
 	MojiCode := "E07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC009:	;8
 	kName := "8"
 	MojiCode := "E08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC009up:
 	kName := "8"
 	MojiCode := "E08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC00A:	;9
 	kName := "9"
 	MojiCode := "E09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC00Aup:
 	kName := "9"
 	MojiCode := "E09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC00B:	;0
 	kName := "10"
 	MojiCode := "E10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC00Bup:
 	kName := "10"
 	MojiCode := "E10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC00C:	;-
 	kName := "-"
 	MojiCode := "E11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC00Cup:
 	kName := "-"
 	MojiCode := "E11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC00D:	;^
 	kName := "^"
 	MojiCode := "E12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC00Dup:
 	kName := "^"
 	MojiCode := "E12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC07D:	;\
 	kName := "\"
 	MojiCode := "E13"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC07Dup:
 	kName := "\"
 	MojiCode := "E13"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 ;　２段目
 gSC010:	;q
 	kName := "q"
 	MojiCode := "D01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC010up:
 	kName := "q"
 	MojiCode := "D01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC011:	;w
 	kName := "w"
 	MojiCode := "D02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC011up:	;w
 	kName := "w"
 	MojiCode := "D02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC012:	;e
 	kName := "e"
 	MojiCode := "D03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC012up:	;e
 	kName := "e"
 	MojiCode := "D03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC013:	;r
 	kName := "r"
 	MojiCode := "D04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC013up:	;r
 	kName := "r"
 	MojiCode := "D04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC014:	;t
 	kName := "t"
 	MojiCode := "D05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC014up:	;t
 	kName := "t"
 	MojiCode := "D05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC015:	;y
 	kName := "y"
 	MojiCode := "D06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC015up:	;y
 	kName := "y"
 	MojiCode := "D06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC016:	;u
 	kName := "u"
 	MojiCode := "D07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC016up:	;u
 	kName := "u"
 	MojiCode := "D07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC017:	;i
 	kName := "i"
 	MojiCode := "D08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC017up:	;i
 	kName := "i"
 	MojiCode := "D08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC018:	;o
 	kName := "o"
 	MojiCode := "D09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC018up:	;o
 	kName := "o"
 	MojiCode := "D09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC019:	;p
 	kName := "p"
 	MojiCode := "D10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC019up:	;p
 	kName := "p"
 	MojiCode := "D10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC01A:	;@
 	kName := "@"
 	MojiCode := "D11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC01Aup:	;@
 	kName := "@"
 	MojiCode := "D11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC01B:	;[
 	kName := "["
 	MojiCode := "D12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC01Bup:	;[
 	kName := "["
 	MojiCode := "D12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 ; ３段目
 gSC01E:	;a
 	kName := "a"
 	MojiCode := "C01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC01Eup:	;a
 	kName := "a"
 	MojiCode := "C01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC01F:	;s
 	kName := "s"
 	MojiCode := "C02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC01Fup:	;s
 	kName := "s"
 	MojiCode := "C02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC020:	;d
 	kName := "d"
 	MojiCode := "C03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC020up:	;d
 	kName := "d"
 	MojiCode := "C03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC021:	;f
 	kName := "f"
 	MojiCode := "C04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC021up:	;f
 	kName := "f"
 	MojiCode := "C04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC022:	;g
 	kName := "g"
 	MojiCode := "C05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC022up:	;g
 	kName := "g"
 	MojiCode := "C05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC023:	;h
 	kName := "h"
 	MojiCode := "C06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC023up:	;h
 	kName := "h"
 	MojiCode := "C06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC024: ;j
 	kName := "j"
 	MojiCode := "C07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC024up: ;j
 	kName := "j"
 	MojiCode := "C07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC025: ;k
 	kName := "k"
 	MojiCode := "C08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC025up: ;k
 	kName := "k"
 	MojiCode := "C08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC026: ;l
 	kName := "l"
 	MojiCode := "C09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC026up: ;l
 	kName := "l"
 	MojiCode := "C09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC027: ;';'
 	kName := ";"
 	MojiCode := "C10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC027up: ;';'
 	kName := ";"
 	MojiCode := "C10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC028: ;'*'
 	kName := "*"
 	MojiCode := "C11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC028up: ;'*'
 	kName := "*"
 	MojiCode := "C11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC02B: ;']'
 	kName := "]"
 	MojiCode := "C12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC02Bup: ;']'
 	kName := "]"
 	MojiCode := "C12"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 ;４段目
 gSC02C:	;z
 	kName := "z"
 	MojiCode := "B01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC02Cup:	;z
 	kName := "z"
 	MojiCode := "B01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC02D:	;x
 	kName := "x"
 	MojiCode := "B02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC02Dup:	;x
 	kName := "x"
 	MojiCode := "B02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC02E:	;c
 	kName := "c"
 	MojiCode := "B03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC02Eup:	;c
 	kName := "c"
 	MojiCode := "B03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC02F:	;v
 	kName := "v"
 	MojiCode := "B04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC02Fup:	;v
 	kName := "v"
 	MojiCode := "B04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC030:	;b
 	kName := "b"
 	MojiCode := "B05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC030up:	;b
 	kName := "b"
 	MojiCode := "B05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC031:	;n
 	kName := "n"
 	MojiCode := "B06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC031up:	;n
 	kName := "n"
 	MojiCode := "B06"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC032:	;m
 	kName := "m"
 	MojiCode := "B07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC032up:	;m
 	kName := "m"
 	MojiCode := "B07"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC033:	;,
 	kName := "`,"
 	MojiCode := "B08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC033up:	;,
 	kName := "`,"
 	MojiCode := "B08"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC034:	;.
 	kName := "."
 	MojiCode := "B09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC034up:	;.
 	kName := "."
 	MojiCode := "B09"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC035:	;/
 	kName := "/"
 	MojiCode := "B10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC035up:	;/
 	kName := "/"
 	MojiCode := "B10"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC073:	;\
 	kName := "\"
 	MojiCode := "B11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC073up:	;_
 	kName := "\"
 	MojiCode := "B11"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
 gTAB:
 	kName := "Tab"
 	MojiCode := "D00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gTABup:
 	kName := "Tab"
 	MojiCode := "D00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gENTER:
 	kName := "Enter"
 	MojiCode := "C13"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gENTERup:
 	kName := "Enter"
 	MojiCode := "C13"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gBACKSPACE:
 	kName := "Backspace"
 	MojiCode := "E14"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gBACKSPACEup:
 	kName := "Backspace"
 	MojiCode := "E14"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC029:	;半角／全角
 	kName := "sc029"
 	MojiCode := "E00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC029up:	;半角／全角
 	kName := "sc029"
 	MojiCode := "E00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gSC070:	;ひらがな／カタカナ
 	kName := "sc070"
 	MojiCode := "A04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gSC070up:	;ひらがな／カタカナ
 	kName := "sc070"
 	MojiCode := "A04"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
 gSpace:
 	kName := "Space"
 	MojiCode := "A02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 
 gSpaceUp:
 	kName := "Space"
 	MojiCode := "A02"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
 gSC07B:					; 無変換キー（左）
 	kName := "sc07B"
 	MojiCode := "A01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 
 gSC07Bup:
 	kName := "sc07B"
 	MojiCode := "A01"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
 gSC079:				; 変換キー（右）
 	kName := "sc079"
 	MojiCode := "A03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 
 gSC079up:
 	kName := "sc079"
 	MojiCode := "A03"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
 ;-----------------------------------------------------------------------
@@ -1904,21 +1995,21 @@ gSC079up:
 gLCTRL:
 	kName := "LCtrl"
 	MojiCode := "A00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gLCTRLup:
 	kName := "LCtrl"
 	MojiCode := "A00"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 gRCTRL:
 	kName := "RCtrl"
 	MojiCode := "A05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keydown%g_metaKey%
 gRCTRLup:
 	kName := "RCtrl"
 	MojiCode := "A05"
-	g_metaKey := keyAttributeHash[MojiCode]
+	g_metaKey := keyAttribute[MojiCode]
 	goto, keyup%g_metaKey%
 
