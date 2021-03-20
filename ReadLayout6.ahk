@@ -10,35 +10,37 @@ ReadLayout:
 	mup := Object()
 	mdn := Object()
 
-	_colcnv := Object()
-	_colcnv[1] := "E"
-	_colcnv[2] := "D"
-	_colcnv[3] := "C"
-	_colcnv[4] := "B"
-	_colcnv[5] := "A"
+	_colhash := Object()
+	_colhash[1] := "E"
+	_colhash[2] := "D"
+	_colhash[3] := "C"
+	_colhash[4] := "B"
+	_colhash[5] := "A"
 	
-	_rowcnv := Object()
-	_rowcnv[0] := "00"
-	_rowcnv[1] := "01"
-	_rowcnv[2] := "02"
-	_rowcnv[3] := "03"
-	_rowcnv[4] := "04"
-	_rowcnv[5] := "05"
-	_rowcnv[6] := "06"
-	_rowcnv[7] := "07"
-	_rowcnv[8] := "08"
-	_rowcnv[9] := "09"
-	_rowcnv[10]:= "10"
-	_rowcnv[11]:= "11"
-	_rowcnv[12]:= "12"
-	_rowcnv[13]:= "13"
-	_rowcnv[14]:= "14"
-	_rowcnv[15]:= "15"
+	_rowhash := Object()
+	_rowhash[0] := "00"
+	_rowhash[1] := "01"
+	_rowhash[2] := "02"
+	_rowhash[3] := "03"
+	_rowhash[4] := "04"
+	_rowhash[5] := "05"
+	_rowhash[6] := "06"
+	_rowhash[7] := "07"
+	_rowhash[8] := "08"
+	_rowhash[9] := "09"
+	_rowhash[10]:= "10"
+	_rowhash[11]:= "11"
+	_rowhash[12]:= "12"
+	_rowhash[13]:= "13"
+	_rowhash[14]:= "14"
+	_rowhash[15]:= "15"
 	
 	roma3hash := MakeRoma3Hash()
 	layoutHash := MakeLayoutHash()
 	z2hHash := MakeZ2hHash()
-	
+	vkeyHash := MakeVkeyHash()
+	codeLabelHash := MakeCodeLabelHash()
+
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
 	if(vLayoutFile = "")
@@ -61,7 +63,7 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
-	keyAttribute := MakeKeyAttributeHash()
+	keyAttribute2 := MakeKeyAttribute2Hash()
 	keyState := MakeKeyState()
 	LF := Object()
 	LF["ANN"] := 0
@@ -89,29 +91,29 @@ InitLayout2:
 	LF["R2K"] := 0
 	loop,4
 	{
-		LF["ANN" . _colcnv[A_Index]] := ""
-		LF["ALN" . _colcnv[A_Index]] := ""
-		LF["ARN" . _colcnv[A_Index]] := ""
-		LF["A1N" . _colcnv[A_Index]] := ""
-		LF["A2N" . _colcnv[A_Index]] := ""
+		LF["ANN" . _colhash[A_Index]] := ""
+		LF["ALN" . _colhash[A_Index]] := ""
+		LF["ARN" . _colhash[A_Index]] := ""
+		LF["A1N" . _colhash[A_Index]] := ""
+		LF["A2N" . _colhash[A_Index]] := ""
 
-		LF["ANK" . _colcnv[A_Index]] := ""
-		LF["ALK" . _colcnv[A_Index]] := ""
-		LF["ARK" . _colcnv[A_Index]] := ""
-		LF["A1K" . _colcnv[A_Index]] := ""
-		LF["A2K" . _colcnv[A_Index]] := ""
+		LF["ANK" . _colhash[A_Index]] := ""
+		LF["ALK" . _colhash[A_Index]] := ""
+		LF["ARK" . _colhash[A_Index]] := ""
+		LF["A1K" . _colhash[A_Index]] := ""
+		LF["A2K" . _colhash[A_Index]] := ""
 
-		LF["RNN" . _colcnv[A_Index]] := ""
-		LF["RLN" . _colcnv[A_Index]] := ""
-		LF["RRN" . _colcnv[A_Index]] := ""
-		LF["R1N" . _colcnv[A_Index]] := ""
-		LF["R2N" . _colcnv[A_Index]] := ""
+		LF["RNN" . _colhash[A_Index]] := ""
+		LF["RLN" . _colhash[A_Index]] := ""
+		LF["RRN" . _colhash[A_Index]] := ""
+		LF["R1N" . _colhash[A_Index]] := ""
+		LF["R2N" . _colhash[A_Index]] := ""
 
-		LF["RNK" . _colcnv[A_Index]] := ""
-		LF["RLK" . _colcnv[A_Index]] := ""
-		LF["RRK" . _colcnv[A_Index]] := ""
-		LF["R1K" . _colcnv[A_Index]] := ""
-		LF["R2K" . _colcnv[A_Index]] := ""
+		LF["RNK" . _colhash[A_Index]] := ""
+		LF["RLK" . _colhash[A_Index]] := ""
+		LF["RRK" . _colhash[A_Index]] := ""
+		LF["R1K" . _colhash[A_Index]] := ""
+		LF["R2K" . _colhash[A_Index]] := ""
 	}
 	; デフォルトテーブル
 	LF["ADNE"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
@@ -166,18 +168,19 @@ ReadLayoutFile:
 			cpos1 := Instr(_line2,"]")
 			if(cpos0 >= 1 && cpos1 > cpos0)
 			{
-				_LayoutName := SubStr(_line2, cpos0+1, cpos1-cpos0-1)
-				_mode := layoutHash[_LayoutName]
+				_Section := SubStr(_line2, cpos0+1, cpos1-cpos0-1)
+				_mode := layoutHash[_Section]
 				if(_mode <> "")
 				{
-					_mline := 0
+					_mline := 1
 				}
+				continue
 			}
 			if(_mode <> "") 
 			{
 				if _mline between 1 and 4
 				{
-					LF[_mode . _colcnv[_mline]] := _line2
+					LF[_mode . _colhash[_mline]] := _line2
 				}
 				_mline += 1
 				if(_mline > 4)
@@ -187,9 +190,29 @@ ReadLayoutFile:
 					{
 						return
 					}
-					_layoutName := ""
+					_Section := ""
 					_mode := ""
 				}
+				continue
+			}
+			else
+			if(_Section == "配列")
+			{
+				cpos2 := Instr(_line2,"=")
+				org := StrSplit(_line2,"=")
+				if(org.MaxIndex() == 2)
+				{
+					if(org[1]=="名称")
+					{
+						g_layoutName := org[2]
+					}
+					else
+					if(org[1]=="バージョン")
+					{
+						g_layoutVersion := org[2]
+					}
+				}
+				continue
 			}
 		}
 	}
@@ -205,10 +228,9 @@ Mode2Key:
 	org := StrSplit(LF[_mode . "E"],",")
 	if(org.MaxIndex() <> 13)
 	{
-		_error := _LayoutName . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
-	;Gosub, TrimSpace
 	Gosub, SetKeyTable
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
@@ -217,10 +239,9 @@ Mode2Key:
 	org := StrSplit(LF[_mode . "D"],",")
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _LayoutName . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
-	;Gosub, TrimSpace
 	Gosub, SetKeyTable
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
@@ -229,10 +250,9 @@ Mode2Key:
 	org := StrSplit(LF[_mode . "C"],",")
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _LayoutName . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
-	;Gosub, TrimSpace
 	Gosub, SetKeyTable
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
@@ -241,10 +261,9 @@ Mode2Key:
 	org := StrSplit(LF[_mode . "B"],",")
 	if(org.MaxIndex() <> 11)
 	{
-		_error := _LayoutName . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
-	;Gosub, TrimSpace
 	Gosub, SetKeyTable
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
@@ -257,11 +276,46 @@ Mode2Key:
 SetLayoutProperty:
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
-	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1 && LF["ANK"]==1 && LF["ALK"]==1 && LF["ARK"]==1)
+	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1 && LF["ANK"]==1)
 	{
 		ShiftMode["A"] := "親指シフト"
+		keyAttribute2["AA01"] := "L"
+		keyAttribute2["AA03"] := "R"
+		
+		if(LF["ALK"] == 0) {
+			CopyKeyTable("ALK", "ANK")
+			_mode := "ALK"
+			_col := "E"
+			org := StrSplit(LF[_mode . "E"],",")
+			Gosub, SetKeyTable
+			_col := "D"
+			org := StrSplit(LF[_mode . "D"],",")
+			Gosub, SetKeyTable
+			_col := "C"
+			org := StrSplit(LF[_mode . "C"],",")
+			Gosub, SetKeyTable
+			_col := "B"
+			org := StrSplit(LF[_mode . "B"],",")
+			Gosub, SetKeyTable
+		}
+		if(LF["ARK"] == 0) {
+			CopyKeyTable("ARK", "ANK")
+			_mode := "ARK"
+			_col := "E"
+			org := StrSplit(LF[_mode . "E"],",")
+			Gosub, SetKeyTable
+			_col := "D"
+			org := StrSplit(LF[_mode . "D"],",")
+			Gosub, SetKeyTable
+			_col := "C"
+			org := StrSplit(LF[_mode . "C"],",")
+			Gosub, SetKeyTable
+			_col := "B"
+			org := StrSplit(LF[_mode . "B"],",")
+			Gosub, SetKeyTable
+		}
 	} else 
-	if(LF["ANN"]==1 && (LF["A1N"]==1 || LF["A2N"]==1) && (LF["ANK"]==1 || LF["A1K"]==1 && LF["A2K"]==1)) 
+	if(LF["ANN"]==1 && (LF["A1N"]==1 || LF["A2N"]==1) && LF["ANK"]==1 (LF["A1K"]==1 || LF["A2K"]==1)) 
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
@@ -271,9 +325,44 @@ SetLayoutProperty:
 		ShiftMode["A"] := "小指シフト"
 	}
 	ShiftMode["R"] := ""
-	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1 && LF["RNK"]==1 && LF["RLK"]==1 && LF["RRK"]==1)
+	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1 && LF["RNK"]==1)
 	{
 		ShiftMode["R"] := "親指シフト"
+		keyAttribute2["RA01"] := "L"
+		keyAttribute2["RA03"] := "R"  
+		
+		if(LF["RLK"] == 0) {
+			CopyKeyTable("RLK", "RNK")
+			_mode := "ALK"
+			_col := "E"
+			org := StrSplit(LF[_mode . "E"],",")
+			Gosub, SetKeyTable
+			_col := "D"
+			org := StrSplit(LF[_mode . "D"],",")
+			Gosub, SetKeyTable
+			_col := "C"
+			org := StrSplit(LF[_mode . "C"],",")
+			Gosub, SetKeyTable
+			_col := "B"
+			org := StrSplit(LF[_mode . "B"],",")
+			Gosub, SetKeyTable
+		}
+		if(LF["RRK"] == 0) {
+			CopyKeyTable("RRK", "RNK")
+			_mode := "ARK"
+			_col := "E"
+			org := StrSplit(LF[_mode . "E"],",")
+			Gosub, SetKeyTable
+			_col := "D"
+			org := StrSplit(LF[_mode . "D"],",")
+			Gosub, SetKeyTable
+			_col := "C"
+			org := StrSplit(LF[_mode . "C"],",")
+			Gosub, SetKeyTable
+			_col := "B"
+			org := StrSplit(LF[_mode . "B"],",")
+			Gosub, SetKeyTable
+		}
 	} else
 	if(LF["RNN"]==1 && (LF["R1N"]==1 || LF["R2N"]==1) && LF["RNK"]==1 && (LF["R1K"]==1 || LF["R2K"]==1))
 	{
@@ -286,19 +375,6 @@ SetLayoutProperty:
 	}
 	return
 
-
-;----------------------------------------------------------------------
-;	行内のスペースを除去
-;----------------------------------------------------------------------
-TrimSpace:
-	loop, % org.MaxIndex()
-	{
-		_tmp := org[A_Index]
-		StringReplace, _tmp, _tmp, %A_Space%,, All
-		org[A_Index] = _tmp
-	}
-	return
-
 ;----------------------------------------------------------------------
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------
@@ -307,7 +383,7 @@ SetKeyTable:
 	kup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
-		_row2 := _rowcnv[A_Index]
+		_row2 := _rowhash[A_Index]
 		ksf[_mode . _col . _row2] := org[A_Index]
 
 		; 月配列などのプレフィックスシフトキー
@@ -315,9 +391,13 @@ SetKeyTable:
 		{
 			kdn[_mode . _col . _row2] := ""
 			kup[_mode . _col . _row2] := ""
-			if(_mode = "RNN" || _mode = "ANN")
+			if(_mode = "RNN")
 			{
-				keyAttribute[_col . _row2] := SubStr(org[A_Index],2,1)
+				keyAttribute2["R" . _col . _row2] := SubStr(org[A_Index],2,1)
+			} else
+			if(_mode = "ANN")
+			{
+				keyAttribute2["A" . _col . _row2] := SubStr(org[A_Index],2,1)
 			}
 			continue
 		}
@@ -346,11 +426,11 @@ SetKeyTable:
 		_aStr := kana2Romaji(org[A_Index])
 		
 		; 送信形式に変換
-		GenSendStr2(_aStr, _up, _down)
-		if( _up <> "")
+		GenSendStr2(_aStr, _down, _up)
+		if( _down <> "")
 		{
-			kdn[_mode . _col . _row2] := _up
-			kup[_mode . _col . _row2] := _down
+			kdn[_mode . _col . _row2] := _down
+			kup[_mode . _col . _row2] := _up
 		}
 		continue
 	}
@@ -364,11 +444,31 @@ SetAlphabet:
 	mup[_mode . "0"] := org.MaxIndex()
 	loop, % org.MaxIndex()
 	{
-		_row2 := _rowcnv[A_Index]
+		_row2 := _rowhash[A_Index]
 		mdn[_mode . _col . _row2] := kdn[_mode . _col . _row2]
 		mup[_mode . _col . _row2] := kup[_mode . _col . _row2]
 	}
 	return
+	
+;----------------------------------------------------------------------
+;	キーテーブルの複写
+;----------------------------------------------------------------------
+CopyKeyTable(_mddst, _mdsrc)
+{
+	global LF, _rowhash
+
+	if(LF[_mdsrc] == 0) 
+	{
+		return
+	}
+	LF[_mddst] := 1
+	LF[_mddst . "E"] := LF[_mdsrc . "E"]
+	LF[_mddst . "D"] := LF[_mdsrc . "D"]
+	LF[_mddst . "C"] := LF[_mdsrc . "C"]
+	LF[_mddst . "B"] := LF[_mdsrc . "B"]
+	LF[_mddst . "A"] := LF[_mdsrc . "A"]
+	return
+}
 ;----------------------------------------------------------------------
 ;	引用文字
 ;----------------------------------------------------------------------
@@ -401,79 +501,18 @@ QuotedStr(aStr) {
 ;	引用符内文字のエスケープ処理
 ;----------------------------------------------------------------------
 ParseEscSeq(aQuo) {
-	global _error
+	global z2hHash
 
-	StringLen _len, aQuo
 	vOut := ""
-	c1 := ""
-	uc := 0
-	loop,%_len%
+	_aQuo2 := ""
+	loop,Parse, aQuo
 	{
-		StringMid, c, aQuo, A_Index, 1
-		c1 := c1 . c
-		if(substr(c1,1,1) = "\")	; backslash
-		{
-			_len := StrLen(c1)
-			if(_len = 2) {
-				if(c1 = "\n") {
-					;vOut := vOut . Chr(10)
-					vOut := vOut . "{ASC 10}"
-					c1 := ""
-				} else if(c1 = "\r")	;\r
-				{
-					;vOut := vOut . Chr(14)
-					vOut := vOut . "{ASC 14}"
-					c1 := ""
-				} else if(c1 = "\t")		;\t
-				{
-					;vOut := vOut . Chr(9)
-					vOut := vOut . "{ASC 9}"
-					c1 := ""
-				} else if(c1 = "\\")	; \\ backslash
-				{
-					vOut := vOut . "\"
-					c1 := ""
-				} else if(c1 = "\'")	; \' single quotation
-				{
-					vOut := vOut . "'"
-					c1 := ""
-				} else if(c1 = "\""")	; \" double quotation
-				{
-					vOut := vOut . """"
-					c1 := ""
-				} else if(c1 = "\u")
-				{
-					uc := 0
-				} else {
-					_error := "引用符付き文字列のエスケープ文字の書式が誤っています。"
-					break
-				}
-			}
-			else if _len in 3,4,5,6
-			{
-				if c not in 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,a,b,c,d,e,f
-				{
-					_error := "引用符付き文字列のエスケープ文字の書式が誤っています。"
-					break
-				}
-			} 
-			if(_len = 6)
-			{
-				; \u???? ならば、16進数に変換したのちユニコード変換
-				c1 := "0x" . substr(c1,3,4)
-				SetFormat, INTEGER, H 
-				uc := c1 + 0
-				vOut := vOut . Chr(uc)
-				SetFormat, INTEGER, D
-				c1 := ""
-			}
-		} else {
-			vOut := vOut . c1
-			c1 := ""
-		}
+		_aQuo2 := _aQuo2 . z2hHash[A_LoopField]
 	}
-	if(c1 <> "") {
-		_error := "引用符付き文字列の書式が誤っています。"
+	_aQuo3 := ""
+	loop,Parse, _aQuo2
+	{
+		vOut := vOut . "{ASC " . Asc(A_LoopField) . "}"
 	}
 	return vOut
 }
@@ -822,7 +861,6 @@ MakeRoma3Hash()
 }
 
 
-
 ;----------------------------------------------------------------------
 ;	キー名から処理関数に変換
 ;	M:文字キー
@@ -830,67 +868,125 @@ MakeRoma3Hash()
 ;	L:左親指キー
 ;	R:右親指キー
 ;----------------------------------------------------------------------
-MakeKeyAttributeHash() {
-	keyAttribute := Object()
-	keyAttribute["E00"] := "X"	; 半角/全角
-	keyAttribute["E01"] := "M"
-	keyAttribute["E02"] := "M"
-	keyAttribute["E03"] := "M"
-	keyAttribute["E04"] := "M"
-	keyAttribute["E05"] := "M"
-	keyAttribute["E06"] := "M"
-	keyAttribute["E07"] := "M"
-	keyAttribute["E08"] := "M"
-	keyAttribute["E09"] := "M"
-	keyAttribute["E10"] := "M"
-	keyAttribute["E11"] := "M"
-	keyAttribute["E12"] := "M"
-	keyAttribute["E13"] := "M"
-	keyAttribute["E14"] := "X"	; Backspace
-	keyAttribute["D00"] := "X"	; Tab
-	keyAttribute["D01"] := "M"
-	keyAttribute["D02"] := "M"
-	keyAttribute["D03"] := "M"
-	keyAttribute["D04"] := "M"
-	keyAttribute["D05"] := "M"
-	keyAttribute["D06"] := "M"
-	keyAttribute["D07"] := "M"
-	keyAttribute["D08"] := "M"
-	keyAttribute["D09"] := "M"
-	keyAttribute["D10"] := "M"
-	keyAttribute["D11"] := "M"
-	keyAttribute["D12"] := "M"
-	keyAttribute["C01"] := "M"
-	keyAttribute["C02"] := "M"
-	keyAttribute["C03"] := "M"
-	keyAttribute["C04"] := "M"
-	keyAttribute["C05"] := "M"
-	keyAttribute["C06"] := "M"
-	keyAttribute["C07"] := "M"
-	keyAttribute["C08"] := "M"
-	keyAttribute["C09"] := "M"
-	keyAttribute["C10"] := "M"
-	keyAttribute["C11"] := "M"
-	keyAttribute["C12"] := "M"
-	keyAttribute["C13"] := "X"	; Enter
-	keyAttribute["B01"] := "M"
-	keyAttribute["B02"] := "M"
-	keyAttribute["B03"] := "M"
-	keyAttribute["B04"] := "M"
-	keyAttribute["B05"] := "M"
-	keyAttribute["B06"] := "M"
-	keyAttribute["B07"] := "M"
-	keyAttribute["B08"] := "M"
-	keyAttribute["B09"] := "M"
-	keyAttribute["B10"] := "M"
-	keyAttribute["B11"] := "M"
-	keyAttribute["A00"] := "X"	; LCtrl
-	keyAttribute["A01"] := "L"
-	keyAttribute["A02"] := "X"	; Space
-	keyAttribute["A03"] := "R"
-	keyAttribute["A04"] := "X"	; カタカナひらがな
-	keyAttribute["A05"] := "X"	; Rctrl
-	return keyAttribute
+MakeKeyAttribute2Hash() {
+	keyAttribute2 := Object()
+	keyAttribute2["AE00"] := "X"	; 半角/全角
+	keyAttribute2["RE00"] := "X"	; 半角/全角
+	keyAttribute2["AE01"] := "M"
+	keyAttribute2["RE01"] := "M"
+	keyAttribute2["AE02"] := "M"
+	keyAttribute2["RE02"] := "M"
+	keyAttribute2["AE03"] := "M"
+	keyAttribute2["RE03"] := "M"
+	keyAttribute2["AE04"] := "M"
+	keyAttribute2["RE04"] := "M"
+	keyAttribute2["AE05"] := "M"
+	keyAttribute2["RE05"] := "M"
+	keyAttribute2["AE06"] := "M"
+	keyAttribute2["RE06"] := "M"
+	keyAttribute2["AE07"] := "M"
+	keyAttribute2["RE07"] := "M"
+	keyAttribute2["AE08"] := "M"
+	keyAttribute2["RE08"] := "M"
+	keyAttribute2["AE09"] := "M"
+	keyAttribute2["RE09"] := "M"
+	keyAttribute2["AE10"] := "M"
+	keyAttribute2["RE10"] := "M"
+	keyAttribute2["AE11"] := "M"
+	keyAttribute2["RE11"] := "M"
+	keyAttribute2["AE12"] := "M"
+	keyAttribute2["RE12"] := "M"
+	keyAttribute2["AE13"] := "M"
+	keyAttribute2["RE13"] := "M"
+	keyAttribute2["AE14"] := "X"	; Backspace
+	keyAttribute2["RE14"] := "X"	; Backspace
+	keyAttribute2["AD00"] := "X"	; Tab
+	keyAttribute2["RD00"] := "X"	; Tab
+	keyAttribute2["AD01"] := "M"
+	keyAttribute2["RD01"] := "M"
+	keyAttribute2["AD02"] := "M"
+	keyAttribute2["RD02"] := "M"
+	keyAttribute2["AD03"] := "M"
+	keyAttribute2["RD03"] := "M"
+	keyAttribute2["AD04"] := "M"
+	keyAttribute2["RD04"] := "M"
+	keyAttribute2["AD05"] := "M"
+	keyAttribute2["RD05"] := "M"
+	keyAttribute2["AD06"] := "M"
+	keyAttribute2["RD06"] := "M"
+	keyAttribute2["AD07"] := "M"
+	keyAttribute2["RD07"] := "M"
+	keyAttribute2["AD08"] := "M"
+	keyAttribute2["RD08"] := "M"
+	keyAttribute2["AD09"] := "M"
+	keyAttribute2["RD09"] := "M"
+	keyAttribute2["AD10"] := "M"
+	keyAttribute2["RD10"] := "M"
+	keyAttribute2["AD11"] := "M"
+	keyAttribute2["RD11"] := "M"
+	keyAttribute2["AD12"] := "M"
+	keyAttribute2["RD12"] := "M"
+	keyAttribute2["AC01"] := "M"
+	keyAttribute2["RC01"] := "M"
+	keyAttribute2["AC02"] := "M"
+	keyAttribute2["RC02"] := "M"
+	keyAttribute2["AC03"] := "M"
+	keyAttribute2["RC03"] := "M"
+	keyAttribute2["AC04"] := "M"
+	keyAttribute2["RC04"] := "M"
+	keyAttribute2["AC05"] := "M"
+	keyAttribute2["RC05"] := "M"
+	keyAttribute2["AC06"] := "M"
+	keyAttribute2["RC06"] := "M"
+	keyAttribute2["AC07"] := "M"
+	keyAttribute2["RC07"] := "M"
+	keyAttribute2["AC08"] := "M"
+	keyAttribute2["RC08"] := "M"
+	keyAttribute2["AC09"] := "M"
+	keyAttribute2["RC09"] := "M"
+	keyAttribute2["AC10"] := "M"
+	keyAttribute2["RC10"] := "M"
+	keyAttribute2["AC11"] := "M"
+	keyAttribute2["RC11"] := "M"
+	keyAttribute2["AC12"] := "M"
+	keyAttribute2["RC12"] := "M"
+	keyAttribute2["AC13"] := "X"	; Enter
+	keyAttribute2["RC13"] := "X"	; Enter
+	keyAttribute2["AB01"] := "M"
+	keyAttribute2["RB01"] := "M"
+	keyAttribute2["AB02"] := "M"
+	keyAttribute2["RB02"] := "M"
+	keyAttribute2["AB03"] := "M"
+	keyAttribute2["RB03"] := "M"
+	keyAttribute2["AB04"] := "M"
+	keyAttribute2["RB04"] := "M"
+	keyAttribute2["AB05"] := "M"
+	keyAttribute2["RB05"] := "M"
+	keyAttribute2["AB06"] := "M"
+	keyAttribute2["RB06"] := "M"
+	keyAttribute2["AB07"] := "M"
+	keyAttribute2["RB07"] := "M"
+	keyAttribute2["AB08"] := "M"
+	keyAttribute2["RB08"] := "M"
+	keyAttribute2["AB09"] := "M"
+	keyAttribute2["RB09"] := "M"
+	keyAttribute2["AB10"] := "M"
+	keyAttribute2["RB10"] := "M"
+	keyAttribute2["AB11"] := "M"
+	keyAttribute2["RB11"] := "M"
+	keyAttribute2["AA00"] := "X"	; LCtrl
+	keyAttribute2["RA00"] := "X"	; LCtrl
+	keyAttribute2["AA01"] := "X"
+	keyAttribute2["RA01"] := "X"
+	keyAttribute2["AA02"] := "X"	; Space
+	keyAttribute2["RA02"] := "X"	; Space
+	keyAttribute2["AA03"] := "X"
+	keyAttribute2["RA03"] := "X"
+	keyAttribute2["AA04"] := "X"	; カタカナひらがな
+	keyAttribute2["RA04"] := "X"	; カタカナひらがな
+	keyAttribute2["AA05"] := "X"	; Rctrl
+	keyAttribute2["RA05"] := "X"	; Rctrl
+	return keyAttribute2
 }
 
 MakeKeyState() {
@@ -954,4 +1050,133 @@ MakeKeyState() {
 	keyState["A04"] := 0	; カタカナひらがな
 	keyState["A05"] := 0	; RCtrl
 	return keyState
+}
+
+;----------------------------------------------------------------------
+;	キー名をデフォルトのvkeyに変換
+;----------------------------------------------------------------------
+MakeVkeyHash()
+{
+	hash := Object()
+	hash["E01"] := 0x31		; 1
+	hash["E02"] := 0x32		; 2
+	hash["E03"] := 0x33		; 3
+	hash["E04"] := 0x34		; 4
+	hash["E05"] := 0x35		; 5
+	hash["E06"] := 0x36		; 6
+	hash["E07"] := 0x37		; 7
+	hash["E08"] := 0x38		; 8
+	hash["E09"] := 0x39		; 9
+	hash["E10"] := 0x30		; 0
+	hash["E11"] := 0xBD		;-
+	hash["E12"] := 0xDE		;^
+	hash["E13"] := 0xDC		;\
+
+	hash["D01"] := 0x51		;q
+	hash["D02"] := 0x57		;w
+	hash["D03"] := 0x45		;e
+	hash["D04"] := 0x52		;r
+	hash["D05"] := 0x54		;t
+	hash["D06"] := 0x59		;y
+	hash["D07"] := 0x55		;u
+	hash["D08"] := 0x49		;i
+	hash["D09"] := 0x4F		;o
+	hash["D10"] := 0x50		;p
+	hash["D11"] := 0xC0		;@
+	hash["D12"] := 0xDB		;[
+	
+	hash["C01"] := 0x41		;a
+	hash["C02"] := 0x53		;s
+	hash["C03"] := 0x44		;d
+	hash["C04"] := 0x46		;f
+	hash["C05"] := 0x47		;g
+	hash["C06"] := 0x48		;h
+	hash["C07"] := 0x4A		;j
+	hash["C08"] := 0x4B		;k
+	hash["C09"] := 0x4C		;l
+	hash["C10"] := 0xBB		;;
+	hash["C11"] := 0xBA		;:
+	hash["C12"] := 0xDD		;]
+
+	hash["B01"] := 0x5A		;z
+	hash["B02"] := 0x58		;x
+	hash["B03"] := 0x43		;c
+	hash["B04"] := 0x56		;v
+	hash["B05"] := 0x42		;b
+	hash["B06"] := 0x4E		;n
+	hash["B07"] := 0x4D		;m
+	hash["B08"] := 0xBC		;,
+	hash["B09"] := 0xBE		;.
+	hash["B10"] := 0xBF		;/
+	hash["B11"] := 0xE2		;\
+	
+	hash["A01"] := 0x1D		;無変換
+	hash["A02"] := 0x20		;スペース
+	hash["A03"] := 0x1C		;変換
+	hash["A04"] := 0xF2		;ひらがな／カタカナ
+	return hash
+}
+;----------------------------------------------------------------------
+;	キーからラベル名に変換
+;----------------------------------------------------------------------
+MakeCodeLabelHash()
+{
+	hash := Object()
+	hash["E01"] := ""		; 1
+	hash["E02"] := ""		; 2
+	hash["E03"] := ""		; 3
+	hash["E04"] := ""		; 4
+	hash["E05"] := ""		; 5
+	hash["E06"] := ""		; 6
+	hash["E07"] := ""		; 7
+	hash["E08"] := ""		; 8
+	hash["E09"] := ""		; 9
+	hash["E10"] := ""		; 0
+	hash["E11"] := ""		;-
+	hash["E12"] := ""		;^
+	hash["E13"] := ""		;\
+
+	hash["D01"] := ""		;q
+	hash["D02"] := ""		;w
+	hash["D03"] := ""		;e
+	hash["D04"] := ""		;r
+	hash["D05"] := ""		;t
+	hash["D06"] := ""		;y
+	hash["D07"] := ""		;u
+	hash["D08"] := ""		;i
+	hash["D09"] := ""		;o
+	hash["D10"] := ""		;p
+	hash["D11"] := ""		;@
+	hash["D12"] := ""		;[
+
+	hash["C01"] := ""		;a
+	hash["C02"] := ""		;s
+	hash["C03"] := ""		;d
+	hash["C04"] := ""		;f
+	hash["C05"] := ""		;g
+	hash["C06"] := ""		;h
+	hash["C07"] := ""		;j
+	hash["C08"] := ""		;k
+	hash["C09"] := ""		;l
+	hash["C10"] := ""		;;
+	hash["C11"] := ""		;:
+	hash["C12"] := ""		;]
+
+	hash["B01"] := ""		;z
+	hash["B02"] := ""		;x
+	hash["B03"] := ""		;c
+	hash["B04"] := ""		;v
+	hash["B05"] := ""		;b
+	hash["B06"] := ""		;n
+	hash["B07"] := ""		;m
+	hash["B08"] := ""		;,
+	hash["B09"] := ""		;.
+	hash["B10"] := ""		;/
+	hash["B11"] := ""		;\
+	
+	hash["A01"] := "無変換"	;無変換
+	hash["A02"] := " 空白 "	;スペース
+	hash["A03"] := " 変換 "	;変換
+	hash["A04"] := "ひ／カ"	;ひらがな／カタカナ
+	return hash
 }

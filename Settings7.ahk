@@ -99,9 +99,10 @@ _Settings:
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
-	Gui, Add, Text,X30 Y40, 配列定義ファイル：
-	Gui, Add, Edit,vvFilePath ggDefFile X150 Y40 W380 H20 ReadOnly, %_LayoutFile%
-	Gui, Add, Button,ggFileSelect X550 Y40 W32 H21,…
+	Gui, Add, Edit,X30 Y40 W250 H20 ReadOnly -Vscroll, %g_layoutName%　%g_layoutVersion%
+	Gui, Add, Text,X300 Y40, 定義ファイル：
+	Gui, Add, Edit,vvFilePath ggDefFile X370 Y40 W220 H20 ReadOnly, %_LayoutFile%
+	Gui, Add, Button,ggFileSelect X600 Y40 W32 H21,…
 
 	if(ShiftMode["R"] = "親指シフト")
 	{
@@ -208,46 +209,39 @@ G2DrawKeyFrame:
 	Gui,Add,GroupBox,X20 Y90 W670 H270,キー配列
 	_col := 1
 	_ypos := 105
-	_cnt := 13
-	loop,%_cnt%
+	loop,13
 	{
 		_row := A_Index
 		Gosub,G2KeyRectChar
 	}
 	_col := 2
 	_ypos := _ypos + 48
-	_cnt := 12
-	loop,%_cnt%
+	loop,12
 	{
 		_row := A_Index
 		Gosub,G2KeyRectChar
 	}
 	_col := 3
 	_ypos := _ypos + 48
-	_cnt := 12
-	loop,%_cnt%
+	loop,12
 	{
 		_row := A_Index
 		Gosub,G2KeyRectChar
 	}
 	_col := 4
 	_ypos := _ypos + 48
-	_cnt := 11
-	loop,%_cnt%
+	loop,11
 	{
 		_row := A_Index
 		Gosub,G2KeyRectChar
 	}
+	_col := 5
 	_ypos := _ypos + 48
-	_col := 5
-	_row := 1
-	Gosub,G2KeyRectChar5
-	_col := 5
-	_row := 2
-	Gosub,G2KeyRectChar5
-	_col := 5
-	_row := 3
-	Gosub,G2KeyRectChar5
+	loop, 4
+	{
+		_row := A_Index
+		Gosub,G2KeyRectChar5
+	}
 	critical,off
 	return
 
@@ -260,8 +254,8 @@ G2KeyRectChar:
 	Gosub, G2KeyRectangle
 	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 10
-	_col2 := _colcnv[_col]
-	_row2 := _rowcnv[_row]
+	_col2 := _colhash[_col]
+	_row2 := _rowhash[_row]
 	Gui, Font,s11 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyRK%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 30
@@ -286,8 +280,8 @@ G2KeyRectChar5:
 	Gosub, G2KeyRectangle5
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 10
-	_col2 := _colcnv[_col]
-	_row2 := _rowcnv[_row]
+	_col2 := _colhash[_col]
+	_row2 := _rowhash[_row]
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyFA%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
 	_xpos0 := _xpos + 6
@@ -342,22 +336,22 @@ G2KeyRectangle5:
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(_row == 1 && keyAttribute["A01"] == "L")
+	if(_row == 1 && keyAttribute2[g_Romaji . "A01"] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else 
-	if(_row == 2 && keyAttribute["A02"] == "L")
+	if(_row == 2 && keyAttribute2[g_Romaji . "A02"] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else
-	if(_row == 2 && keyAttribute["A02"] == "R")
+	if(_row == 2 && keyAttribute2[g_Romaji . "A02"] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
 	else
-	if(_row == 3 && keyAttribute["A03"] == "R")
+	if(_row == 3 && keyAttribute2[g_Romaji . "A03"] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
@@ -367,8 +361,8 @@ G2KeyRectangle5:
 	}
 	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	_col2 := _colcnv[_col]
-	_row2 := _rowcnv[_row]
+	_col2 := _colhash[_col]
+	_row2 := _rowhash[_row]
 	Gui, Add, Text,vvkeyFC%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
@@ -379,12 +373,10 @@ G2KeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	_col2 := _colcnv[_col]
-	_row2 := _rowcnv[_row]
+	_col2 := _colhash[_col]
+	_row2 := _rowhash[_row]
 	
 	Gui, Add, Text,vvkeyDN%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
-	;_row2 := _rowcnv[A_Index]
-	;vkeyDN%_col2%%_row2% := "　"
 	return
 
 ;-----------------------------------------------------------------------
@@ -409,6 +401,15 @@ G2PollingLayout:
 	}
 	if(ShiftMode[g_Romaji] == "" ) {
 		Gosub,ReadKeyboardState
+	} else {
+		_keyname := "A04"
+		Gosub,SetKeyGui2A
+		_keyname := "A03"
+		Gosub,SetKeyGui2A
+		_keyname := "A02"
+		Gosub,SetKeyGui2A
+		_keyname := "A01"
+		Gosub,SetKeyGui2A
 	}
 	return
 
@@ -416,109 +417,53 @@ G2PollingLayout:
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
 G2RefreshLayout5:
+	_keyname := "A01"
+	Gosub,G2RefreshLayout51
+	_keyname := "A02"
+	Gosub,G2RefreshLayout51
+	_keyname := "A03"
+	Gosub,G2RefreshLayout51
+	_keyname := "A04"
+	Gosub,G2RefreshLayout51
+	return
+
+;-----------------------------------------------------------------------
+; 機能：Ａ列のキー表示の更新
+;-----------------------------------------------------------------------
+G2RefreshLayout51:
 	Critical
 	Gui, Submit, NoHide
-	GuiControl,-Redraw,vkeyDNA01
-	GuiControl,-Redraw,vkeyDNA02
-	GuiControl,-Redraw,vkeyDNA03
-	if(ShiftMode[g_Romaji] != "親指シフト" ) {
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA01
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA02
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA03
-		Gui, Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFAA01,　　　
-		GuiControl,,vkeyFAA02,　　　
-		GuiControl,,vkeyFAA03,　　　
-		GuiControl,,vkeyFBA01,無変換
-		GuiControl,,vkeyFBA02, 空白 
-		GuiControl,,vkeyFBA03, 変換 
+	GuiControl,-Redraw,vkeyDN%_keyname%
+	if(keyAttribute2[g_Romaji . _keyname] == "L")
+	{
+		Gui,Font,S42 cFFFF00,Yu Gothic UI
+		GuiControl,Font,vkeyFC%_keyname%
+		GuiControl,,vkeyFA%_keyname%,左親指
 	}
 	else
-	if(keyAttribute["A01"] == "L" && keyAttribute["A03"] == "R")
+	if(keyAttribute2[g_Romaji . _keyname] == "R")
 	{
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFCA01
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA02
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA03
-		Gui, Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFAA01,左親指
-		GuiControl,,vkeyFAA02,　　　
-		GuiControl,,vkeyFAA03,右親指
-		if(s_KeySingle = "有効")
-		{
-			GuiControl,,vkeyFBA01,無変換
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03, 変換 
-		}
-		else
-		{
-			GuiControl,,vkeyFBA01,　　　
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03,　　　
-		}
+		GuiControl,Font,vkeyFC%_keyname%
+		GuiControl,,vkeyFA%_keyname%,右親指
 	}
-	else if(keyAttribute["A01"] == "L" && keyAttribute["A02"] == "R")
-	{
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFCA01 
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA02
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA03
-		GuiControl,,vkeyFAA01,左親指
-		GuiControl,,vkeyFAA02,右親指
-		GuiControl,,vkeyFAA03,　　　
-		if(s_KeySingle = "有効")
-		{
-			GuiControl,,vkeyFBA01,無変換
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03, 変換 
-		}
-		else
-		{
-			GuiControl,,vkeyFBA01,　　　
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03, 変換 
-		}
-	}
-	else	; 空白－変換
+	else
 	{
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA01
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFCA02
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFCA03
-		GuiControl,,vkeyFAA01,　　　
-		GuiControl,,vkeyFAA02,左親指
-		GuiControl,,vkeyFAA03,右親指
-		if(s_KeySingle = "有効")
-		{
-			GuiControl,,vkeyFBA01,無変換
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03, 変換 
-		}
-		else
-		{
-			GuiControl,,vkeyFBA01,無変換
-			GuiControl,,vkeyFBA02, 空白 
-			GuiControl,,vkeyFBA03,　　　
-		}
+		GuiControl,Font,vkeyFC%_keyname%
+
+		Gui,Font,s9 c000000,Meiryo UI
+		GuiControl,,vkeyFA%_keyname%,　　　
 	}
-	vkeyDNA01 := "　"
-	GuiControl,2:,vkeyDNA01,　
-	vkeyDNA02 := "　"
-	GuiControl,2:,vkeyDNA02,　
-	vkeyDNA03 := "　"
-	GuiControl,2:,vkeyDNA03,　
-	GuiControl,+Redraw,vkeyDNA01
-	GuiControl,+Redraw,vkeyDNA02
-	GuiControl,+Redraw,vkeyDNA03
+	if(s_KeySingle = "有効" || (codeLabel%_keyname% != "無変換" || codeLabel%_keyname% != " 変換 ")) {
+		_label := codeLabelHash[_keyname]
+		GuiControl,,vkeyFB%_keyname%,%_label%
+	} else {
+		GuiControl,,vkeyFB%_keyname%,　　　
+	}
+	vkeyDN%_keyname% := "　"
+	GuiControl,2:,vkeyDN%_keyname%,　
+	GuiControl,+Redraw,vkeyDN%_keyname%
 	Critical,off
 	return
 
@@ -530,11 +475,11 @@ G2RefreshLayout:
 	Gui, Submit, NoHide
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		org := StrSplit(LF["NUL" . _col2],",")
 		loop,% org.MaxIndex()
 		{
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,-Redraw,vkeyDN%_col2%%_row2%
 			GuiControl,,vkeyDN%_col2%%_row2%,　
 			GuiControl,-Redraw,vkeyRK%_col2%%_row2%
@@ -545,7 +490,7 @@ G2RefreshLayout:
 	}
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		if(LF[g_Romaji . "NK" . _col2] != "")
 		{
 			org := StrSplit(LF[g_Romaji . "NK" . _col2],",")
@@ -557,13 +502,13 @@ G2RefreshLayout:
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,,vkeyRK%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		if(LF[g_Romaji . "NN" . _col2] != "")
 		{
 			org := StrSplit(LF[g_Romaji . "NN" . _col2],",")
@@ -575,13 +520,13 @@ G2RefreshLayout:
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,,vkeyRN%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		if(LF[g_Romaji . "LN" . _col2] != "")
 		{
 			org := StrSplit(LF[g_Romaji . "LN" . _col2],",")
@@ -598,13 +543,13 @@ G2RefreshLayout:
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,,vkeyRL%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		if(LF[g_Romaji . "RN" . _col2] != "")
 		{
 			org := StrSplit(LF[g_Romaji . "RN" . _col2],",")
@@ -621,17 +566,17 @@ G2RefreshLayout:
 		loop,% org.MaxIndex()
 		{
 			_ch := org[A_Index]
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,,vkeyRR%_col2%%_row2%,%_ch%
 		}
 	}
 	loop,4
 	{
-		_col2 := _colcnv[A_Index]
+		_col2 := _colhash[A_Index]
 		org := StrSplit(LF["NUL" . _col2],",")
 		loop,% org.MaxIndex()
 		{
-			_row2 := _rowcnv[A_Index]
+			_row2 := _rowhash[A_Index]
 			GuiControl,+Redraw,vkeyDN%_col2%%_row2%
 			GuiControl,+Redraw,vkeyRK%_col2%%_row2%
 			GuiControl,+Redraw,vkeyRN%_col2%%_row2%
@@ -642,6 +587,9 @@ G2RefreshLayout:
 	Critical,off
 	return
 
+;-----------------------------------------------------------------------
+; 機能：キーのオンオフ表示の更新
+;-----------------------------------------------------------------------
 ReadKeyboardState:
 	Critical
 	VarSetCapacity(stKtbl, cbSize:=512, 0)
@@ -651,6 +599,41 @@ ReadKeyboardState:
 	{
 		return
 	}
+	loop, 13
+	{
+		_keyname := "E" . _rowhash[A_Index]
+		_vkey := vkeyHash[_keyname]
+;msgbox, % "_keyname is " . _keyname . ":_vkey is " . _vkey
+		Gosub,SetKeyGui2
+	}
+	loop, 12
+	{
+		_keyname := "D" . _rowhash[A_Index]
+		_vkey := vkeyHash[_keyname]
+		Gosub,SetKeyGui2
+	}
+	loop, 12
+	{
+		_keyname := "C" . _rowhash[A_Index]
+		_vkey := vkeyHash[_keyname]
+		Gosub,SetKeyGui2
+	}
+	loop, 11
+	{
+		_keyname := "B" . _rowhash[A_Index]
+		_vkey := vkeyHash[_keyname]
+		Gosub,SetKeyGui2
+	}
+	loop, 4
+	{
+		_keyname := "A" . _rowhash[A_Index]
+		_vkey := vkeyHash[_keyname]
+		Gosub,SetKeyGui2
+	}
+	return
+	
+	
+	
 	_vkey := 0x31
 	_keyname := "E01"
 	Gosub,SetKeyGui2
@@ -808,6 +791,9 @@ ReadKeyboardState:
 	_vkey := 0x1C			;変換
 	_keyname := "A03"
 	Gosub,SetKeyGui2
+	_vkey := 0xF2			;ひらがな／カタカナ
+	_keyname := "A04"
+	Gosub,SetKeyGui2
 	critical,off
 	return
 
@@ -821,6 +807,19 @@ SetKeyGui2:
 	else
 	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)== 0
 	&&  _val != "　")
+	{
+		GuiControl,2:,vkeyDN%_keyname%,　
+	}
+	return
+
+SetKeyGui2A:
+	GuiControlGet,_val,,vkeyDN%_keyname%
+	if( keyState[_keyname]!= 0 && _val != "□")
+	{
+		GuiControl,2:,vkeyDN%_keyname%,□
+	}
+	else
+	if( keyState[_keyname]== 0 && _val != "　")
 	{
 		GuiControl,2:,vkeyDN%_keyname%,　
 	}
@@ -892,21 +891,42 @@ RemapOya:
 	_OyaKey := vOyaKey
 	if(vOyaKey = "無変換－変換")
 	{
-		keyAttribute["A01"] := "L"
-		keyAttribute["A02"] := "X"
-		keyAttribute["A03"] := "R"
+		if(ShiftMode["R"] == "親指シフト") {
+			keyAttribute2["RA01"] := "L"
+			keyAttribute2["RA02"] := "X"
+			keyAttribute2["RA03"] := "R"
+		} else
+		if(ShiftMode["A"] == "親指シフト") {
+			keyAttribute2["AA01"] := "L"
+			keyAttribute2["AA02"] := "X"
+			keyAttribute2["AA03"] := "R"
+		}
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
-		keyAttribute["A01"] := "L"
-		keyAttribute["A02"] := "R"
-		keyAttribute["A03"] := "X"
+		if(ShiftMode["R"] == "親指シフト") {
+			keyAttribute2["RA01"] := "L"
+			keyAttribute2["RA02"] := "R"
+			keyAttribute2["RA03"] := "X"
+		} else
+		if(ShiftMode["A"] == "親指シフト") {
+			keyAttribute2["AA01"] := "L"
+			keyAttribute2["AA02"] := "R"
+			keyAttribute2["AA03"] := "X"
+		}
 	}
 	else	; 空白－変換
 	{
-		keyAttribute["A01"] := "X"
-		keyAttribute["A02"] := "L"
-		keyAttribute["A03"] := "R"
+		if(ShiftMode["R"] == "親指シフト") {
+			keyAttribute2["RA01"] := "X"
+			keyAttribute2["RA02"] := "L"
+			keyAttribute2["RA03"] := "R"
+		} else
+		if(ShiftMode["A"] == "親指シフト") {
+			keyAttribute2["AA01"] := "X"
+			keyAttribute2["AA02"] := "L"
+			keyAttribute2["AA03"] := "R"
+		}
 	}
 	Return
 
