@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.4 .... 2021/3/14
+;	ver.0.1.4.4 .... 2021/3/20
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -335,23 +335,15 @@ G2KeyRectangle5:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
+	_col2 := _colhash[_col]
+	_row2 := _rowhash[_row]
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(_row == 1 && keyAttribute2[g_Romaji . "A01"] == "L")
-	{
-		Gui, Font,s42 cFFFF00,Yu Gothic UI
-	}
-	else 
-	if(_row == 2 && keyAttribute2[g_Romaji . "A02"] == "L")
+	if(keyAttribute2[g_Romaji . _col2 . _row2] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else
-	if(_row == 2 && keyAttribute2[g_Romaji . "A02"] == "R")
-	{
-		Gui, Font,s42 c00FFFF,Yu Gothic UI
-	}
-	else
-	if(_row == 3 && keyAttribute2[g_Romaji . "A03"] == "R")
+	if(keyAttribute2[g_Romaji . _col2 . _row2] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
@@ -402,13 +394,13 @@ G2PollingLayout:
 	if(ShiftMode[g_Romaji] == "" ) {
 		Gosub,ReadKeyboardState
 	} else {
-		_keyname := "A04"
+		_layoutPos := "A04"
 		Gosub,SetKeyGui2A
-		_keyname := "A03"
+		_layoutPos := "A03"
 		Gosub,SetKeyGui2A
-		_keyname := "A02"
+		_layoutPos := "A02"
 		Gosub,SetKeyGui2A
-		_keyname := "A01"
+		_layoutPos := "A01"
 		Gosub,SetKeyGui2A
 	}
 	return
@@ -417,13 +409,13 @@ G2PollingLayout:
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
 G2RefreshLayout5:
-	_keyname := "A01"
+	_layoutPos := "A01"
 	Gosub,G2RefreshLayout51
-	_keyname := "A02"
+	_layoutPos := "A02"
 	Gosub,G2RefreshLayout51
-	_keyname := "A03"
+	_layoutPos := "A03"
 	Gosub,G2RefreshLayout51
-	_keyname := "A04"
+	_layoutPos := "A04"
 	Gosub,G2RefreshLayout51
 	return
 
@@ -433,37 +425,37 @@ G2RefreshLayout5:
 G2RefreshLayout51:
 	Critical
 	Gui, Submit, NoHide
-	GuiControl,-Redraw,vkeyDN%_keyname%
-	if(keyAttribute2[g_Romaji . _keyname] == "L")
+	GuiControl,-Redraw,vkeyDN%_layoutPos%
+	if(keyAttribute2[g_Romaji . _layoutPos] == "L")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_keyname%
-		GuiControl,,vkeyFA%_keyname%,左親指
+		GuiControl,Font,vkeyFC%_layoutPos%
+		GuiControl,,vkeyFA%_layoutPos%,左親指
 	}
 	else
-	if(keyAttribute2[g_Romaji . _keyname] == "R")
+	if(keyAttribute2[g_Romaji . _layoutPos] == "R")
 	{
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_keyname%
-		GuiControl,,vkeyFA%_keyname%,右親指
+		GuiControl,Font,vkeyFC%_layoutPos%
+		GuiControl,,vkeyFA%_layoutPos%,右親指
 	}
 	else
 	{
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_keyname%
+		GuiControl,Font,vkeyFC%_layoutPos%
 
 		Gui,Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFA%_keyname%,　　　
+		GuiControl,,vkeyFA%_layoutPos%,　　　
 	}
-	if(s_KeySingle = "有効" || (codeLabel%_keyname% != "無変換" || codeLabel%_keyname% != " 変換 ")) {
-		_label := codeLabelHash[_keyname]
-		GuiControl,,vkeyFB%_keyname%,%_label%
+	if(s_KeySingle = "有効" || (codeLabel%_layoutPos% != "無変換" || codeLabel%_layoutPos% != " 変換 ")) {
+		_label := codeLabelHash[_layoutPos]
+		GuiControl,,vkeyFB%_layoutPos%,%_label%
 	} else {
-		GuiControl,,vkeyFB%_keyname%,　　　
+		GuiControl,,vkeyFB%_layoutPos%,　　　
 	}
-	vkeyDN%_keyname% := "　"
-	GuiControl,2:,vkeyDN%_keyname%,　
-	GuiControl,+Redraw,vkeyDN%_keyname%
+	vkeyDN%_layoutPos% := "　"
+	GuiControl,2:,vkeyDN%_layoutPos%,　
+	GuiControl,+Redraw,vkeyDN%_layoutPos%
 	Critical,off
 	return
 
@@ -601,227 +593,62 @@ ReadKeyboardState:
 	}
 	loop, 13
 	{
-		_keyname := "E" . _rowhash[A_Index]
-		_vkey := vkeyHash[_keyname]
-;msgbox, % "_keyname is " . _keyname . ":_vkey is " . _vkey
+		_layoutPos := "E" . _rowhash[A_Index]
+		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		_keyname := "D" . _rowhash[A_Index]
-		_vkey := vkeyHash[_keyname]
+		_layoutPos := "D" . _rowhash[A_Index]
+		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		_keyname := "C" . _rowhash[A_Index]
-		_vkey := vkeyHash[_keyname]
+		_layoutPos := "C" . _rowhash[A_Index]
+		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 11
 	{
-		_keyname := "B" . _rowhash[A_Index]
-		_vkey := vkeyHash[_keyname]
+		_layoutPos := "B" . _rowhash[A_Index]
+		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 4
 	{
-		_keyname := "A" . _rowhash[A_Index]
-		_vkey := vkeyHash[_keyname]
+		_layoutPos := "A" . _rowhash[A_Index]
+		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
-	return
-	
-	
-	
-	_vkey := 0x31
-	_keyname := "E01"
-	Gosub,SetKeyGui2
-	_vkey := 0x32
-	_keyname := "E02"
-	Gosub,SetKeyGui2
-	_vkey := 0x33
-	_keyname := "E03"
-	Gosub,SetKeyGui2
-	_vkey := 0x34
-	_keyname := "E04"  
-	Gosub,SetKeyGui2
-	_vkey := 0x35
-	_keyname := "E05"
-	Gosub,SetKeyGui2
-	_vkey := 0x36
-	_keyname := "E06"
-	Gosub,SetKeyGui2
-	_vkey := 0x37
-	_keyname := "E07"
-	Gosub,SetKeyGui2
-	_vkey := 0x38
-	_keyname := "E08"
-	Gosub,SetKeyGui2
-	_vkey := 0x39
-	_keyname := "E09"
-	Gosub,SetKeyGui2
-	_vkey := 0x30
-	_keyname := "E10"
-	Gosub,SetKeyGui2
-	_vkey := 0xBD			;-
-	_keyname := "E11"
-	Gosub,SetKeyGui2
-	_vkey := 0xDE			;^
-	_keyname := "E12"
-	Gosub,SetKeyGui2
-	_vkey := 0xDC			;\
-	_keyname := "E13"
-	Gosub,SetKeyGui2
-
-	_vkey := 0x51			;q
-	_keyname := "D01"
-	Gosub,SetKeyGui2
-	_vkey := 0x57			;w
-	_keyname := "D02"
-	Gosub,SetKeyGui2
-	_vkey := 0x45			;e
-	_keyname := "D03"
-	Gosub,SetKeyGui2
-	_vkey := 0x52			;r
-	_keyname := "D04"
-	Gosub,SetKeyGui2
-	_vkey := 0x54			;t
-	_keyname := "D05"
-	Gosub,SetKeyGui2
-	_vkey := 0x59			;y
-	_keyname := "D06"
-	Gosub,SetKeyGui2
-	_vkey := 0x55			;u
-	_keyname := "D07"
-	Gosub,SetKeyGui2
-	_vkey := 0x49			;i
-	_keyname := "D08"
-	Gosub,SetKeyGui2
-	_vkey := 0x4F			;o
-	_keyname := "D09"
-	Gosub,SetKeyGui2
-	_vkey := 0x50			;p
-	_keyname := "D10"
-	Gosub,SetKeyGui2
-	_vkey := 0xC0			;@
-	_keyname := "D11"
-	Gosub,SetKeyGui2
-	_vkey := 0xDB			;[
-	_keyname := "D12"
-	Gosub,SetKeyGui2
-	
-	_vkey := 0x41			;a
-	_keyname := "C01"
-	Gosub,SetKeyGui2
-	_vkey := 0x53			;s
-	_keyname := "C02"
-	Gosub,SetKeyGui2
-	_vkey := 0x44			;d
-	_keyname := "C03"
-	Gosub,SetKeyGui2
-	_vkey := 0x46			;f
-	_keyname := "C04"
-	Gosub,SetKeyGui2
-	_vkey := 0x47			;g
-	_keyname := "C05"
-	Gosub,SetKeyGui2
-	_vkey := 0x48			;h
-	_keyname := "C06"
-	Gosub,SetKeyGui2
-	_vkey := 0x4A			;j
-	_keyname := "C07"
-	Gosub,SetKeyGui2
-	_vkey := 0x4B			;k
-	_keyname := "C08"
-	Gosub,SetKeyGui2
-	_vkey := 0x4C			;l
-	_keyname := "C09"
-	Gosub,SetKeyGui2
-	_vkey := 0xBB			;;
-	_keyname := "C10"
-	Gosub,SetKeyGui2
-	_vkey := 0xBA			;:
-	_keyname := "C11"
-	Gosub,SetKeyGui2
-	_vkey := 0xDD			;]
-	_keyname := "C12"
-	Gosub,SetKeyGui2
-
-	_vkey := 0x5A			;z
-	_keyname := "B01"
-	Gosub,SetKeyGui2
-	_vkey := 0x58			;x
-	_keyname := "B02"
-	Gosub,SetKeyGui2
-	_vkey := 0x43			;c
-	_keyname := "B03"
-	Gosub,SetKeyGui2
-	_vkey := 0x56			;v
-	_keyname := "B04"
-	Gosub,SetKeyGui2
-	_vkey := 0x42			;b
-	_keyname := "B05"
-	Gosub,SetKeyGui2
-	_vkey := 0x4E			;n
-	_keyname := "B06"
-	Gosub,SetKeyGui2
-	_vkey := 0x4D			;m
-	_keyname := "B07"
-	Gosub,SetKeyGui2
-	_vkey := 0xBC			;,
-	_keyname := "B08"
-	Gosub,SetKeyGui2
-	_vkey := 0xBE			;.
-	_keyname := "B09"
-	Gosub,SetKeyGui2
-	_vkey := 0xBF			;/
-	_keyname := "B10"
-	Gosub,SetKeyGui2
-	_vkey := 0xE2			;\
-	_keyname := "B11"
-	Gosub,SetKeyGui2
-	
-	_vkey := 0x1D			;無変換
-	_keyname := "A01"
-	Gosub,SetKeyGui2
-	_vkey := 0x20			;スペース
-	_keyname := "A02"
-	Gosub,SetKeyGui2
-	_vkey := 0x1C			;変換
-	_keyname := "A03"
-	Gosub,SetKeyGui2
-	_vkey := 0xF2			;ひらがな／カタカナ
-	_keyname := "A04"
-	Gosub,SetKeyGui2
 	critical,off
 	return
 
 SetKeyGui2:
-	GuiControlGet,_val,,vkeyDN%_keyname%
+	GuiControlGet,_val,,vkeyDN%_layoutPos%
 	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)!= 0
 	&&   _val != "□")
 	{
-		GuiControl,2:,vkeyDN%_keyname%,□
+		GuiControl,2:,vkeyDN%_layoutPos%,□
 	}
 	else
 	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)== 0
 	&&  _val != "　")
 	{
-		GuiControl,2:,vkeyDN%_keyname%,　
+		GuiControl,2:,vkeyDN%_layoutPos%,　
 	}
 	return
 
 SetKeyGui2A:
-	GuiControlGet,_val,,vkeyDN%_keyname%
-	if( keyState[_keyname]!= 0 && _val != "□")
+	GuiControlGet,_val,,vkeyDN%_layoutPos%
+	if( keyState[_layoutPos]!= 0 && _val != "□")
 	{
-		GuiControl,2:,vkeyDN%_keyname%,□
+		GuiControl,2:,vkeyDN%_layoutPos%,□
 	}
 	else
-	if( keyState[_keyname]== 0 && _val != "　")
+	if( keyState[_layoutPos]== 0 && _val != "　")
 	{
-		GuiControl,2:,vkeyDN%_keyname%,　
+		GuiControl,2:,vkeyDN%_layoutPos%,　
 	}
 	return
 
