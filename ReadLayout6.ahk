@@ -35,6 +35,11 @@ ReadLayout:
 	_rowhash[14]:= "14"
 	_rowhash[15]:= "15"
 	
+	layoutAry := "E01,E02,E03,E04,E05,E06,E07,E08,E09,E10,E11,E12,E13"
+	layoutAry := layoutAry . ",D01,D02,D03,D04,D05,D06,D07,D08,D09,D10,D11,D12"
+	layoutAry := layoutAry . ",C01,C02,C03,C04,C05,C06,C07,C08,C09,C10,C11,C12"
+	layoutAry := layoutAry . ",B01,B02,B03,B04,B05,B06,B07,B08,B09,B10,B11"
+	layoutArys := StrSplit(layoutAry,",")
 	roma3hash := MakeRoma3Hash()
 	layoutHash := MakeLayoutHash()
 	z2hHash := MakeZ2hHash()
@@ -70,7 +75,7 @@ InitLayout2:
 	keyAttribute2 := MakeKeyAttribute2Hash()
 	keyState := MakeKeyState()
 	keyNameHash := MakeKeyNameHash()
-	codeLabelHash := MakeCodeLabelHash()
+	codeLabel := MakeCodeLabel()
 	LF := Object()
 	LF["ANN"] := 0
 	LF["ALN"] := 0
@@ -126,11 +131,14 @@ InitLayout2:
 	LF["ADND"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
 	LF["ADNC"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
 	LF["ADNB"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
+	SetCodeLabel("ANN","ADN")
 
 	LF["ADKE"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
 	LF["ADKD"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
 	LF["ADKC"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
 	LF["ADKB"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
+	SetCodeLabel("ANK","ADK")
+	
 	; NULLテーブル
 	LF["NULE"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
 	LF["NULD"] := "　,　,　,　,　,　,　,　,　,　,　,　"
@@ -139,6 +147,39 @@ InitLayout2:
 	return
 
 
+;----------------------------------------------------------------------
+;	各モードのレイアウトを処理
+;----------------------------------------------------------------------
+SetCodeLabel(_modeDst, _modeSrc)
+{
+	global LF, codeLabel, _rowhash
+
+	_col := "E"
+	org := StrSplit(LF[_modeSrc . "E"],",")
+	loop, % org.MaxIndex()
+	{
+		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+	}
+	_col := "D"
+	org := StrSplit(LF[_modeSrc . "D"],",")
+	loop, % org.MaxIndex()
+	{
+		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+	}
+	_col := "C"
+	org := StrSplit(LF[_modeSrc . "C"],",")
+	loop, % org.MaxIndex()
+	{
+		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+	}
+	_col := "B"
+	org := StrSplit(LF[_modeSrc . "B"],",")
+	loop, % org.MaxIndex()
+	{
+		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+	}
+	return
+}
 ;----------------------------------------------------------------------
 ;	キー配列ファイル読み込み
 ;----------------------------------------------------------------------
@@ -229,10 +270,9 @@ ReadLayoutFile:
 				{
 					_layoutPos := fkeyPosHash[org[1]]
 					_code := fkeyCodeHash[org[2]]
-;msgbox , % "pos is " . _layoutPos . ":" . _code
 					if(_layoutPos != "" && _code != "") {
 						keyNameHash[_layoutPos] := _code
-						codeLabelHash[_layoutPos] := CodeNameHash[_code]
+						codeLabel[_layoutPos] := CodeNameHash[_code]
 					}
 				}
 			}
@@ -406,7 +446,6 @@ SetKeyTable:
 	loop, % org.MaxIndex()
 	{
 		_row2 := _rowhash[A_Index]
-		ksf[_mode . _col . _row2] := org[A_Index]
 
 		; 月配列などのプレフィックスシフトキー
 		if(org[A_Index] == " 1" || org[A_Index] == " 2")
@@ -416,10 +455,12 @@ SetKeyTable:
 			if(_mode = "RNN")
 			{
 				keyAttribute2["R" . _col . _row2] := SubStr(org[A_Index],2,1)
+				codeLabel[_mode . _col . _row2] := SubStr(org[A_Index],2,1)
 			} else
 			if(_mode = "ANN")
 			{
 				keyAttribute2["A" . _col . _row2] := SubStr(org[A_Index],2,1)
+				codeLabel[_mode . _col . _row2] := SubStr(org[A_Index],2,1)
 			}
 			continue
 		}
@@ -440,6 +481,7 @@ SetKeyTable:
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
+			codeLabel[_mode . _col . _row2] := _vk
 			kdn[_mode . _col . _row2] := "{" . _vk . "}"
 			kup[_mode . _col . _row2] := ""
 			continue
@@ -451,6 +493,14 @@ SetKeyTable:
 		GenSendStr2(_aStr, _down, _up)
 		if( _down <> "")
 		{
+			if(SubStr(_mode,1,1)=="R")
+			{
+				codeLabel[_mode . _col . _row2] := Romaji2Kana(org[A_Index])
+			}
+			else
+			{
+				codeLabel[_mode . _col . _row2] := org[A_Index]
+			}
 			kdn[_mode . _col . _row2] := _down
 			kup[_mode . _col . _row2] := _up
 		}
@@ -595,6 +645,23 @@ Kana2Romaji(aStr)
 	}
 	return _aStr2
 }
+
+;----------------------------------------------------------------------
+; ローマ字を仮名に変換する
+; 引数　：aStr：対応するキー入力
+; 戻り値：仮名に変換した後
+;----------------------------------------------------------------------
+Romaji2Kana(aStr)
+{
+	global kanaHash
+	_c2 := kanaHash[aStr]
+	if(_c2 <> "")
+	{
+		return _c2
+	}
+	return aStr
+}
+
 ;----------------------------------------------------------------------
 ; 通常のキーdown時にSendする引数の文字列を設定する
 ; 引数　：aStr：対応するキー入力
@@ -1326,61 +1393,9 @@ MakekeyNameHash()
 ;----------------------------------------------------------------------
 ;	キーからラベル名に変換
 ;----------------------------------------------------------------------
-MakeCodeLabelHash()
+MakeCodeLabel()
 {
 	hash := Object()
-	hash["E01"] := ""		;1
-	hash["E02"] := ""		;2
-	hash["E03"] := ""		;3
-	hash["E04"] := ""		;4
-	hash["E05"] := ""		;5
-	hash["E06"] := ""		;6
-	hash["E07"] := ""		;7
-	hash["E08"] := ""		;8
-	hash["E09"] := ""		;9
-	hash["E10"] := ""		;0
-	hash["E11"] := ""		;-
-	hash["E12"] := ""		;^
-	hash["E13"] := ""		;\
-
-	hash["D01"] := ""		;q
-	hash["D02"] := ""		;w
-	hash["D03"] := ""		;e
-	hash["D04"] := ""		;r
-	hash["D05"] := ""		;t
-	hash["D06"] := ""		;y
-	hash["D07"] := ""		;u
-	hash["D08"] := ""		;i
-	hash["D09"] := ""		;o
-	hash["D10"] := ""		;p
-	hash["D11"] := ""		;@
-	hash["D12"] := ""		;[
-
-	hash["C01"] := ""		;a
-	hash["C02"] := ""		;s
-	hash["C03"] := ""		;d
-	hash["C04"] := ""		;f
-	hash["C05"] := ""		;g
-	hash["C06"] := ""		;h
-	hash["C07"] := ""		;j
-	hash["C08"] := ""		;k
-	hash["C09"] := ""		;l
-	hash["C10"] := ""		;;
-	hash["C11"] := ""		;:
-	hash["C12"] := ""		;]
-
-	hash["B01"] := ""		;z
-	hash["B02"] := ""		;x
-	hash["B03"] := ""		;c
-	hash["B04"] := ""		;v
-	hash["B05"] := ""		;b
-	hash["B06"] := ""		;n
-	hash["B07"] := ""		;m
-	hash["B08"] := ""		;,
-	hash["B09"] := ""		;.
-	hash["B10"] := ""		;/
-	hash["B11"] := ""		;\
-	
 	hash["A01"] := "無変換"	;無変換
 	hash["A02"] := " 空白 "	;スペース
 	hash["A03"] := " 変換 "	;変換

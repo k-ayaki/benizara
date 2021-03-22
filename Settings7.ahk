@@ -447,8 +447,8 @@ G2RefreshLayout51:
 		Gui,Font,s9 c000000,Meiryo UI
 		GuiControl,,vkeyFA%_layoutPos%,　　　
 	}
-	if(s_KeySingle = "有効" || (codeLabel%_layoutPos% != "無変換" || codeLabel%_layoutPos% != " 変換 ")) {
-		_label := codeLabelHash[_layoutPos]
+	if(s_KeySingle = "有効" || (codeLabel[_layoutPos] != "無変換" || codeLabel[_layoutPos] != " 変換 ")) {
+		_label := codeLabel[_layoutPos]
 		GuiControl,,vkeyFB%_layoutPos%,%_label%
 	} else {
 		GuiControl,,vkeyFB%_layoutPos%,　　　
@@ -465,116 +465,34 @@ G2RefreshLayout51:
 G2RefreshLayout:
 	Critical
 	Gui, Submit, NoHide
-	loop,4
+	for index, element in layoutArys
 	{
-		_col2 := _colhash[A_Index]
-		org := StrSplit(LF["NUL" . _col2],",")
-		loop,% org.MaxIndex()
-		{
-			_row2 := _rowhash[A_Index]
-			GuiControl,-Redraw,vkeyDN%_col2%%_row2%
-			GuiControl,,vkeyDN%_col2%%_row2%,　
-			GuiControl,-Redraw,vkeyRK%_col2%%_row2%
-			GuiControl,-Redraw,vkeyRN%_col2%%_row2%
-			GuiControl,-Redraw,vkeyRL%_col2%%_row2%
-			GuiControl,-Redraw,vkeyRR%_col2%%_row2%
+		GuiControl,-Redraw,vkeyDN%element%
+		GuiControl,,vkeyDN%element%,　
+		GuiControl,-Redraw,vkeyRK%element%
+		GuiControl,-Redraw,vkeyRN%element%
+		GuiControl,-Redraw,vkeyRL%element%
+		GuiControl,-Redraw,vkeyRR%element%
+		
+		_ch := codeLabel[g_Romaji . "NK" . element]
+		GuiControl,,vkeyRK%element%,%_ch%
+		_ch := codeLabel[g_Romaji . "NN" . element]
+		GuiControl,,vkeyRN%element%,%_ch%	
+		_ch := codeLabel[g_Romaji . "LN" . element]
+		if(_ch == "") {
+			_ch := codeLabel[g_Romaji . "1N" . element]
 		}
-	}
-	loop,4
-	{
-		_col2 := _colhash[A_Index]
-		if(LF[g_Romaji . "NK" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "NK" . _col2],",")
+		GuiControl,,vkeyRL%element%,%_ch%
+		_ch := codeLabel[g_Romaji . "RN" . element]
+		if(_ch == "") {
+			_ch := codeLabel[g_Romaji . "2N" . element]
 		}
-		else
-		{
-			org := StrSplit(LF["ADK" . _col2],",")
-		}
-		loop,% org.MaxIndex()
-		{
-			_ch := org[A_Index]
-			_row2 := _rowhash[A_Index]
-			GuiControl,,vkeyRK%_col2%%_row2%,%_ch%
-		}
-	}
-	loop,4
-	{
-		_col2 := _colhash[A_Index]
-		if(LF[g_Romaji . "NN" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "NN" . _col2],",")
-		}
-		else
-		{
-			org := StrSplit(LF["ADN" . _col2],",")
-		}
-		loop,% org.MaxIndex()
-		{
-			_ch := org[A_Index]
-			_row2 := _rowhash[A_Index]
-			GuiControl,,vkeyRN%_col2%%_row2%,%_ch%
-		}
-	}
-	loop,4
-	{
-		_col2 := _colhash[A_Index]
-		if(LF[g_Romaji . "LN" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "LN" . _col2],",")
-		}
-		else 
-		if(LF[g_Romaji . "1N" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "1N" . _col2],",")
-		}
-		else
-		{
-			org := StrSplit(LF["NUL" . _col2],",")
-		}
-		loop,% org.MaxIndex()
-		{
-			_ch := org[A_Index]
-			_row2 := _rowhash[A_Index]
-			GuiControl,,vkeyRL%_col2%%_row2%,%_ch%
-		}
-	}
-	loop,4
-	{
-		_col2 := _colhash[A_Index]
-		if(LF[g_Romaji . "RN" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "RN" . _col2],",")
-		}
-		else
-		if(LF[g_Romaji . "2N" . _col2] != "")
-		{
-			org := StrSplit(LF[g_Romaji . "2N" . _col2],",")
-		}
-		else
-		{
-			org := StrSplit(LF["NUL" . _col2],",")
-		}
-		loop,% org.MaxIndex()
-		{
-			_ch := org[A_Index]
-			_row2 := _rowhash[A_Index]
-			GuiControl,,vkeyRR%_col2%%_row2%,%_ch%
-		}
-	}
-	loop,4
-	{
-		_col2 := _colhash[A_Index]
-		org := StrSplit(LF["NUL" . _col2],",")
-		loop,% org.MaxIndex()
-		{
-			_row2 := _rowhash[A_Index]
-			GuiControl,+Redraw,vkeyDN%_col2%%_row2%
-			GuiControl,+Redraw,vkeyRK%_col2%%_row2%
-			GuiControl,+Redraw,vkeyRN%_col2%%_row2%
-			GuiControl,+Redraw,vkeyRL%_col2%%_row2%
-			GuiControl,+Redraw,vkeyRR%_col2%%_row2%
-		}
+		GuiControl,,vkeyRR%element%,%_ch%
+		GuiControl,+Redraw,vkeyDN%element%
+		GuiControl,+Redraw,vkeyRK%element%
+		GuiControl,+Redraw,vkeyRN%element%
+		GuiControl,+Redraw,vkeyRL%element%
+		GuiControl,+Redraw,vkeyRR%element%
 	}
 	Critical,off
 	return

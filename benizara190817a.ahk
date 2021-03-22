@@ -20,7 +20,6 @@
 	}
     hMutex := DllCall("CreateMutex", Int, 0, Int, False, Str, MutexName)
 	
-	TrayTip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver%
 	SetWorkingDir, %A_ScriptDir%
 
 	idxLogs := 0
@@ -70,6 +69,7 @@
 	g_Tau := 0
 	GoSub,Init
 	Gosub,ReadLayout
+	TrayTip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
 	g_allTheLayout := vAllTheLayout
 	g_LayoutFile := vLayoutFile
 	kup_save := Object()
