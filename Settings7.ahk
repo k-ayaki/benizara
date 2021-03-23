@@ -206,7 +206,8 @@ gURLsupport:
 ;-----------------------------------------------------------------------
 G2DrawKeyFrame:
 	Critical
-	Gui,Add,GroupBox,X20 Y90 W670 H270,キー配列
+	_ch := GuiLayoutHash[g_Romaji]
+	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W670 H270,%_ch%
 	_col := 1
 	_ypos := 105
 	loop,13
@@ -386,6 +387,8 @@ G2PollingLayout:
 		if(s_Romaji != g_Romaji) 
 		{
 			s_Romaji := g_Romaji
+			_ch := GuiLayoutHash[g_Romaji]
+			GuiControl,,vkeyLayoutName,%_ch%
 			Gosub,G2RefreshLayout
 		}
 		s_KeySingle := g_KeySingle
@@ -447,12 +450,8 @@ G2RefreshLayout51:
 		Gui,Font,s9 c000000,Meiryo UI
 		GuiControl,,vkeyFA%_layoutPos%,　　　
 	}
-	if(s_KeySingle = "有効" || (codeLabel[_layoutPos] != "無変換" || codeLabel[_layoutPos] != " 変換 ")) {
-		_label := codeLabel[_layoutPos]
-		GuiControl,,vkeyFB%_layoutPos%,%_label%
-	} else {
-		GuiControl,,vkeyFB%_layoutPos%,　　　
-	}
+	_label := codeLabel[_layoutPos]
+	GuiControl,,vkeyFB%_layoutPos%,%_label%
 	vkeyDN%_layoutPos% := "　"
 	GuiControl,2:,vkeyDN%_layoutPos%,　
 	GuiControl,+Redraw,vkeyDN%_layoutPos%
@@ -673,6 +672,7 @@ RemapOya:
 			keyAttribute2["AA03"] := "R"
 		}
 	}
+	Gosub,G2RefreshLayout5
 	Return
 
 gKeySingle:
@@ -683,6 +683,7 @@ gKeySingle:
 	{
 		_KeyRepeat := 1
 	}
+	Gosub,G2RefreshLayout5
 	return
 
 gKeyRepeat:

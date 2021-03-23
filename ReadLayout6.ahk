@@ -49,6 +49,7 @@ ReadLayout:
 	fkeyCodeHash := MakefkeyCodeHash()
 	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
+	GuiLayoutHash := MakeGuiLayoutHash()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -736,7 +737,12 @@ MakeLayoutHash() {
 	return Hash
 }
 
-
+MakeGuiLayoutHash() {
+	Hash := Object()
+	Hash["A"] := "英数配列"
+	Hash["R"] := "ローマ字配列"
+	return Hash
+}
 ;----------------------------------------------------------------------
 ;	全角を半角に変換
 ;----------------------------------------------------------------------
