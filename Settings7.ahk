@@ -213,35 +213,35 @@ G2DrawKeyFrame:
 	loop,13
 	{
 		_row := A_Index
-		Gosub,G2KeyRectChar
+		Gosub,DrawKeyE2B
 	}
 	_col := 2
 	_ypos := _ypos + 48
 	loop,12
 	{
 		_row := A_Index
-		Gosub,G2KeyRectChar
+		Gosub,DrawKeyE2B
 	}
 	_col := 3
 	_ypos := _ypos + 48
 	loop,12
 	{
 		_row := A_Index
-		Gosub,G2KeyRectChar
+		Gosub,DrawKeyE2B
 	}
 	_col := 4
 	_ypos := _ypos + 48
 	loop,11
 	{
 		_row := A_Index
-		Gosub,G2KeyRectChar
+		Gosub,DrawKeyE2B
 	}
 	_col := 5
 	_ypos := _ypos + 48
 	loop, 4
 	{
 		_row := A_Index
-		Gosub,G2KeyRectChar5
+		Gosub,DrawKeyA
 	}
 	critical,off
 	return
@@ -249,10 +249,10 @@ G2DrawKeyFrame:
 ;-----------------------------------------------------------------------
 ; 機能：E～B段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
-G2KeyRectChar:
+DrawKeyE2B:
 	_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 	_ch := " "
-	Gosub, G2KeyRectangle
+	Gosub, DrawKeyRectE2B
 	_xpos0 := _xpos + 10
 	_ypos0 := _ypos + 10
 	_col2 := _colhash[_col]
@@ -271,14 +271,14 @@ G2KeyRectChar:
 	_ypos0 := _ypos + 30
 	Gui, Font,s11 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyRN%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-	Gosub, G2KeyBorder
+	Gosub, DrawKeyBorder
 	return
 ;-----------------------------------------------------------------------
 ; 機能：A段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
-G2KeyRectChar5:
+DrawKeyA:
 	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
-	Gosub, G2KeyRectangle5
+	Gosub, DrawKeyRectA
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 10
 	_col2 := _colhash[_col]
@@ -289,13 +289,13 @@ G2KeyRectChar5:
 	_ypos0 := _ypos + 30
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyFB%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
-	Gosub, G2KeyBorder
+	Gosub, DrawKeyBorder
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：各キーの矩形表示
 ;-----------------------------------------------------------------------
-G2KeyRectangle:
+DrawKeyRectE2B:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
@@ -332,7 +332,7 @@ G2KeyRectangle:
 ;-----------------------------------------------------------------------
 ; 機能：各キーの矩形表示・・・５列目
 ;-----------------------------------------------------------------------
-G2KeyRectangle5:
+DrawKeyRectA:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
@@ -362,7 +362,7 @@ G2KeyRectangle5:
 ;-----------------------------------------------------------------------
 ; 機能：キーダウン表示
 ;-----------------------------------------------------------------------
-G2KeyBorder:
+DrawKeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
@@ -392,7 +392,7 @@ G2PollingLayout:
 			Gosub,G2RefreshLayout
 		}
 		s_KeySingle := g_KeySingle
-		Gosub,G2RefreshLayout5
+		Gosub,RefreshLayoutA
 	}
 	if(ShiftMode[g_Romaji] == "" ) {
 		Gosub,ReadKeyboardState
@@ -411,21 +411,21 @@ G2PollingLayout:
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
-G2RefreshLayout5:
+RefreshLayoutA:
 	_layoutPos := "A01"
-	Gosub,G2RefreshLayout51
+	Gosub,RefreshLayoutA1
 	_layoutPos := "A02"
-	Gosub,G2RefreshLayout51
+	Gosub,RefreshLayoutA1
 	_layoutPos := "A03"
-	Gosub,G2RefreshLayout51
+	Gosub,RefreshLayoutA1
 	_layoutPos := "A04"
-	Gosub,G2RefreshLayout51
+	Gosub,RefreshLayoutA1
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：Ａ列のキー表示の更新
 ;-----------------------------------------------------------------------
-G2RefreshLayout51:
+RefreshLayoutA1:
 	Critical
 	Gui, Submit, NoHide
 	GuiControl,-Redraw,vkeyDN%_layoutPos%
@@ -672,7 +672,7 @@ RemapOya:
 			keyAttribute2["AA03"] := "R"
 		}
 	}
-	Gosub,G2RefreshLayout5
+	Gosub,RefreshLayoutA
 	Return
 
 gKeySingle:
@@ -683,7 +683,7 @@ gKeySingle:
 	{
 		_KeyRepeat := 1
 	}
-	Gosub,G2RefreshLayout5
+	Gosub,RefreshLayoutA
 	return
 
 gKeyRepeat:

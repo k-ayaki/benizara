@@ -1045,8 +1045,10 @@ Interrupt10:
 		if(_TickCount > keyState["A04"] + 100) 	; タイムアウト
 		{
 			; ひらがな／カタカナキーはキーアップを受信できないから、0.1秒でキーアップと見做す
-			
-			gosub, gSC070up
+			g_layoutPos := "A04"
+			g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
+			kName := keyNameHash[g_layoutPos]
+			goto, keyup%g_metaKey%
 		}
 	}
 Polling:
