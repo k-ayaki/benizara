@@ -692,25 +692,60 @@ keydownM:
 			g_RomajiOnHold := g_Romaji
 			g_OyaOnHold    := g_prefixshift
 			g_KoyubiOnHold := g_Koyubi
-			vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			SubSend(vOut)
 			g_prefixshift := ""
 		}
-		else
+		SetKeyDelay -1
+		Gosub,ScanModifier
+		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
-			g_MojiOnHold   := g_layoutPos
-			g_RomajiOnHold := g_Romaji
-			g_OyaOnHold    := "N"
-			g_KoyubiOnHold := g_Koyubi
-			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+			vOut                  := mdn["ANN" . g_layoutPos]
+			kup_save[g_layoutPos] := mup["ANN" . g_layoutPos]
 			SubSend(vOut)
+			
+			g_MojiOnHold := ""
+			g_OyaOnHold  := "N"
+			g_KoyubiOnHold := "N"
+			g_SendTick := ""
+			g_KeyInPtn := ""
+
+			g_prefixshift := ""
+			critical,off
+			return
 		}
+		g_MojiOnHold   := g_layoutPos
+		g_RomajiOnHold := g_Romaji
+		g_OyaOnHold    := "N"
+		g_KoyubiOnHold := g_Koyubi
+		vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+		kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+		SubSend(vOut)
 		critical,off
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
+		SetKeyDelay -1
+		Gosub,ScanModifier
+		if(g_Modifier != 0)		; 修飾キーが押されている
+		{
+			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+			vOut                  := mdn["ANN" . g_layoutPos]
+			kup_save[g_layoutPos] := mup["ANN" . g_layoutPos]
+			SubSend(vOut)
+			
+			g_MojiOnHold := ""
+			g_OyaOnHold  := "N"
+			g_KoyubiOnHold := "N"
+			g_SendTick := ""
+			g_KeyInPtn := ""
+
+			g_prefixshift := ""
+			critical,off
+			return
+		}
 		g_MojiOnHold   := g_layoutPos
 		g_RomajiOnHold := g_Romaji
 		g_OyaOnHold    := "N"
@@ -764,7 +799,7 @@ keydownM:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		vOut               := mdn["ANN" . g_layoutPos]
+		vOut                  := mdn["ANN" . g_layoutPos]
 		kup_save[g_layoutPos] := mup["ANN" . g_layoutPos]
 		SubSend(vOut)
 		
@@ -878,6 +913,7 @@ keydownX:
 	keyState[g_layoutPos] := Pf_Count()
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSend(MnDown(kName))
+		g_prefixshift := ""
 		critical,off
 		return
 	}
@@ -896,8 +932,27 @@ keydown2:
 	Critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	RegLogs(kName . " down")
-	gosub,Polling
 	keyState[g_layoutPos] := Pf_Count()
+
+	SetKeyDelay -1
+	Gosub,ScanModifier
+	if(g_Modifier != 0)		; 修飾キーが押されている
+	{
+		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+		vOut                  := mdn["ANN" . g_layoutPos]
+		kup_save[g_layoutPos] := mup["ANN" . g_layoutPos]
+		SubSend(vOut)
+		
+		g_MojiOnHold := ""
+		g_OyaOnHold  := "N"
+		g_KoyubiOnHold := "N"
+		g_SendTick := ""
+		g_KeyInPtn := ""
+
+		g_prefixshift := ""
+		critical,off
+		return
+	}
 	if(g_prefixshift == "")
 	{
 		g_prefixshift := g_metaKey
@@ -912,13 +967,139 @@ keydown2:
 	g_RomajiOnHold := g_Romaji
 	g_OyaOnHold    := g_prefixshift
 	g_KoyubiOnHold := g_Koyubi
-	vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+	vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 	SubSend(vOut)
 	g_prefixshift := ""
 	critical,off
 	return
 
+;----------------------------------------------------------------------
+; 新下駄配列等等の同時打鍵押下
+;----------------------------------------------------------------------
+keydownS:
+	Critical
+	GuiControl,2:,vkeyDN%g_layoutPos%,□
+	RegLogs(kName . " down")
+	keyState[g_layoutPos] := Pf_Count()
+	g_MojiTick := Pf_Count()	;A_TickCount
+	
+	SetKeyDelay -1
+	Gosub,ScanModifier
+	if(g_Modifier != 0)		; 修飾キーが押されている
+	{
+		Gosub, SendOnHoldS
+		
+		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+		vOut                  := mdn["ANN" . g_layoutPos]
+		kup_save[g_layoutPos] := mup["ANN" . g_layoutPos]
+		SubSend(vOut)
+		
+		g_MojiOnHold   := ""
+		g_OyaOnHold    := "N"
+		g_KoyubiOnHold := "N"
+		g_SendTick := ""
+		g_KeyInPtn := ""
+		critical,off
+		return
+	}
+	if(g_KeyInPtn == "") {
+		; 当該キーを単独打鍵として保留
+		g_MojiOnHold := g_layoutPos
+		g_RomajiOnHold := "R"
+		g_OyaOnHold    := "N"
+		g_KoyubiOnHold := "N"
+		g_SendTick := g_MojiTick + g_Threshold
+		g_KeyInPtn := "S"
+		Gosub, SendZeroDelayS
+	} else
+	if(g_KeyInPtn == "S") {
+		if(kdn[g_layoutPos . g_MojiOnHold] != "") {
+			vOut                   := kdn[g_layoutPos . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_layoutPos . g_MojiOnHold]
+			if(g_ZeroDelay = 1)
+			{
+				if(vOut <> g_ZeroDelayOut)
+				{
+					_save := g_KeyInPtn
+					;vOut1 := "{Blind}{Backspace down}{Backspace up}" 
+					;SubSend(vOut1)
+					SubSend(MnDown("Backspace") . MnUp("Backspace"))
+					SubSend(vOut)
+				}
+				g_ZeroDelayOut := ""
+			} else {
+				SubSend(vOut)
+			}
+			g_MojiOnHold   := ""
+			g_KoyubiOnHold := "N"
+			g_SendTick     := ""
+			g_keyInPtn     := ""
+		} else {
+			Gosub, SendOnHoldS
+			g_MojiOnHold := g_layoutPos
+			g_RomajiOnHold := "R"
+			g_OyaOnHold    := "N"
+			g_KoyubiOnHold := "N"
+			g_SendTick := g_MojiTick + g_Threshold
+			g_KeyInPtn := "S"
+			Gosub, SendZeroDelayS
+		}
+	}
+	critical,off
+	return
+
+;----------------------------------------------------------------------
+; 同時打鍵用の零遅延モードの先行出力
+;----------------------------------------------------------------------
+SendZeroDelayS:
+	if(g_ZeroDelay = 1)
+	{
+		; 保留キーがあれば先行出力（零遅延モード）
+		vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+		kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+		g_ZeroDelayOut := vOut
+		SubSend(vOut)
+	}
+	else
+	{
+		g_ZeroDelayOut := ""
+	}
+	return
+
+;----------------------------------------------------------------------
+; 保留キーの出力：セットされた文字の出力
+;----------------------------------------------------------------------
+SendOnHoldS:
+	if(g_MojiOnHold == "") 
+	{
+		return
+	}
+	vOut                   := kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+
+	if(g_ZeroDelay = 1)
+	{
+		if(vOut <> g_ZeroDelayOut)
+		{
+			_save := g_KeyInPtn
+			;vOut1 := "{Blind}{Backspace down}{Backspace up}" 
+			;SubSend(vOut1)
+			SubSend(MnDown("Backspace") . MnUp("Backspace"))
+			SubSend(vOut)
+		}
+		g_ZeroDelayOut := ""
+	} else {
+		SubSend(vOut)
+	}
+	g_MojiOnHold   := ""
+	g_KoyubiOnHold := "N"
+	g_SendTick     := ""
+	if(g_KeyInPtn = "S")
+	{
+		g_keyInPtn := ""
+	}
+	return
 
 ;----------------------------------------------------------------------
 ; キーアップ（押下終了）
@@ -1007,7 +1188,24 @@ keyup2:
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 
 	RegLogs(kName . " up")
-	gosub,Polling
+	keyState[g_layoutPos] := 0
+	vOut := kup_save[g_layoutPos]
+	if(vOut <> "") 
+	{
+		SubSend(vOut)
+	}
+	kup_save[g_layoutPos] := ""
+	critical,off
+	return
+
+;----------------------------------------------------------------------
+; 新下駄配列等等の同時打鍵押下終了
+;----------------------------------------------------------------------
+keyupS:
+	Critical
+	GuiControl,2:,vkeyDN%g_layoutPos%,　
+
+	RegLogs(kName . " up")
 	keyState[g_layoutPos] := 0
 	vOut := kup_save[g_layoutPos]
 	if(vOut <> "") 
@@ -1080,6 +1278,10 @@ Polling:
 					Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
 				}
 				Gosub, SendOnHoldM		; 保留文字キーの単独打鍵
+			}
+			else if g_KeyInPtn in S
+			{
+				Gosub, SendOnHoldS
 			}
 		}
 	}

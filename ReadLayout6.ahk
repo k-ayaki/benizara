@@ -50,7 +50,7 @@ ReadLayout:
 	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
-	code2Lpos := Makecode2Lpos()
+	code2Pos := MakeCode2Pos()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -78,6 +78,8 @@ InitLayout2:
 	keyState := MakeKeyState()
 	keyNameHash := MakeKeyNameHash()
 	codeLabel := MakeCodeLabel()
+	g_layoutName := ""
+	g_layoutVersion := ""
 	LF := Object()
 	LF["ANN"] := 0
 	LF["ALN"] := 0
@@ -216,9 +218,22 @@ ReadLayoutFile:
 			if(SubStr(_line2,1,1)=="[" && SubStr(_line2,StrLen(_line2),1)=="]") {
 				_Section := _line2
 			}
+			if(SubStr(_line2,1,1)=="<" && SubStr(_line2,StrLen(_line2),1)==">") {
+				_Section := _line2
+			}
 			if(layout2Hash[_line2] != "") {
 				_mode := layout2Hash[_line2]
+				_lpos := ""
 				if(_mode <> "")
+				{
+					_mline := 1
+				}
+				continue
+			}
+			if(code2Pos[_line2] != "") {
+				_lpos := code2Pos[_line2]
+				_mode := ""
+				if(_lpos <> "")
 				{
 					_mline := 1
 				}
@@ -243,7 +258,26 @@ ReadLayoutFile:
 				}
 				continue
 			}
-			else
+			if(_lpos <> "") {
+				if _mline between 1 and 4
+				{
+					LF[_lpos . _colhash[_mline]] := _line2
+				}
+				_mline += 1
+				if(_mline > 4)
+				{
+					GoSub, Mode3Key
+					if(_error <> "")
+					{
+						return
+					}
+					_Section := ""
+					_mode := ""
+					_lpos := ""
+				}
+				continue
+			}
+
 			if(_Section == "[配列]")
 			{
 				cpos2 := Instr(_line2,"=")
@@ -330,6 +364,47 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
+	return
+
+;----------------------------------------------------------------------
+;	文字の同時打鍵のレイアウトを処理
+;----------------------------------------------------------------------
+Mode3Key:
+	_col := "E"
+	org := StrSplit(LF[_lpos . "E"],",")
+	if(org.MaxIndex() <> 13)
+	{
+		_error := _Section . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		return
+	}
+	Gosub, SetSimulKeyTable
+	
+	_col := "D"
+	org := StrSplit(LF[_lpos . "D"],",")
+	if(org.MaxIndex() <> 12)
+	{
+		_error := _Section . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		return
+	}
+	Gosub, SetSimulKeyTable
+	
+	_col := "C"
+	org := StrSplit(LF[_lpos . "C"],",")
+	if(org.MaxIndex() <> 12)
+	{
+		_error := _Section . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		return
+	}
+	Gosub, SetSimulKeyTable
+
+	_col := "B"
+	org := StrSplit(LF[_lpos . "B"],",")
+	if(org.MaxIndex() <> 11)
+	{
+		_error := _Section . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		return
+	}
+	Gosub, SetSimulKeyTable
 	return
 
 ;----------------------------------------------------------------------
@@ -447,21 +522,22 @@ SetKeyTable:
 	loop, % org.MaxIndex()
 	{
 		_row2 := _rowhash[A_Index]
+		_lpos2 := _col . _row2
 
 		; 月配列などのプレフィックスシフトキー
 		if(org[A_Index] == " 1" || org[A_Index] == " 2")
 		{
-			kdn[_mode . _col . _row2] := ""
-			kup[_mode . _col . _row2] := ""
+			kdn[_mode . _lpos2] := ""
+			kup[_mode . _lpos2] := ""
 			if(_mode = "RNN")
 			{
-				keyAttribute2["R" . _col . _row2] := SubStr(org[A_Index],2,1)
-				codeLabel[_mode . _col . _row2] := SubStr(org[A_Index],2,1)
+				keyAttribute2["R" . _lpos2] := SubStr(org[A_Index],2,1)
+				codeLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
 			} else
 			if(_mode = "ANN")
 			{
-				keyAttribute2["A" . _col . _row2] := SubStr(org[A_Index],2,1)
-				codeLabel[_mode . _col . _row2] := SubStr(org[A_Index],2,1)
+				keyAttribute2["A" . _lpos2] := SubStr(org[A_Index],2,1)
+				codeLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
 			}
 			continue
 		}
@@ -474,17 +550,17 @@ SetKeyTable:
 		}
 		if(_qstr <> "")
 		{
-			kdn[_mode . _col . _row2] := _qstr
-			kup[_mode . _col . _row2] := ""
+			kdn[_mode . _lpos2] := _qstr
+			kup[_mode . _lpos2] := ""
 			continue
 		}
 		; vkeyならば vkeyとして登録
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			codeLabel[_mode . _col . _row2] := _vk
-			kdn[_mode . _col . _row2] := "{" . _vk . "}"
-			kup[_mode . _col . _row2] := ""
+			codeLabel[_mode . _lpos2] := _vk
+			kdn[_mode . _lpos2] := "{" . _vk . "}"
+			kup[_mode . _lpos2] := ""
 			continue
 		}
 		; かな文字はローマ字に変換
@@ -496,14 +572,78 @@ SetKeyTable:
 		{
 			if(SubStr(_mode,1,1)=="R")
 			{
-				codeLabel[_mode . _col . _row2] := Romaji2Kana(org[A_Index])
+				codeLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
 			}
 			else
 			{
-				codeLabel[_mode . _col . _row2] := org[A_Index]
+				codeLabel[_mode . _lpos2] := org[A_Index]
 			}
-			kdn[_mode . _col . _row2] := _down
-			kup[_mode . _col . _row2] := _up
+			kdn[_mode . _lpos2] := _down
+			kup[_mode . _lpos2] := _up
+		}
+		continue
+	}
+	return
+
+;----------------------------------------------------------------------
+;	ローマ字＋文字同時打鍵のときのキーダウン・キーアップの際に送信する内容を作成
+;----------------------------------------------------------------------
+SetSimulKeyTable:
+	loop, % org.MaxIndex()
+	{
+		_row2 := _rowhash[A_Index]
+		_lpos2 := _col . _row2
+
+		; 引用符つき文字列を登録・・・2020年10月以降のWindows10ではダメになった
+		_qstr := QuotedStr(org[A_Index])
+		if(_error <> "")
+		{
+			break
+		}
+		if(_qstr <> "")
+		{
+			kdn[_lpos . _lpos2] := _qstr
+			kup[_lpos . _lpos2] := ""
+			kdn[_lpos2 . _lpos] := _qstr
+			kup[_lpos2 . _lpos] := ""
+			keyAttribute2["R" . _lpos2] := "S"
+			keyAttribute2["R" . _lpos]  := "S"
+			continue
+		}
+		; vkeyならば vkeyとして登録
+		_vk := ConvVkey(org[A_Index])
+		if(_vk <> "")
+		{
+			codeLabel[_lpos . _lpos2] := _vk
+			kdn[_lpos . _lpos2] := "{" . _vk . "}"
+			kup[_lpos . _lpos2] := ""
+			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
+			kup[_lpos2 . _lpos] := ""
+			keyAttribute2["R" . _lpos2] := "S"
+			keyAttribute2["R" . _lpos]  := "S"
+			continue
+		}
+		; かな文字はローマ字に変換
+		_aStr := kana2Romaji(org[A_Index])
+		
+		; 送信形式に変換
+		GenSendStr2(_aStr, _down, _up)
+		if( _down <> "")
+		{
+			if(SubStr(_mode,1,1)=="R")
+			{
+				codeLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
+			}
+			else
+			{
+				codeLabel[_lpos . _lpos2] := org[A_Index]
+			}
+			kdn[_lpos . _lpos2] := _down
+			kup[_lpos . _lpos2] := _up
+			kdn[_lpos2 . _lpos] := _down
+			kup[_lpos2 . _lpos] := _up
+			keyAttribute2["R" . _lpos2] := "S"
+			keyAttribute2["R" . _lpos]  := "S"
 		}
 		continue
 	}
@@ -955,8 +1095,8 @@ MakeRoma3Hash()
 	hash["ろ"] := "ｒｏ"
 	hash["ゎ"] := "ｌｗａ"
 	hash["わ"] := "ｗａ"
-	hash["ゐ"] := "ｗｉ"
-	hash["ゑ"] := "ｗｅ"
+	hash["ゐ"] := "ｗｙｉ"
+	hash["ゑ"] := "ｗｙｅ"
 	hash["を"] := "ｗｏ"
 	hash["ん"] := "ｎｎ"
 	hash["ゔ"] := "ｖｕ"
@@ -974,14 +1114,19 @@ MakeKanaHash()
 {
 	hash := Object()
 	hash["ｌａ"]   := "ぁ"
+	hash["ｘａ"]   := "ぁ"
 	hash["ａ"]     := "あ"
 	hash["ｌｉ"]   := "ぃ"
+	hash["ｘｉ"]   := "ぃ"
 	hash["ｉ"]     := "い"
 	hash["ｌｕ"]   := "ぅ"
+	hash["ｘｕ"]   := "ぅ"
 	hash["ｕ"]     := "う"
 	hash["ｌｅ"]   := "ぇ"
+	hash["ｘｅ"]   := "ぇ"
 	hash["ｅ"]     := "え"
 	hash["ｌｏ"]   := "ぉ"
+	hash["ｘｏ"]   := "ぉ"
 	hash["ｏ"]     := "お"
 	hash["ｋａ"]   := "か"
 	hash["ｇａ"]   := "が"
@@ -1008,6 +1153,7 @@ MakeKanaHash()
 	hash["ｔｉ"]   := "ち"
 	hash["ｄｉ"]   := "ぢ"
 	hash["ｌｔｕ"] := "っ"
+	hash["ｘｔｕ"] := "っ"
 	hash["ｔｕ"]   := "つ"
 	hash["ｄｕ"]   := "づ"
 	hash["ｔｅ"]   := "て"
@@ -1040,10 +1186,13 @@ MakeKanaHash()
 	hash["ｍｅ"]   := "め"
 	hash["ｍｏ"]   := "も"
 	hash["ｌｙａ"] := "ゃ"
+	hash["ｘｙａ"] := "ゃ"
 	hash["ｙａ"]   := "や"
 	hash["ｌｙｕ"] := "ゅ"
+	hash["ｘｙｕ"] := "ゅ"
 	hash["ｙｕ"]   := "ゆ"
 	hash["ｌｙｏ"] := "ょ"
+	hash["ｘｙｏ"] := "ょ"
 	hash["ｙｏ"]   := "よ"
 	hash["ｒａ"]   := "ら"
 	hash["ｒｉ"]   := "り"
@@ -1051,15 +1200,111 @@ MakeKanaHash()
 	hash["ｒｅ"]   := "れ"
 	hash["ｒｏ"]   := "ろ"
 	hash["ｌｗａ"] := "ゎ"
+	hash["ｘｗａ"] := "ゎ"
 	hash["ｗａ"]   := "わ"
-	hash["ｗｉ"]   := "ゐ"
-	hash["ｗｅ"]   := "ゑ"
+	hash["ｗｉ"]   := "うぃ"
+	hash["ｗｅ"]   := "うぇ"
 	hash["ｗｏ"]   := "を"
 	hash["ｎｎ"]   := "ん"
 	hash["ｖｕ"]   := "ゔ"
 	hash["ｖｕ"]   := "ヴ"
 	hash["ｌｋａ"] := "ゕ"
-	hash["ｌｋｅ"] := "ゖ"
+	hash["ｘｋｅ"] := "ゖ"
+	hash["ｌｋａ"] := "ゕ"
+	hash["ｘｋｅ"] := "ゖ"
+
+	hash["ｆａ"] := "ふぁ"
+	hash["ｆｉ"] := "ふぃ"
+	hash["ｆｅ"] := "ふぇ"
+	hash["ｆｅ"] := "ふぇ"
+	hash["ｆｏ"] := "ふぉ"
+	hash["ｗｙｉ"] := "ゐ"
+	hash["ｗｙｅ"] := "ゑ"
+
+	hash["ｋｙａ"] := "きゃ"
+	hash["ｋｙｉ"] := "きぃ"
+	hash["ｋｙｕ"] := "きゅ"
+	hash["ｋｙｅ"] := "きぇ"
+	hash["ｋｙｏ"] := "きょ"
+
+	hash["ｇｙａ"] := "ぎゃ"
+	hash["ｇｙｉ"] := "ぎぃ"
+	hash["ｇｙｕ"] := "ぎゅ"
+	hash["ｇｙｅ"] := "ぎぇ"
+	hash["ｇｙｏ"] := "ぎょ"
+
+	hash["ｓｙａ"] := "しゃ"
+	hash["ｓｙｉ"] := "しぃ"
+	hash["ｓｙｕ"] := "しゅ"
+	hash["ｓｙｅ"] := "しぇ"
+	hash["ｓｙｏ"] := "しょ"
+
+	hash["ｓｈａ"] := "しゃ"
+	hash["ｓｈｉ"] := "し"
+	hash["ｓｈｕ"] := "しゅ"
+	hash["ｓｈｅ"] := "しぇ"
+	hash["ｓｈｏ"] := "しょ"
+	
+	hash["ｚｙａ"] := "じゃ"
+	hash["ｚｙｉ"] := "じぃ"
+	hash["ｚｙｕ"] := "じゅ"
+	hash["ｚｙｅ"] := "じぇ"
+	hash["ｚｙｏ"] := "じょ"
+
+	hash["ｔｈａ"] := "てゃ"
+	hash["ｔｈｉ"] := "てぃ"
+	hash["ｔｈｕ"] := "てゅ"
+	hash["ｔｈｅ"] := "てぇ"
+	hash["ｔｈｏ"] := "てょ"
+
+	hash["ｔｙａ"] := "ちゃ"
+	hash["ｔｙｉ"] := "ちぃ"
+	hash["ｔｙｕ"] := "ちゅ"
+	hash["ｔｙｅ"] := "ちぇ"
+	hash["ｔｙｏ"] := "ちょ"
+
+	hash["ｎｙａ"] := "にゃ"
+	hash["ｎｙｉ"] := "にぃ"
+	hash["ｎｙｕ"] := "にゅ"
+	hash["ｎｙｅ"] := "にぇ"
+	hash["ｎｙｏ"] := "にょ"
+
+	hash["ｄｈａ"] := "でゃ"
+	hash["ｄｈｉ"] := "でぃ"
+	hash["ｄｈｕ"] := "でゅ"
+	hash["ｄｈｅ"] := "でぇ"
+	hash["ｄｈｏ"] := "でょ"
+
+	hash["ｂｙａ"] := "びゃ"
+	hash["ｂｙｉ"] := "びぃ"
+	hash["ｂｙｕ"] := "びゅ"
+	hash["ｂｙｅ"] := "びぇ"
+	hash["ｂｙｏ"] := "びょ"
+
+	hash["ｈｙａ"] := "ひゃ"
+	hash["ｈｙｉ"] := "ひぃ"
+	hash["ｈｙｕ"] := "ひゅ"
+	hash["ｈｙｅ"] := "ひぇ"
+	hash["ｈｙｏ"] := "ひょ"
+
+	hash["ｐｙａ"] := "ぴゃ"
+	hash["ｐｙｉ"] := "ぴぃ"
+	hash["ｐｙｕ"] := "ぴゅ"
+	hash["ｐｙｅ"] := "ぴぇ"
+	hash["ｐｙｏ"] := "ぴょ"
+
+	hash["ｍｙａ"] := "みゃ"
+	hash["ｍｙｉ"] := "みぃ"
+	hash["ｍｙｕ"] := "みゅ"
+	hash["ｍｙｅ"] := "みぇ"
+	hash["ｍｙｏ"] := "みょ"
+
+	hash["ｒｙａ"] := "りゃ"
+	hash["ｒｙｉ"] := "りぃ"
+	hash["ｒｙｕ"] := "りゅ"
+	hash["ｒｙｅ"] := "りぇ"
+	hash["ｒｙｏ"] := "りょ"
+
 	return hash
 }
 
@@ -1067,6 +1312,7 @@ MakeKanaHash()
 ;	キー名から処理関数に変換
 ;	M:文字キー
 ;	X:修飾キー
+;	S:同時打鍵キー
 ;	L:左親指キー
 ;	R:右親指キー
 ;----------------------------------------------------------------------
@@ -1191,6 +1437,9 @@ MakeKeyAttribute2Hash() {
 	return keyAttribute2
 }
 
+;----------------------------------------------------------------------
+;	キー状態の連想配列
+;----------------------------------------------------------------------
 MakeKeyState() {
 	keyState := Object()
 	keyState["E00"] := 0	; 半角/全角
@@ -1328,7 +1577,7 @@ MakeVkeyHash()
 ;----------------------------------------------------------------------
 ;	キー名を配列位置に変換
 ;----------------------------------------------------------------------
-Makecode2Lpos()
+MakeCode2Pos()
 {
 	hash := Object()
 	hash["<1>"] := "E01"		;1
