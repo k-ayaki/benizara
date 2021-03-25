@@ -41,7 +41,7 @@ ReadLayout:
 	layoutAry := layoutAry . ",B01,B02,B03,B04,B05,B06,B07,B08,B09,B10,B11"
 	layoutArys := StrSplit(layoutAry,",")
 	roma3hash := MakeRoma3Hash()
-	layoutHash := MakeLayoutHash()
+	layout2Hash := MakeLayout2Hash()
 	z2hHash := MakeZ2hHash()
 	vkeyHash := MakeVkeyHash()
 	layoutPosHash := MakeLayoutPosHash()
@@ -50,6 +50,7 @@ ReadLayout:
 	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
+	code2Lpos := Makecode2Lpos()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -208,16 +209,15 @@ ReadLayoutFile:
     	{
 			_line2 := SubStr(_line,1,%cpos%-1)
 		} else {
-	    	_line2 := _line
+	    	_line2 := Trim(_line, OmitChars = " `t`n`r")
 	    }
 	    if(StrLen(_line2) > 0)
 		{
-			cpos0 := Instr(_line2,"[")
-			cpos1 := Instr(_line2,"]")
-			if(cpos0 >= 1 && cpos1 > cpos0)
-			{
-				_Section := SubStr(_line2, cpos0+1, cpos1-cpos0-1)
-				_mode := layoutHash[_Section]
+			if(SubStr(_line2,1,1)=="[" && SubStr(_line2,StrLen(_line2),1)=="]") {
+				_Section := _line2
+			}
+			if(layout2Hash[_line2] != "") {
+				_mode := layout2Hash[_line2]
 				if(_mode <> "")
 				{
 					_mline := 1
@@ -244,7 +244,7 @@ ReadLayoutFile:
 				continue
 			}
 			else
-			if(_Section == "配列")
+			if(_Section == "[配列]")
 			{
 				cpos2 := Instr(_line2,"=")
 				org := StrSplit(_line2,"=")
@@ -263,7 +263,7 @@ ReadLayoutFile:
 				continue
 			}
 			else
-			if(_Section == "機能キー")
+			if(_Section == "[機能キー]")
 			{
 				cpos2 := Instr(_line2,",")
 				org := StrSplit(_line2,",")
@@ -701,38 +701,38 @@ GenSendStr2(aStr,BYREF _dn,BYREF _up)
 ;----------------------------------------------------------------------
 ;	レイアウト名からモード名に変換
 ;----------------------------------------------------------------------
-MakeLayoutHash() {
+MakeLayout2Hash() {
 	Hash := Object()
-	Hash["英数シフト無し"]           := "ANN"
-	Hash["英数左親指シフト"]         := "ALN"
-	Hash["英数右親指シフト"]         := "ARN"
-	Hash["英数小指シフト"]           := "ANK"
-	Hash["英数小指左親指シフト"]     := "ALK"
-	Hash["英数小指右親指シフト"]     := "ARK"
-	Hash["ローマ字シフト無し"]       := "RNN"
-	Hash["ローマ字左親指シフト"]     := "RLN"
-	Hash["ローマ字右親指シフト"]     := "RRN"
-	Hash["ローマ字小指シフト"]       := "RNK"
-	Hash["ローマ字小指左親指シフト"] := "RRK"
-	Hash["ローマ字小指右親指シフト"] := "RLK"
+	Hash["[英数シフト無し]"]           := "ANN"
+	Hash["[英数左親指シフト]"]         := "ALN"
+	Hash["[英数右親指シフト]"]         := "ARN"
+	Hash["[英数小指シフト]"]           := "ANK"
+	Hash["[英数小指左親指シフト]"]     := "ALK"
+	Hash["[英数小指右親指シフト]"]     := "ARK"
+	Hash["[ローマ字シフト無し]"]       := "RNN"
+	Hash["[ローマ字左親指シフト]"]     := "RLN"
+	Hash["[ローマ字右親指シフト]"]     := "RRN"
+	Hash["[ローマ字小指シフト]"]       := "RNK"
+	Hash["[ローマ字小指左親指シフト]"] := "RRK"
+	Hash["[ローマ字小指右親指シフト]"] := "RLK"
 
-	Hash["英数１プリフィックスシフト"]         := "A1N"	; for 月配列
-	Hash["英数２プリフィックスシフト"]         := "A2N"	; for 月配列
-	Hash["英数小指１プリフィックスシフト"]     := "A1K"	; for 月配列
-	Hash["英数小指２プリフィックスシフト"]     := "A2K"	; for 月配列	
-	Hash["ローマ字１プリフィックスシフト"]     := "R1N"	; for 月配列
-	Hash["ローマ字２プリフィックスシフト"]     := "R2N"	; for 月配列
-	Hash["ローマ字小指１プリフィックスシフト"] := "R1K"	; for 月配列
-	Hash["ローマ字小指２プリフィックスシフト"] := "R2K"	; for 月配列	
+	Hash["[英数１プリフィックスシフト]"]         := "A1N"	; for 月配列
+	Hash["[英数２プリフィックスシフト]"]         := "A2N"	; for 月配列
+	Hash["[英数小指１プリフィックスシフト]"]     := "A1K"	; for 月配列
+	Hash["[英数小指２プリフィックスシフト]"]     := "A2K"	; for 月配列	
+	Hash["[ローマ字１プリフィックスシフト]"]     := "R1N"	; for 月配列
+	Hash["[ローマ字２プリフィックスシフト]"]     := "R2N"	; for 月配列
+	Hash["[ローマ字小指１プリフィックスシフト]"] := "R1K"	; for 月配列
+	Hash["[ローマ字小指２プリフィックスシフト]"] := "R2K"	; for 月配列	
 	; やまぶき互換
-	Hash["1英数シフト無し"]     := "A1N"	; for 月配列
-	Hash["2英数シフト無し"]     := "A2N"	; for 月配列
-	Hash["1英数小指シフト"]     := "A1K"	; for 月配列
-	Hash["2英数小指シフト"]     := "A2K"	; for 月配列	
-	Hash["1ローマ字シフト無し"] := "R1N"	; for 月配列
-	Hash["2ローマ字シフト無し"] := "R2N"	; for 月配列
-	Hash["1ローマ字小指シフト"] := "R1K"	; for 月配列
-	Hash["2ローマ字小指シフト"] := "R2K"	; for 月配列	
+	Hash["[1英数シフト無し]"]     := "A1N"	; for 月配列
+	Hash["[2英数シフト無し]"]     := "A2N"	; for 月配列
+	Hash["[1英数小指シフト]"]     := "A1K"	; for 月配列
+	Hash["[2英数小指シフト]"]     := "A2K"	; for 月配列	
+	Hash["[1ローマ字シフト無し]"] := "R1N"	; for 月配列
+	Hash["[2ローマ字シフト無し]"] := "R2N"	; for 月配列
+	Hash["[1ローマ字小指シフト]"] := "R1K"	; for 月配列
+	Hash["[2ローマ字小指シフト]"] := "R2K"	; for 月配列	
 
 	return Hash
 }
@@ -1326,6 +1326,66 @@ MakeVkeyHash()
 }
 
 ;----------------------------------------------------------------------
+;	キー名を配列位置に変換
+;----------------------------------------------------------------------
+Makecode2Lpos()
+{
+	hash := Object()
+	hash["<1>"] := "E01"		;1
+	hash["<2>"] := "E02"		;2
+	hash["<3>"] := "E03"		;3
+	hash["<4>"] := "E04"		;4
+	hash["<5>"] := "E05"		;5
+	hash["<6>"] := "E06"		;6
+	hash["<7>"] := "E07"		;7
+	hash["<8>"] := "E08"		;8
+	hash["<9>"] := "E09"		;9
+	hash["<0>"] := "E10"		;0
+	hash["<->"] := "E11"		;-
+	hash["<^>"] := "E12"		;^
+	hash["<\>"] := "E13"		;\
+
+	hash["<q>"] := "D01"		;q
+	hash["<w>"] := "D02"		;w
+	hash["<e>"] := "D03"		;e
+	hash["<r>"] := "D04"		;r
+	hash["<t>"] := "D05"		;t
+	hash["<y>"] := "D06"		;y
+	hash["<u>"] := "D07"		;u
+	hash["<i>"] := "D08"		;i
+	hash["<o>"] := "D09"		;o
+	hash["<p>"] := "D10"		;p
+	hash["<@>"] := "D11"		;@
+	hash["<[>"] := "D12"		;[
+
+	hash["<a>"] := "C01"		;a
+	hash["<s>"] := "C02"		;s
+	hash["<d>"] := "C03"		;d
+	hash["<f>"] := "C04"		;f
+	hash["<g>"] := "C05"		;g
+	hash["<h>"] := "C06"		;h
+	hash["<j>"] := "C07"		;j
+	hash["<k>"] := "C08"		;k
+	hash["<l>"] := "C09"		;l
+	hash["<;>"] := "C10"		;;
+	hash["<:>"] := "C11"		;:
+	hash["<]>"] := "C12"		;]
+
+	hash["<z>"] := "B01"		;z
+	hash["<x>"] := "B02"		;x
+	hash["<c>"] := "B03"		;c
+	hash["<v>"] := "B04"		;v
+	hash["<b>"] := "B05"		;b
+	hash["<n>"] := "B06"		;n
+	hash["<m>"] := "B07"		;m
+	hash["<,>"] := "B08"		;,
+	hash["<.>"] := "B09"		;.
+	hash["</>"] := "B10"		;/
+	hash["<\>"] := "B11"		;\
+	return hash
+}
+
+;----------------------------------------------------------------------
 ;	キー名に変換
 ;----------------------------------------------------------------------
 MakekeyNameHash()
@@ -1428,7 +1488,7 @@ MakeLayoutPosHash()
 	hash["*sc00C"]    := "E11"
 	hash["*sc00D"]    := "E12"
 	hash["*sc07D"]    := "E13"
-	hash["Backspace"]    := "E14"	; \b
+	hash["Backspace"] := "E14"	; \b
 
 	hash["Tab"]       := "D00"	;tab
 	hash["*sc010"]    := "D01"
@@ -1456,7 +1516,7 @@ MakeLayoutPosHash()
 	hash["*sc027"]    := "C10"
 	hash["*sc028"]    := "C11"
 	hash["*sc02B"]    := "C12"
-	hash["Enter"]    := "C13"
+	hash["Enter"]     := "C13"
 	
 	hash["*sc02C"]    := "B01"
 	hash["*sc02D"]    := "B02"
