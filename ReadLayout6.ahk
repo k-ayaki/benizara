@@ -77,7 +77,7 @@ InitLayout2:
 	keyAttribute2 := MakeKeyAttribute2Hash()
 	keyState := MakeKeyState()
 	keyNameHash := MakeKeyNameHash()
-	codeLabel := MakeCodeLabel()
+	kLabel := MakeKeyLabelHash()
 	g_layoutName := ""
 	g_layoutVersion := ""
 	LF := Object()
@@ -135,13 +135,13 @@ InitLayout2:
 	LF["ADND"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
 	LF["ADNC"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
 	LF["ADNB"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
-	SetCodeLabel("ANN","ADN")
+	SetkLabel("ANN","ADN")
 
 	LF["ADKE"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
 	LF["ADKD"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
 	LF["ADKC"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
 	LF["ADKB"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
-	SetCodeLabel("ANK","ADK")
+	SetkLabel("ANK","ADK")
 	
 	; NULLテーブル
 	LF["NULE"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
@@ -154,33 +154,33 @@ InitLayout2:
 ;----------------------------------------------------------------------
 ;	各モードのレイアウトを処理
 ;----------------------------------------------------------------------
-SetCodeLabel(_modeDst, _modeSrc)
+SetkLabel(_modeDst, _modeSrc)
 {
-	global LF, codeLabel, _rowhash
+	global LF, kLabel, _rowhash
 
 	_col := "E"
 	org := StrSplit(LF[_modeSrc . "E"],",")
 	loop, % org.MaxIndex()
 	{
-		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+		kLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
 	}
 	_col := "D"
 	org := StrSplit(LF[_modeSrc . "D"],",")
 	loop, % org.MaxIndex()
 	{
-		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+		kLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
 	}
 	_col := "C"
 	org := StrSplit(LF[_modeSrc . "C"],",")
 	loop, % org.MaxIndex()
 	{
-		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+		kLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
 	}
 	_col := "B"
 	org := StrSplit(LF[_modeSrc . "B"],",")
 	loop, % org.MaxIndex()
 	{
-		codeLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
+		kLabel[_modeDst . _col . _rowhash[A_Index]] := org[A_Index]
 	}
 	return
 }
@@ -307,7 +307,7 @@ ReadLayoutFile:
 					_code := fkeyCodeHash[org[2]]
 					if(_layoutPos != "" && _code != "") {
 						keyNameHash[_layoutPos] := _code
-						codeLabel[_layoutPos] := CodeNameHash[_code]
+						kLabel[_layoutPos] := CodeNameHash[_code]
 					}
 				}
 			}
@@ -532,12 +532,12 @@ SetKeyTable:
 			if(_mode = "RNN")
 			{
 				keyAttribute2["R" . _lpos2] := SubStr(org[A_Index],2,1)
-				codeLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
+				kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
 			} else
 			if(_mode = "ANN")
 			{
 				keyAttribute2["A" . _lpos2] := SubStr(org[A_Index],2,1)
-				codeLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
+				kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
 			}
 			continue
 		}
@@ -558,7 +558,7 @@ SetKeyTable:
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			codeLabel[_mode . _lpos2] := _vk
+			kLabel[_mode . _lpos2] := _vk
 			kdn[_mode . _lpos2] := "{" . _vk . "}"
 			kup[_mode . _lpos2] := ""
 			continue
@@ -572,11 +572,11 @@ SetKeyTable:
 		{
 			if(SubStr(_mode,1,1)=="R")
 			{
-				codeLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
+				kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
 			}
 			else
 			{
-				codeLabel[_mode . _lpos2] := org[A_Index]
+				kLabel[_mode . _lpos2] := org[A_Index]
 			}
 			kdn[_mode . _lpos2] := _down
 			kup[_mode . _lpos2] := _up
@@ -614,7 +614,7 @@ SetSimulKeyTable:
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			codeLabel[_lpos . _lpos2] := _vk
+			kLabel[_lpos . _lpos2] := _vk
 			kdn[_lpos . _lpos2] := "{" . _vk . "}"
 			kup[_lpos . _lpos2] := ""
 			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
@@ -630,14 +630,7 @@ SetSimulKeyTable:
 		GenSendStr2(_aStr, _down, _up)
 		if( _down <> "")
 		{
-			if(SubStr(_mode,1,1)=="R")
-			{
-				codeLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
-			}
-			else
-			{
-				codeLabel[_lpos . _lpos2] := org[A_Index]
-			}
+			kLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
 			kdn[_lpos . _lpos2] := _down
 			kup[_lpos . _lpos2] := _up
 			kdn[_lpos2 . _lpos] := _down
@@ -1708,7 +1701,7 @@ MakekeyNameHash()
 ;----------------------------------------------------------------------
 ;	キーからラベル名に変換
 ;----------------------------------------------------------------------
-MakeCodeLabel()
+MakeKeyLabelHash()
 {
 	hash := Object()
 	hash["A01"] := "無変換"	;無変換

@@ -450,7 +450,7 @@ RefreshLayoutA1:
 		Gui,Font,s9 c000000,Meiryo UI
 		GuiControl,,vkeyFA%_layoutPos%,　　　
 	}
-	_label := codeLabel[_layoutPos]
+	_label := kLabel[_layoutPos]
 	GuiControl,,vkeyFB%_layoutPos%,%_label%
 	vkeyDN%_layoutPos% := "　"
 	GuiControl,2:,vkeyDN%_layoutPos%,　
@@ -473,18 +473,18 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRL%element%
 		GuiControl,-Redraw,vkeyRR%element%
 		
-		_ch := codeLabel[g_Romaji . "NK" . element]
+		_ch := kLabel[g_Romaji . "NK" . element]
 		GuiControl,,vkeyRK%element%,%_ch%
-		_ch := codeLabel[g_Romaji . "NN" . element]
+		_ch := kLabel[g_Romaji . "NN" . element]
 		GuiControl,,vkeyRN%element%,%_ch%	
-		_ch := codeLabel[g_Romaji . "LN" . element]
+		_ch := kLabel[g_Romaji . "LN" . element]
 		if(_ch == "") {
-			_ch := codeLabel[g_Romaji . "1N" . element]
+			_ch := kLabel[g_Romaji . "1N" . element]
 		}
 		GuiControl,,vkeyRL%element%,%_ch%
-		_ch := codeLabel[g_Romaji . "RN" . element]
+		_ch := kLabel[g_Romaji . "RN" . element]
 		if(_ch == "") {
-			_ch := codeLabel[g_Romaji . "2N" . element]
+			_ch := kLabel[g_Romaji . "2N" . element]
 		}
 		GuiControl,,vkeyRR%element%,%_ch%
 		GuiControl,+Redraw,vkeyDN%element%
