@@ -998,9 +998,8 @@ keydownS:
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := Pf_Count()
-	g_MojiTick3 := g_MojiTick2
 	g_MojiTick2 := g_MojiTick
-	g_MojiTick := Pf_Count()	;A_TickCount
+	g_MojiTick := eyState[g_layoutPos] 	;A_TickCount
 	
 	SetKeyDelay -1
 	Gosub,ScanModifier
@@ -1042,38 +1041,44 @@ keydownS:
 				{
 					_save := g_KeyInPtn
 					CancelZeroDelayOut()
-					
-					g_SendTick := g_MojiTick + g_SS1Interval
-					g_KeyInPtn := "SS"
-					SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
-					;Gosub, SendZeroDelayS2
+
+					;g_SendTick := g_MojiTick + g_SS1Interval
+					;g_KeyInPtn := "SS"
+					;SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
+					vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
+					kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+					SubSend(vOut)
 				}
 			} else {
+				;g_SendTick := g_MojiTick + g_SS1Interval
+				;g_KeyInPtn := "SS"
 				vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
 				kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
 				SubSend(vOut)
 			}
-			g_MojiOnHold   := ""
-			g_KoyubiOnHold := "N"
+			;g_MojiOnHold   := ""
+			;g_KoyubiOnHold := "N"
 			g_SendTick     := ""
 			g_keyInPtn     := ""
 		} else {
+			; １文字を出力
 			Gosub, SendOnHoldS
+			
 			g_MojiOnHold := g_layoutPos
 			g_RomajiOnHold := "R"
 			g_OyaOnHold    := "N"
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + g_Threshold
 			g_KeyInPtn := "S"
-			;Gosub, SendZeroDelayS
 			SendZeroDelayS(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold)
 		}
 	}
 	else
 	if(g_KeyInPtn == "SS") {
-		if(kdn[g_MojiOnHold2 . g_MojiOnHold] != "" && g_SS2Interval > g_SS1Interval) {
-			g_SS2Interval := g_SS1Interval
-			g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+		g_SS2Interval := g_SS1Interval
+		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_SS2Interval > g_SS1Interval) {
+			g_MojiOnHold3 := g_MojiOnHold2
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
 			
@@ -1084,24 +1089,29 @@ keydownS:
 					_save := g_KeyInPtn
 					CancelZeroDelayOut()
 					
-					vOut                    := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold2]
-					kup_save[g_MojiOnHold2] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold2]
+					vOut                    := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold3]
+					kup_save[g_MojiOnHold2] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold3]
 					SubSend(vOut)
 					
 					g_SendTick := g_MojiTick + g_SS1Interval
 					g_KeyInPtn := "SS"
-					;Gosub, SendZeroDelayS2
 					SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
 				}
 			} else {
-				vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
-				kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+				vOut                    := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold3]
+				kup_save[g_MojiOnHold2] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold3]
 				SubSend(vOut)
+
+				g_SendTick := g_MojiTick + g_SS1Interval
+				g_KeyInPtn := "SS"
+				;vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
+				;kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+				;SubSend(vOut)
 			}
-			g_MojiOnHold   := ""
-			g_KoyubiOnHold := "N"
-			g_SendTick     := ""
-			g_keyInPtn     := ""
+			;g_MojiOnHold   := ""
+			;g_KoyubiOnHold := "N"
+			;g_SendTick     := ""
+			;g_keyInPtn     := ""
 		} else {
 			Gosub, SendOnHoldS2
 
@@ -1112,7 +1122,6 @@ keydownS:
 			g_SendTick := g_MojiTick + g_Threshold
 			g_KeyInPtn := "S"
 			SendZeroDelayS(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold)
-			;Gosub, SendZeroDelayS
 		}
 	}
 	critical,off
@@ -1228,7 +1237,7 @@ SendOnHoldS2:
 	} else
 	if(g_KeyInPtn = "SS")
 	{
-		g_keyInPtn := "S"
+		g_keyInPtn := ""
 	}
 	return
 
