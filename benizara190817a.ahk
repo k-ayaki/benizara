@@ -1030,15 +1030,12 @@ keydownS:
 		g_SendTick := g_MojiTick + g_Threshold
 		g_KeyInPtn := "S"
 		SendZeroDelayS(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold)
-		;Gosub, SendZeroDelayS
 	} else
 	if(g_KeyInPtn == "S") {
-		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		g_MojiOnHold2 := g_MojiOnHold
-		g_MojiOnHold  := g_layoutPos
-		if(kdn[g_MojiOnHold2 . g_MojiOnHold] != "") {
-			vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+		if(kdn[g_layoutPos . g_MojiOnHold] != "") {
+			g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+			g_MojiOnHold2 := g_MojiOnHold
+			g_MojiOnHold  := g_layoutPos
 			if(g_ZeroDelay = 1)
 			{
 				if(vOut <> g_ZeroDelayOut)
@@ -1052,6 +1049,8 @@ keydownS:
 					;Gosub, SendZeroDelayS2
 				}
 			} else {
+				vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
+				kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
 				SubSend(vOut)
 			}
 			g_MojiOnHold   := ""
@@ -1072,13 +1071,12 @@ keydownS:
 	}
 	else
 	if(g_KeyInPtn == "SS") {
-		g_SS2Interval := g_SS1Interval
-		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		g_MojiOnHold2 := g_MojiOnHold
-		g_MojiOnHold  := g_layoutPos
-		if(kdn[g_layoutPos . g_MojiOnHold] != "" && g_SS2Interval > g_SS1Interval) {
-			vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+		if(kdn[g_MojiOnHold2 . g_MojiOnHold] != "" && g_SS2Interval > g_SS1Interval) {
+			g_SS2Interval := g_SS1Interval
+			g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+			g_MojiOnHold2 := g_MojiOnHold
+			g_MojiOnHold  := g_layoutPos
+			
 			if(g_ZeroDelay = 1)
 			{
 				if(vOut <> g_ZeroDelayOut)
@@ -1096,6 +1094,8 @@ keydownS:
 					SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
 				}
 			} else {
+				vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
+				kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
 				SubSend(vOut)
 			}
 			g_MojiOnHold   := ""
@@ -1169,7 +1169,6 @@ SendOnHoldS:
 	}
 	vOut                   := kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
-
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
