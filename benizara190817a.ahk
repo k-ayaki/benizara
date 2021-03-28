@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.4 .... 2021/03/07
+;	ver.0.1.4.4 .... 2021/03/28
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,7 +11,7 @@
 	#KeyHistory
 #SingleInstance, Off
 	g_Ver := "ver.0.1.4.4"
-	g_Date := "2021/03/20"
+	g_Date := "2021/03/28"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -57,7 +57,9 @@
 	g_LayoutFile := ".\NICOLA配列.bnz"
 	g_Continue := 1
 	g_Threshold := 150	; 
+	g_ThresholdSS := 80	; 
 	g_Overlap := 50
+	g_OverlapSS := 70
 	g_ZeroDelay := 1		; 零遅延モード
 	g_ZeroDelayOut := ""
 	g_ZeroDelaySurface := ""	; 零遅延モードで出力される表層文字列
@@ -1030,13 +1032,13 @@ keydownS:
 		; 当該キーを単独打鍵として保留
 		g_MojiOnHold := g_layoutPos
 		g_KoyubiOnHold := g_Koyubi
-		g_SendTick := g_MojiTick + g_Threshold
+		g_SendTick := g_MojiTick + g_ThresholdSS
 		g_KeyInPtn := "S"
 		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
 	} else
 	if(g_KeyInPtn == "S") {
 		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		if(kdn[g_layoutPos . g_MojiOnHold] != "" && g_SS1Interval < g_Threshold) {
+		if(kdn[g_layoutPos . g_MojiOnHold] != "" && g_SS1Interval < g_ThresholdSS) {
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
 			
@@ -1064,7 +1066,7 @@ keydownS:
 			; 当該キーを単独打鍵として保留
 			g_MojiOnHold := g_layoutPos
 			g_KoyubiOnHold := g_Koyubi
-			g_SendTick := g_MojiTick + g_Threshold
+			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "S"
 			SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
 		}
@@ -1073,7 +1075,7 @@ keydownS:
 	if(g_KeyInPtn == "SS") {
 		g_SS2Interval := g_SS1Interval
 		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_SS2Interval > g_SS1Interval && (g_SS2Interval + g_SS1Interval) < g_Threshold) {
+		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_SS2Interval > g_SS1Interval && (g_SS2Interval + g_SS1Interval) < g_ThresholdSS) {
 			g_MojiOnHold3 := g_MojiOnHold2
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
@@ -1105,7 +1107,7 @@ keydownS:
 			; 当該キーを単独打鍵として保留
 			g_MojiOnHold := g_layoutPos
 			g_KoyubiOnHold := g_Koyubi
-			g_SendTick := g_MojiTick + g_Threshold
+			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "S"
 			SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
 		}
@@ -1119,7 +1121,7 @@ keydownS:
 		g_KoyubiOnHold3 := ""
 		g_KoyubiOnHold2 := ""
 		g_KoyubiOnHold  := g_Koyubi
-		g_SendTick := g_MojiTick + g_Threshold
+		g_SendTick := g_MojiTick + g_ThresholdSS
 		g_KeyInPtn := "S"
 		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
 	}
@@ -1333,7 +1335,7 @@ keyupS:
 		if(g_layoutPos == g_MojiOnHold2) {
 			g_Ss1Interval := g_MojiUpTick - g_MojiTick	; 前回の文字キー押しからの期間
 			vOverlap := 100*g_Ss1Interval/(g_Ss1Interval+g_SS1Interval)	; 重なり厚み計算
-			if(g_Overlap <= vOverlap && g_Ss1Interval < g_Threshold) {
+			if(g_OverlapSS <= vOverlap && g_Ss1Interval < g_ThresholdSS) {
 				; 同時打鍵を確定
 				Gosub, SendOnHoldSS
 			} else {

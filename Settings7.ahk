@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.4 .... 2021/3/20
+;	ver.0.1.4.4 .... 2021/3/28
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -27,10 +27,14 @@ Init:
 		IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 		g_Threshold := 100
 		IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
+		g_ThresholdSS := 80
+		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
 		g_Overlap := 50
 		IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
+		g_Overlap := 70
+		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 		g_KeySingle := "無効"
@@ -54,11 +58,21 @@ Init:
 		g_Threshold := 10
 	if(g_Threshold > 400)
 		g_Threshold := 400
+	IniRead,g_ThresholdSS,%g_IniFile%,Key,ThresholdSS
+	if(g_ThresholdSS < 10)
+		g_ThresholdSS := 10
+	if(g_ThresholdSS > 400)
+		g_ThresholdSS := 400
 	IniRead,g_Overlap,%g_IniFile%,Key,Overlap
-	if(g_Overlap < 20)
-		g_Overlap := 20
-	if(g_Overlap > 80)
-		g_Overlap := 80
+	if(g_Overlap < 10)
+		g_Overlap := 10
+	if(g_Overlap > 90)
+		g_Overlap := 90
+	IniRead,g_OverlapSS,%g_IniFile%,Key,OverlapSS
+	if(g_OverlapSS < 10)
+		g_OverlapSS := 10
+	if(g_OverlapSS > 90)
+		g_OverlapSS := 90
 	IniRead,g_OyaKey,%g_IniFile%,Key,OyaKey
 	if g_OyaKey not in 無変換－変換,無変換－空白,空白－変換
 		g_OyaKey := "無変換－変換"
@@ -84,8 +98,10 @@ Settings:
 	_Continue := g_Continue
 	_ZeroDelay := g_ZeroDelay
 	_Threshold := g_Threshold
+	_ThresholdSS := g_ThresholdSS
 	_LayoutFile := g_LayoutFile
 	_Overlap := g_Overlap
+	_OverlapSS := g_OverlapSS
 	_OyaKey := g_OyaKey
 	_KeySingle := g_KeySingle
 	_KeyRepeat := g_KeyRepeat
@@ -95,7 +111,7 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X530 Y405 W80 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X620 Y405 W80 H22,キャンセル
-	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフトと中指シフト|一時停止|管理者権限|紅皿について
+	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフト|文字同時打鍵|一時停止|管理者権限|紅皿について
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
@@ -120,7 +136,14 @@ _Settings:
 		else
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
 	}
-
+	else if(ShiftMode["R"] = "プレフィックスシフト")
+	{
+		Gui, Add, Text,X30 Y70,プレフィックスシフトを用いた配列です
+	}
+	else if(ShiftMode["R"] = "文字同時打鍵")
+	{
+		Gui, Add, Text,X30 Y70,文字同時打鍵を用いた配列です
+	}
 	Gui, Font,s10 c000000,Meiryo UI
 	Gosub,G2DrawKeyFrame
 	Gui, Font,s9 c000000,Meiryo UI
@@ -141,16 +164,16 @@ _Settings:
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y205,キーリピート
 	GuiControl,,vKeyRepeat,%_KeyRepeat%
 	
-	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,親指シフトや中指シフトの同時打鍵の際に、打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y250 W230 H20,親指シフトや中指シフトの同時打鍵の割合：
+	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y250 W230 H20,文字キーと親指キーの重なりの割合：
 	Gui, Add, Edit,vvOverlapNum X+3 Y248 W50 ReadOnly, %_Overlap%
 	Gui, Add, Text,X+10 Y250 c000000,[`%]
 	
-	Gui, Add, Slider, X320 Y280 ggOlSlider w350 vvOlSlider Range20-80 line10 TickInterval10
+	Gui, Add, Slider, X320 Y280 ggOlSlider w350 vvOlSlider Range10-90 line10 TickInterval10
 	GuiControl,,vOlSlider,%_Overlap%
 	
-	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,親指シフトや中指シフトの同時打鍵の際に、打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y320 W230 H20,親指シフトや中指シフトの同時打鍵の判定時間：
+	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y320 W230 H20,文字キーと親指キーの重なりの判定時間：
 	Gui, Add, Edit,vvThresholdNum X+3 Y318 W50 ReadOnly, %_Threshold%
 	Gui, Add, Text,X+10 Y320 c000000,[mSEC]
 	
@@ -158,6 +181,27 @@ _Settings:
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
+	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵が確定する前に候補文字を表示する設定です。候補文字とは異なる打鍵であった場合、バックスペースで消去して、正しい文字で修正します。
+	Gui, Add, Checkbox,ggZeroDelaySS vvZeroDelaySS X+20 Y65,零遅延モード
+	GuiControl,,vZeroDelaySS,%_ZeroDelay%
+	
+	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y110 W230 H20,文字キー同志の重なりの割合：
+	Gui, Add, Edit,vvOverlapNumSS X+3 Y108 W50 ReadOnly, %_OverlapSS%
+	Gui, Add, Text,X+10 Y110 c000000,[`%]
+
+	Gui, Add, Slider, X320 Y140 ggOlSliderSS w350 vvOlSliderSS Range10-90 line10 TickInterval10
+	GuiControl,,vOlSliderSS,%_OverlapSS%
+	
+	Gui, Add, Edit,X20 Y180 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なり期間が何ミリ秒のときに同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y180 W230 H20,文字キー同志の重なりの判定時間：
+	Gui, Add, Edit,vvThresholdNumSS X+3 Y178 W50 ReadOnly, %_ThresholdSS%
+	Gui, Add, Text,X+10 Y180 c000000,[mSEC]
+	
+	Gui, Add, Slider, X320 Y210 ggThSliderSS w350 vvThSliderSS Range10-400 line10 TickInterval10
+	GuiControl,,vThSliderSS,%_ThresholdSS%
+	
+	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
 	Gui, Add, Text,X30 Y130,一時停止キー：
@@ -168,7 +212,7 @@ _Settings:
 	else
 		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause|ScrollLock|無効||
 
-	Gui, Tab, 4
+	Gui, Tab, 5
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
@@ -180,7 +224,7 @@ _Settings:
 		Gui, Add, Text,X30 Y+30,紅皿は通常権限で動作しています。
 		Gui, Add, Button,ggButtonAdmin X30 Y+30 W140 H22,管理者権限に切替
 	}
-	Gui, Tab, 5
+	Gui, Tab, 6
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
@@ -517,7 +561,7 @@ RefreshLayoutUsage:
 		GuiControl,,vkeyRRA00,２
 	}
 	else
-	if(ShiftMode["R"] == "中指シフト") {
+	if(ShiftMode["R"] == "文字同時打鍵") {
 		GuiControl,,vkeyRLA00,中指
 		GuiControl,,vkeyRRA00,薬指
 	}
@@ -659,21 +703,38 @@ gTabChange:
 	return
 	
 ;-----------------------------------------------------------------------
-; 機能：同時打鍵の判定時間のスライダー操作
+; 機能：親指シフト同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
 gThSlider:
 	GuiControlGet, _Threshold , , vThSlider, 
 	GuiControl,, vThresholdNum, %_Threshold%
 	return
-	
+
 ;-----------------------------------------------------------------------
-; 機能：同時打鍵の割合のスライダー操作
+; 機能：文字同時打鍵の判定時間のスライダー操作
+;-----------------------------------------------------------------------
+gThSliderSS:
+	GuiControlGet, _ThresholdSS , , vThSliderSS, 
+	GuiControl,, vThresholdNumSS, %_ThresholdSS%
+	return
+	
+
+;-----------------------------------------------------------------------
+; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSlider:
 	GuiControlGet, _Overlap , , vOlSlider, 
 	GuiControl,, vOverlapNum, %_Overlap%
 	return
 
+;-----------------------------------------------------------------------
+; 機能：文字同時打鍵の割合のスライダー操作
+;-----------------------------------------------------------------------
+gOlSliderSS:
+	GuiControlGet, _OverlapSS , , vOlSliderSS, 
+	GuiControl,, vOverlapNumSS, %_OverlapSS%
+	return
+	
 ;-----------------------------------------------------------------------
 ; 機能：連続シフトチェックボックスの操作
 ;-----------------------------------------------------------------------
@@ -692,6 +753,11 @@ gContinue:
 ; 機能：零遅延モードチェックボックスの操作
 ;-----------------------------------------------------------------------
 gZeroDelay:
+	Gui, Submit, NoHide
+	_ZeroDelay := %A_GuiControl%
+	Return
+
+gZeroDelaySS:
 	Gui, Submit, NoHide
 	_ZeroDelay := %A_GuiControl%
 	Return
@@ -837,8 +903,10 @@ gButtonOk:
 	g_Continue := _Continue
 	g_ZeroDelay := _ZeroDelay
 	g_Threshold := _Threshold
+	g_ThresholdSS := _ThresholdSS
 	g_LayoutFile := _LayoutFile
-	g_Overlap := _Overlap
+	g_Overlap   := _Overlap
+	g_OverlapSS := _OverlapSS
 	g_OyaKey := _OyaKey
 	g_KeySingle := _KeySingle
 	g_KeyRepeat := _KeyRepeat
@@ -848,8 +916,10 @@ gButtonOk:
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 	IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
+	IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
 	IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
+	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 	IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat

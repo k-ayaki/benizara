@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.4 .... 2021/3/10
+;	ver.0.1.4.4 .... 2021/3/28
 ;-----------------------------------------------------------------------
 ReadLayout:
 	ksf := Object()	; 表層形
@@ -482,7 +482,7 @@ SetLayoutProperty:
 	else
 	if(LF["ANN"]==1 && (LF["A3N"]==1 || LF["A4N"]==1) && LF["ANK"]==1 (LF["A3K"]==1 || LF["A4K"]==1)) 
 	{
-		ShiftMode["A"] := "中指シフト"
+		ShiftMode["A"] := "文字同時打鍵"
 	}
 	else
 	if(LF["ANN"]==1 && LF["ALN"]==0 && LF["ARN"]==0 && LF["ANK"]==1 && LF["ALK"]==0 && LF["ARK"]==0)
@@ -536,7 +536,7 @@ SetLayoutProperty:
 	else
 	if(LF["RNN"]==1 && (LF["R3N"]==1 || LF["R4N"]==1) && LF["RNK"]==1)
 	{
-		ShiftMode["R"] := "中指シフト"
+		ShiftMode["R"] := "文字同時打鍵"
 	}
 	else
 	if(LF["RNN"]==1 && LF["RRN"]==0 && LF["RLN"]==0 && LF["RNK"]==1 && LF["RLK"]==0 && LF["RRK"]==0)
