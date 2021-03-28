@@ -95,14 +95,14 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X530 Y405 W80 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X620 Y405 W80 H22,キャンセル
-	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフト|管理者権限|紅皿について
+	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフトと中指シフト|一時停止|管理者権限|紅皿について
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
-	Gui, Add, Edit,X30 Y40 W250 H20 ReadOnly -Vscroll, %g_layoutName%　%g_layoutVersion%
-	Gui, Add, Text,X300 Y40, 定義ファイル：
-	Gui, Add, Edit,vvFilePath ggDefFile X370 Y40 W220 H20 ReadOnly, %_LayoutFile%
-	Gui, Add, Button,ggFileSelect X600 Y40 W32 H21,…
+	Gui, Add, Edit,X30 Y40 W280 H20 ReadOnly -Vscroll, %g_layoutName%　%g_layoutVersion%
+	Gui, Add, Text,X320 Y40, 定義ファイル：
+	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %_LayoutFile%
+	Gui, Add, Button,ggFileSelect X630 Y40 W32 H21,…
 
 	if(ShiftMode["R"] = "親指シフト")
 	{
@@ -141,16 +141,16 @@ _Settings:
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y205,キーリピート
 	GuiControl,,vKeyRepeat,%_KeyRepeat%
 	
-	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,親指Aー文字Mー親指Bの順の打鍵の際に、親指Aから文字Mまで打鍵間隔が全体の何％のときに、親指Aのシフトであるかを決定します。
-	Gui, Add, Text,X+20 Y250 W230 H20,文字と親指シフトの同時打鍵の割合：
+	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,親指シフトや中指シフトの同時打鍵の際に、打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y250 W230 H20,親指シフトや中指シフトの同時打鍵の割合：
 	Gui, Add, Edit,vvOverlapNum X+3 Y248 W50 ReadOnly, %_Overlap%
 	Gui, Add, Text,X+10 Y250 c000000,[`%]
 	
 	Gui, Add, Slider, X320 Y280 ggOlSlider w350 vvOlSlider Range20-80 line10 TickInterval10
 	GuiControl,,vOlSlider,%_Overlap%
 	
-	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,親指ー文字の打鍵間隔や文字ー親指の打鍵間隔が何ミリ秒のときに親指シフトであるかを決定します。
-	Gui, Add, Text,X+20 Y320 W230 H20,文字と親指シフトの同時打鍵の判定時間：
+	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,親指シフトや中指シフトの同時打鍵の際に、打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y320 W230 H20,親指シフトや中指シフトの同時打鍵の判定時間：
 	Gui, Add, Edit,vvThresholdNum X+3 Y318 W50 ReadOnly, %_Threshold%
 	Gui, Add, Text,X+10 Y320 c000000,[mSEC]
 	
@@ -158,6 +158,17 @@ _Settings:
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
+	Gui, Add, Text,X30 Y130,一時停止キー：
+	if(g_PauseKey = "Pause")
+		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause||ScrollLock|無効|
+	else if(g_PauseKey = "ScrollLock")
+		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause|ScrollLock||無効|
+	else
+		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause|ScrollLock|無効||
+
+	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
@@ -169,7 +180,7 @@ _Settings:
 		Gui, Add, Text,X30 Y+30,紅皿は通常権限で動作しています。
 		Gui, Add, Button,ggButtonAdmin X30 Y+30 W140 H22,管理者権限に切替
 	}
-	Gui, Tab, 4
+	Gui, Tab, 5
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
@@ -243,6 +254,7 @@ G2DrawKeyFrame:
 		_row := A_Index
 		Gosub,DrawKeyA
 	}
+	Gosub,DrawKeyUsage
 	critical,off
 	return
 
@@ -253,24 +265,24 @@ DrawKeyE2B:
 	_xpos := 32*(_col-1) + 48*(_row - 1) + 40
 	_ch := " "
 	Gosub, DrawKeyRectE2B
-	_xpos0 := _xpos + 10
+	_xpos0 := _xpos + 4
 	_ypos0 := _ypos + 10
 	_col2 := _colhash[_col]
 	_row2 := _rowhash[_row]
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRK%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 30
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRL%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 24
 	_ypos0 := _ypos + 10
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRR%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 10
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRR%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 4
 	_ypos0 := _ypos + 30
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRL%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 30
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRK%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 24
 	_ypos0 := _ypos + 30
-	Gui, Font,s11 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRN%_col2%%_row2% X%_xpos0% Y%_ypos0% W16 +Center c000000 BackgroundTrans,%_ch%
+	Gui, Font,s10 c000000,Meiryo UI
+	Gui, Add, Text,vvkeyRN%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
 	Gosub, DrawKeyBorder
 	return
 ;-----------------------------------------------------------------------
@@ -289,6 +301,36 @@ DrawKeyA:
 	_ypos0 := _ypos + 30
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyFB%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
+	Gosub, DrawKeyBorder
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キー凡例
+;-----------------------------------------------------------------------
+DrawKeyUsage:
+	_xpos := 40
+	_row := 0
+	Gosub, DrawKeyRectA
+	_xpos0 := _xpos + 4
+	_ypos0 := _ypos + 10
+	Gui, Font,s7 c000000,Meiryo UI
+	_ch := "左親"
+	Gui, Add, Text,vvkeyRLA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 24
+	_ypos0 := _ypos + 10
+	Gui, Font,s7 c000000,Meiryo UI
+	_ch := "右親"
+	Gui, Add, Text,vvkeyRRA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 4
+	_ypos0 := _ypos + 30
+	Gui, Font,s7 c000000,Meiryo UI
+	_ch := "小指"
+	Gui, Add, Text,vvkeyRKA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
+	_xpos0 := _xpos + 24
+	_ypos0 := _ypos + 30
+	Gui, Font,s8 c000000,Meiryo UI
+	_ch := "無"
+	Gui, Add, Text,vvkeyRNA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
 	Gosub, DrawKeyBorder
 	return
 
@@ -420,6 +462,8 @@ RefreshLayoutA:
 	Gosub,RefreshLayoutA1
 	_layoutPos := "A04"
 	Gosub,RefreshLayoutA1
+	_layoutPos := "A00"
+	Gosub,RefreshLayoutUsage
 	return
 
 ;-----------------------------------------------------------------------
@@ -457,6 +501,28 @@ RefreshLayoutA1:
 	GuiControl,+Redraw,vkeyDN%_layoutPos%
 	Critical,off
 	return
+;-----------------------------------------------------------------------
+; 機能：凡例表示の更新
+;-----------------------------------------------------------------------
+RefreshLayoutUsage:
+	Critical
+	Gui, Submit, NoHide
+	if(ShiftMode["R"] == "親指シフト") {
+		GuiControl,,vkeyRLA00,左親
+		GuiControl,,vkeyRRA00,右親
+	}
+	else
+	if(ShiftMode["R"] == "プレフィックスシフト") {
+		GuiControl,,vkeyRLA00,１
+		GuiControl,,vkeyRRA00,２
+	}
+	else
+	if(ShiftMode["R"] == "中指シフト") {
+		GuiControl,,vkeyRLA00,中指
+		GuiControl,,vkeyRRA00,薬指
+	}
+	Critical,off
+	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え
@@ -481,10 +547,16 @@ G2RefreshLayout:
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "1N" . element]
 		}
+		if(_ch == "") {
+			_ch := kLabel[g_Romaji . "3N" . element]
+		}
 		GuiControl,,vkeyRL%element%,%_ch%
 		_ch := kLabel[g_Romaji . "RN" . element]
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "2N" . element]
+		}
+		if(_ch == "") {
+			_ch := kLabel[g_Romaji . "4N" . element]
 		}
 		GuiControl,,vkeyRR%element%,%_ch%
 		GuiControl,+Redraw,vkeyDN%element%
@@ -591,7 +663,6 @@ gTabChange:
 ;-----------------------------------------------------------------------
 gThSlider:
 	GuiControlGet, _Threshold , , vThSlider, 
-	;msgbox, _Threshold is %_Threshold% vThSlider is %vThSlider%
 	GuiControl,, vThresholdNum, %_Threshold%
 	return
 	
@@ -722,6 +793,7 @@ gFileSelect:
 			; 元ファイルを再読み込みする
 			Gosub, InitLayout2
 			_LayoutFile := g_LayoutFile
+			vLayoutFile := g_LayoutFile
 			GoSub, ReadLayoutFile
 		}
 		Gosub, SetLayoutProperty
@@ -730,7 +802,20 @@ gFileSelect:
 	Gui,Destroy
 	Goto,_Settings
 
+;-----------------------------------------------------------------------
+; 機能：一時停止ボタンの選択メニュー
+;-----------------------------------------------------------------------
 
+gSetPause:
+	Gui, Submit, NoHide
+	_pauseKey := vPauseKey
+	msgbox, % "pauseKey is " . _pauseKey
+
+	return
+
+;-----------------------------------------------------------------------
+; 機能：管理者権限設定ボタン
+;-----------------------------------------------------------------------
 gButtonAdmin:
 	{ 
 		try ; leads to having the script re-launching itself as administrator 
@@ -757,6 +842,7 @@ gButtonOk:
 	g_OyaKey := _OyaKey
 	g_KeySingle := _KeySingle
 	g_KeyRepeat := _KeyRepeat
+	g_PauseKey := _pauseKey
 
 	g_IniFile := ".\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile

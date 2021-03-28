@@ -51,6 +51,8 @@ ReadLayout:
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
 	code2Pos := MakeCode2Pos()
+	lpos2Mode := MakeLpos2ModeHash()
+	name2vkey := MakeName2vkeyHash()
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -86,24 +88,32 @@ InitLayout2:
 	LF["ARN"] := 0
 	LF["A1N"] := 0
 	LF["A2N"] := 0
+	LF["A3N"] := 0
+	LF["A4N"] := 0
 
 	LF["ANK"] := 0
 	LF["ALK"] := 0
 	LF["ARK"] := 0
 	LF["A1K"] := 0
 	LF["A2K"] := 0
+	LF["A3K"] := 0
+	LF["A4K"] := 0
 
 	LF["RNN"] := 0
 	LF["RLN"] := 0
 	LF["RRN"] := 0
 	LF["R1N"] := 0
 	LF["R2N"] := 0
+	LF["R3N"] := 0
+	LF["R4N"] := 0
 
 	LF["RNK"] := 0
 	LF["RLK"] := 0
 	LF["RRK"] := 0
 	LF["R1K"] := 0
 	LF["R2K"] := 0
+	LF["R3K"] := 0
+	LF["R4K"] := 0
 	loop,4
 	{
 		LF["ANN" . _colhash[A_Index]] := ""
@@ -197,6 +207,8 @@ ReadLayoutFile:
 	}
 	Gosub,InitLayout2
 	_mode := ""
+	_Section := ""
+	_lpos := ""
 	_mline := 0
 	Loop
 	{
@@ -251,10 +263,14 @@ ReadLayoutFile:
 					GoSub, Mode2Key
 					if(_error <> "")
 					{
+						_Section := ""
+						_mode := ""
+						_lpos := ""
 						return
 					}
 					_Section := ""
 					_mode := ""
+					_lpos := ""
 				}
 				continue
 			}
@@ -269,6 +285,9 @@ ReadLayoutFile:
 					GoSub, Mode3Key
 					if(_error <> "")
 					{
+						_Section := ""
+						_mode := ""
+						_lpos := ""
 						return
 					}
 					_Section := ""
@@ -370,6 +389,9 @@ Mode2Key:
 ;	文字の同時打鍵のレイアウトを処理
 ;----------------------------------------------------------------------
 Mode3Key:
+	_mode2 := lpos2Mode[_lpos]
+	if(_mode2!="") 
+		LF[_mode2] := 1
 	_col := "E"
 	org := StrSplit(LF[_lpos . "E"],",")
 	if(org.MaxIndex() <> 13)
@@ -458,6 +480,11 @@ SetLayoutProperty:
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
 	else
+	if(LF["ANN"]==1 && (LF["A3N"]==1 || LF["A4N"]==1) && LF["ANK"]==1 (LF["A3K"]==1 || LF["A4K"]==1)) 
+	{
+		ShiftMode["A"] := "中指シフト"
+	}
+	else
 	if(LF["ANN"]==1 && LF["ALN"]==0 && LF["ARN"]==0 && LF["ANK"]==1 && LF["ALK"]==0 && LF["ARK"]==0)
 	{
 		ShiftMode["A"] := "小指シフト"
@@ -505,6 +532,11 @@ SetLayoutProperty:
 	if(LF["RNN"]==1 && (LF["R1N"]==1 || LF["R2N"]==1) && LF["RNK"]==1 && (LF["R1K"]==1 || LF["R2K"]==1))
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
+	}
+	else
+	if(LF["RNN"]==1 && (LF["R3N"]==1 || LF["R4N"]==1) && LF["RNK"]==1)
+	{
+		ShiftMode["R"] := "中指シフト"
 	}
 	else
 	if(LF["RNN"]==1 && LF["RRN"]==0 && LF["RLN"]==0 && LF["RNK"]==1 && LF["RLK"]==0 && LF["RRK"]==0)
@@ -615,6 +647,9 @@ SetSimulKeyTable:
 		if(_vk <> "")
 		{
 			kLabel[_lpos . _lpos2] := _vk
+			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			if(_mode2 != "") 
+				KLabel[_mode2 . _lpos2] := _vk
 			kdn[_lpos . _lpos2] := "{" . _vk . "}"
 			kup[_lpos . _lpos2] := ""
 			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
@@ -631,6 +666,9 @@ SetSimulKeyTable:
 		if( _down <> "")
 		{
 			kLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
+			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			if(_mode2 != "") 
+				KLabel[_mode2  . _lpos2] := Romaji2Kana(org[A_Index])
 			kdn[_lpos . _lpos2] := _down
 			kup[_lpos . _lpos2] := _up
 			kdn[_lpos2 . _lpos] := _down
@@ -1863,6 +1901,7 @@ MakefkeyPosHash()
 	hash["右Ctrl"] := "A05"
 	return hash
 }
+
 ;----------------------------------------------------------------------
 ;	機能キー名とコードの変換
 ;----------------------------------------------------------------------
@@ -1883,6 +1922,7 @@ MakefkeyCodeHash()
 	hash["右Ctrl"]    := "RCtrl"
 	return hash
 }
+
 ;----------------------------------------------------------------------
 ;	機能キー名とコードの変換
 ;----------------------------------------------------------------------
@@ -1903,3 +1943,40 @@ MakeCodeNameHash()
 	hash["RCtrl"]     := "右Ctrl"
 	return hash
 }
+
+;----------------------------------------------------------------------
+;	新下駄配列などの同時打鍵モードのキーレイアウト名
+;----------------------------------------------------------------------
+MakeLpos2ModeHash()
+{
+	hash := Object()
+	hash["C02"] := "R4N"	;第４指（薬指）
+	hash["C03"] := "R3N"	;第３指（中指）
+	hash["C08"] := "R3N"	;第３指（中指）
+	hash["C09"] := "R4N"	;第４指（薬指）
+	return hash
+}
+
+
+;----------------------------------------------------------------------
+;	キー名とvkeyの変換
+;----------------------------------------------------------------------
+MakeName2vkeyHash()
+{
+	hash := Object()
+	hash["Pause"]      := 0x13
+	hash["ScrollLock"] := 0x91
+	hash["Insert"]     := 0x2D
+	
+	hash["LShift"]     := 160
+	hash["RShift"]     := 161
+	hash["LCtrl"]      := 162
+	hash["RCtrl"]      := 163
+	hash["LAlt"]       := 164
+	hash["RAlt"]       := 165
+	hash["LWin"]       := 91
+	hash["RWin"]       := 92
+	hash["AppsKey"]    := 93
+	return hash
+}
+

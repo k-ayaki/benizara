@@ -66,6 +66,8 @@
 	g_OyaRKeyOn := 0
 	g_OyaLState := 0	
 	g_OyaLKeyOn := 0
+	g_Pause := 0
+	g_PauseKey := "Pause"
 	vLayoutFile := g_LayoutFile
 	g_Tau := 0
 	GoSub,Init
@@ -83,8 +85,11 @@
 	Menu, Tray, Add, 紅皿設定,Settings
 	;Menu, Tray, Add, 配列,ShowLayout
 	Menu, Tray, Add, ログ,Logs
-	Menu, Tray, Add, 終了,Menu_Exit 	
-	Menu, Tray, Icon
+	Menu, Tray, Add, 終了,Menu_Exit
+	if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+	{
+		Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+	}
 	SetBatchLines, -1
 	SetHook("init")
 	fPf := Pf_Init()
@@ -110,7 +115,7 @@ Menu_Exit:
 #include Settings7.ahk
 #include PfCount.ahk
 #include Logs1.ahk
-
+#include Path.ahk
 
 ;-----------------------------------------------------------------------
 ; 親指シフトキー
@@ -490,14 +495,16 @@ minimum(val0, val1) {
 ; 零遅延モード出力のキャンセル
 ;----------------------------------------------------------------------
 CancelZeroDelayOut() {
-	global g_ZeroDelaySurface, g_ZeroDelayOut
-	_len := StrLen(g_ZeroDelaySurface)
-	loop, %_len%
-	{
-		SubSend(MnDown("Backspace") . MnUp("Backspace"))
+	global g_ZeroDelaySurface, g_ZeroDelay
+	if(g_ZeroDelay == 1) {	
+		_len := StrLen(g_ZeroDelaySurface)
+		loop, %_len%
+		{
+			SubSend(MnDown("Backspace") . MnUp("Backspace"))
+		}
 	}
-	g_ZeroDelayOut := ""
 	g_ZeroDelaySurface := ""
+	g_ZeroDelayOut := ""
 }
 
 ;----------------------------------------------------------------------
@@ -697,17 +704,6 @@ keydownM:
 	keyState[g_layoutPos] := Pf_Count()
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		if(g_prefixshift <> "" )
-		{
-			g_MojiOnHold   := g_layoutPos
-			g_RomajiOnHold := g_Romaji
-			g_OyaOnHold    := g_prefixshift
-			g_KoyubiOnHold := g_Koyubi
-			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			SubSend(vOut)
-			g_prefixshift := ""
-		}
 		SetKeyDelay -1
 		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
@@ -723,6 +719,19 @@ keydownM:
 			g_SendTick := ""
 			g_KeyInPtn := ""
 
+			g_prefixshift := ""
+			critical,off
+			return
+		}
+		if(g_prefixshift <> "" )
+		{
+			g_MojiOnHold   := g_layoutPos
+			g_RomajiOnHold := g_Romaji
+			g_OyaOnHold    := g_prefixshift
+			g_KoyubiOnHold := g_Koyubi
+			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+			SubSend(vOut)
 			g_prefixshift := ""
 			critical,off
 			return
@@ -930,7 +939,7 @@ keydownX:
 		critical,off
 		return
 	}
-	g_ModifierTick := Pf_Count()	;A_TickCount
+	g_ModifierTick := keyState[g_layoutPos]
 	Gosub,ModeInitialize
 	SubSend(MnDown(kName))
 	g_KeyInPtn := ""
@@ -1002,7 +1011,7 @@ keydownS:
 	Gosub,ScanModifier
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
-		Gosub, SendOnHoldS
+		Gosub, ModeInitialize
 		
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
 		vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
@@ -1026,20 +1035,22 @@ keydownS:
 		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
 	} else
 	if(g_KeyInPtn == "S") {
-		if(kdn[g_layoutPos . g_MojiOnHold] != "") {
-			g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
+		if(kdn[g_layoutPos . g_MojiOnHold] != "" && g_SS1Interval < g_Threshold) {
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
 			
 			g_KoyubiOnHold2 := g_KoyubiOnHold
 			g_KoyubiOnHold  := g_Koyubi
-			if(g_ZeroDelay = 1)
+			if(g_ZeroDelay == 1)
 			{
 				CancelZeroDelayOut()
 			}
+			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_SS1Interval
 			g_KeyInPtn := "SS"
 			SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
+
 			; SS 状態に遷移せず確定
 			;vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
 			;kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
@@ -1047,9 +1058,10 @@ keydownS:
 			;g_SendTick     := ""
 			;g_keyInPtn     := ""
 		} else {
-			; １文字を出力
+			; 保留中の１文字を確定（出力）
 			Gosub, SendOnHoldS
 			
+			; 当該キーを単独打鍵として保留
 			g_MojiOnHold := g_layoutPos
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + g_Threshold
@@ -1061,7 +1073,7 @@ keydownS:
 	if(g_KeyInPtn == "SS") {
 		g_SS2Interval := g_SS1Interval
 		g_SS1Interval := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_SS2Interval > g_SS1Interval) {
+		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_SS2Interval > g_SS1Interval && (g_SS2Interval + g_SS1Interval) < g_Threshold) {
 			g_MojiOnHold3 := g_MojiOnHold2
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
@@ -1069,23 +1081,28 @@ keydownS:
 			g_KoyubiOnHold3 := g_KoyubiOnHold2
 			g_KoyubiOnHold2 := g_KoyubiOnHold
 			g_KoyubiOnHold  := g_Koyubi
-			if(g_ZeroDelay = 1)
-			{
-				CancelZeroDelayOut()
-			}
-			; ３文字前を確定
+
+			; ３文字前を単独打鍵
 			vOut                    := kdn["RN" . g_KoyubiOnHold3 . g_MojiOnHold3]
 			kup_save[g_MojiOnHold3] := kup["RN" . g_KoyubiOnHold3 . g_MojiOnHold3]
+			if(g_ZeroDelay == 1)
+			{
+				if(vOut <> g_ZeroDelayOut)
+				{
+					CancelZeroDelayOut()
+				}
+			}
 			SubSend(vOut)
 				
-			; １－２文字前の零遅延モード出力
+			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_SS1Interval
 			g_KeyInPtn := "SS"
 			SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
 		} else {
-			; ２～３文字前を確定
+			; 保留中の同時打鍵を確定
 			Gosub, SendOnHoldSS
 
+			; 当該キーを単独打鍵として保留
 			g_MojiOnHold := g_layoutPos
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + g_Threshold
@@ -1095,8 +1112,13 @@ keydownS:
 	} else {
 		; バグ対策
 		; 当該キーを単独打鍵として保留
-		g_MojiOnHold := g_layoutPos
-		g_KoyubiOnHold := g_Koyubi
+		g_MojiOnHold3 := ""
+		g_MojiOnHold2 := ""
+		g_MojiOnHold  := g_layoutPos
+
+		g_KoyubiOnHold3 := ""
+		g_KoyubiOnHold2 := ""
+		g_KoyubiOnHold  := g_Koyubi
 		g_SendTick := g_MojiTick + g_Threshold
 		g_KeyInPtn := "S"
 		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
@@ -1117,11 +1139,6 @@ SendZeroDelayS(_index) {
 		g_ZeroDelaySurface     := kLabel[_index]
 		g_ZeroDelayOut := vOut
 		SubSend(vOut)
-	}
-	else
-	{
-		g_ZeroDelaySurface := ""
-		g_ZeroDelayOut := ""
 	}
 	return
 }
@@ -1315,24 +1332,29 @@ keyupS:
 	{
 		if(g_layoutPos == g_MojiOnHold2) {
 			g_Ss1Interval := g_MojiUpTick - g_MojiTick	; 前回の文字キー押しからの期間
-			if(g_Ss1Interval < g_SS1Interval) {
-
-				; ２文字前を確定
+			vOverlap := 100*g_Ss1Interval/(g_Ss1Interval+g_SS1Interval)	; 重なり厚み計算
+			if(g_Overlap <= vOverlap && g_Ss1Interval < g_Threshold) {
+				; 同時打鍵を確定
+				Gosub, SendOnHoldSS
+			} else {
+				; 単独打鍵に切り替え
 				vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
 				kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
 				if(g_ZeroDelay = 1)
 				{
-					CancelZeroDelayOut()
+					if(vOut <> g_ZeroDelayOut)
+					{
+						CancelZeroDelayOut()
+					}
 				}
 				SubSend(vOut)
 				; １文字前の待機
 				g_KeyInPtn := "S"
 				SendZeroDelayS("RN" . g_KoyubiOnHold2 . g_MojiOnHold)
-			} else {
-				Gosub, SendOnHoldSS
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold) {
+			; 同時打鍵を確定
 			Gosub, SendOnHoldSS
 		}
 	}
@@ -1350,7 +1372,7 @@ Interrupt10:
 	;{
 		;Tooltip, %g_Modifier%, 0, 0, 2 ; debug	
 	;}
-	if(g_Modifier!=0) 
+	if(g_Modifier!=0 || g_Pause==1) 
 	{
 		Gosub,ModeInitialize
 		SetHook("off")
@@ -1427,6 +1449,9 @@ ScanModifier:
 	}
 	Critical
 	g_Modifier := 0x00
+	stEsc      := GetKeyStateWithLog(stEsc,0x1B,"Esc")
+	g_Modifier := g_Modifier | stEsc
+	g_Modifier := g_Modifier >> 1			; 0x01
 	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
 	g_Modifier := g_Modifier | stLCtrl
 	g_Modifier := g_Modifier >> 1			; 0x02
@@ -1445,8 +1470,23 @@ ScanModifier:
 	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
 	g_Modifier := g_Modifier | stRWin
 	g_Modifier := g_Modifier >> 1			; 0x40
-	stAppsKey   := GetKeyStateWithLog(stApp,93,"AppsKey")
+	stAppsKey  := GetKeyStateWithLog(stApp,93,"AppsKey")
 	g_Modifier := g_Modifier | stAppsKey	; 0x80
+	
+	stPause := GetKeyStateWithLog3(stPause,0x13,"Pause", _kDown)
+	if(_kDown == 1 && g_PauseKey == "Pause") {
+		Gosub,pauseKeyDown
+	}
+	stScrollLock := GetKeyStateWithLog3(stScrollLock,0x91,"ScrollLock",_kDown)
+	if(_kDown == 1 && g_PauseKey == "ScrollLock") {
+		Gosub,pauseKeyDown
+	}
+	if(g_PauseKey == "無効")
+	{
+		if(g_Pause == 1) {
+			Gosub,pauseKeyDown
+		}
+	}
 	critical,off
 	return
 
@@ -1471,6 +1511,14 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldMO			; 同時打鍵
 	}
+	else if(g_KeyInPtn == "S")
+	{
+		Gosub, SendOnHoldS
+	}
+	else if(g_KeyInPtn == "SS")
+	{
+		Gosub, SendOnHoldSS
+	}
 	return
 
 ;-----------------------------------------------------------------------
@@ -1488,6 +1536,39 @@ GetKeyStateWithLog(stLast, vkey0, kName) {
 	}
 	return stCurr
 }
+;-----------------------------------------------------------------------
+;	仮想キーの状態取得とログ
+;-----------------------------------------------------------------------
+GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
+	kDown := 0
+	stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
+	if(stCurr = 128 && stLast = 0)	; keydown
+	{
+		kDown := 1
+		RegLogs(kName . " down")
+	}
+	else if(stCurr = 0 && stLast = 128)	; keyup
+	{
+		RegLogs(kName . " up")
+	}
+	return stCurr
+}
+
+pauseKeyDown:
+	if(g_Pause == 1) {
+		g_Pause := 0
+		if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+		}
+	} else {
+		g_Pause := 1
+		if(Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
+		}
+	}
+	return
 
 ;----------------------------------------------------------------------
 ; IME状態のチェックとローマ字モード判定
@@ -1762,6 +1843,7 @@ SetHook(flg)
 		Hotkey,*sc07B,%flg%
 		Hotkey,*sc07B up,%flg%
 	}
+	
 	if(flg="off") {
 		g_OyaRState := 0
 		g_OyaRKeyOn := 0
@@ -1908,8 +1990,6 @@ gRCTRLup:
 	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keyup%g_metaKey%
-
-
 
 
 ; １段目
