@@ -875,8 +875,6 @@ gFileSelect:
 gSetPause:
 	Gui, Submit, NoHide
 	_pauseKey := vPauseKey
-	msgbox, % "pauseKey is " . _pauseKey
-
 	return
 
 ;-----------------------------------------------------------------------
