@@ -254,6 +254,11 @@ keyupR:
 			else
 				g_Oya := "N"
 		}
+		else
+		{
+			if(g_Oya == "R")
+				g_Oya := "N"
+		}
 		
 		if(g_KeyInPtn = "R")		;S3)Oオン状態
 		{
@@ -299,10 +304,6 @@ keyupR:
 		else if(g_KeyInPtn="M" || g_KeyInPtn="RMr" || g_KeyInPtn="LMl") ; S2)Mオン状態 S6)O-M-Oオフ状態
 		{
 			; 何もしない
-		}
-		if(g_Continue == 0) 
-		{
-			g_Oya := "N"
 		}
 		g_OyaRKeyOn := 0
 	}
@@ -435,6 +436,11 @@ keyupL:
 			else
 				g_Oya := "N"
 		}
+		else
+		{
+			if(g_Oya == "L")
+				g_Oya := "N"
+		}
 
 		if(g_KeyInPtn = "L")			;S3)Oオン状態
 		{
@@ -484,7 +490,8 @@ keyupL:
 		}
 		if(g_Continue == 0) 
 		{
-			g_Oya := "N"
+			if(g_Oya == "L")
+				g_Oya := "N"
 		}
 		g_OyaLKeyOn := 0
 	}
@@ -1228,6 +1235,42 @@ SendOnHoldSS:
 	return
 
 ;----------------------------------------------------------------------
+; 保留キーの出力：セットされた文字の分離出力
+;----------------------------------------------------------------------
+SendOnHoldSS2:
+	if(g_MojiOnHold2 == "") 
+	{
+		return
+	}
+	vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
+	kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
+	if(g_ZeroDelay = 1)
+	{
+		if(vOut <> g_ZeroDelayOut)
+		{
+			CancelZeroDelayOut()
+			SubSend(vOut)
+		}
+		g_ZeroDelaySurface := ""
+		g_ZeroDelayOut := ""
+	} else {
+		SubSend(vOut)
+	}
+	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
+	SubSend(vOut)
+	
+	g_KoyubiOnHold3 := ""
+	g_KoyubiOnHold2 := ""
+	g_KoyubiOnHold  := ""
+	g_MojiOnHold   := ""
+	g_MojiOnHold2  := ""
+	g_KoyubiOnHold := "N"
+	g_SendTick     := ""
+	g_keyInPtn := ""
+	return
+
+;----------------------------------------------------------------------
 ; キーアップ（押下終了）
 ;----------------------------------------------------------------------
 keyupM:
@@ -1364,8 +1407,15 @@ keyupS:
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold) {
-			; 同時打鍵を確定
-			Gosub, SendOnHoldSS
+			g_Ss1Interval := g_MojiUpTick - g_MojiTick	; 前回の文字キー押しからの期間
+			vOverlap := 100*g_Ss1Interval/(g_Ss1Interval+g_SS1Interval)	; 重なり厚み計算
+			if(g_OverlapSS <= vOverlap && g_Ss1Interval < g_ThresholdSS) {
+				; 同時打鍵を確定
+				Gosub, SendOnHoldSS
+			} else {
+				; 単独打鍵を２つ確定
+				Gosub, SendOnHoldSS2
+			}
 		}
 	}
 	SubSend(kup_save[g_layoutPos])
@@ -1459,9 +1509,6 @@ ScanModifier:
 	}
 	Critical
 	g_Modifier := 0x00
-	stEsc      := GetKeyStateWithLog(stEsc,0x1B,"Esc")
-	g_Modifier := g_Modifier | stEsc
-	g_Modifier := g_Modifier >> 1			; 0x01
 	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
 	g_Modifier := g_Modifier | stLCtrl
 	g_Modifier := g_Modifier >> 1			; 0x02
@@ -1527,7 +1574,7 @@ ModeInitialize:
 	}
 	else if(g_KeyInPtn == "SS")
 	{
-		Gosub, SendOnHoldSS
+		Gosub, SendOnHoldSS2
 	}
 	return
 
