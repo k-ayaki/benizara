@@ -210,6 +210,7 @@ ReadLayoutFile:
 	_Section := ""
 	_lpos := ""
 	_mline := 0
+	_error := ""
 	Loop
 	{
 		FileReadLine, _line, %vLayoutFile%, %A_Index%
@@ -266,11 +267,13 @@ ReadLayoutFile:
 						_Section := ""
 						_mode := ""
 						_lpos := ""
+						_mline := 0
 						return
 					}
 					_Section := ""
 					_mode := ""
 					_lpos := ""
+					_mline := 0
 				}
 				continue
 			}
@@ -288,11 +291,13 @@ ReadLayoutFile:
 						_Section := ""
 						_mode := ""
 						_lpos := ""
+						_mline := 0
 						return
 					}
 					_Section := ""
 					_mode := ""
 					_lpos := ""
+					_mline := 0
 				}
 				continue
 			}
@@ -339,6 +344,7 @@ ReadLayoutFile:
 ;	各モードのレイアウトを処理
 ;----------------------------------------------------------------------
 Mode2Key:
+	_error := ""
 	LF[_mode] := 1
 	_col := "E"
 	org := StrSplit(LF[_mode . "E"],",")
@@ -389,6 +395,7 @@ Mode2Key:
 ;	文字の同時打鍵のレイアウトを処理
 ;----------------------------------------------------------------------
 Mode3Key:
+	_error := ""
 	_mode2 := lpos2Mode[_lpos]
 	if(_mode2!="") 
 		LF[_mode2] := 1
