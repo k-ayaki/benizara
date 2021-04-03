@@ -64,10 +64,13 @@
 	g_ZeroDelayOut := ""
 	g_ZeroDelaySurface := ""	; 零遅延モードで出力される表層文字列
 	g_Offset := 20
-	g_OyaRState := 0
-	g_OyaRKeyOn := 0
-	g_OyaLState := 0	
-	g_OyaLKeyOn := 0
+
+	g_OyaState := Object()
+	g_OyaKeyOn := Object()
+	g_OyaTick   := Object()
+	g_OyaUpTick := Object()
+	g_Interval := Object()
+	
 	g_Pause := 0
 	g_PauseKey := "Pause"
 	vLayoutFile := g_LayoutFile
@@ -95,8 +98,8 @@
 	SetBatchLines, -1
 	SetHook("init")
 	fPf := Pf_Init()
-	g_OyaRTick := Pf_Count()	;A_TickCount
-	g_OyaLTick := Pf_Count()	;A_TickCount
+	g_OyaTick["R"] := Pf_Count()	;A_TickCount
+	g_OyaTick["L"] := Pf_Count()	;A_TickCount
 	g_MojiTick := Pf_Count()	;A_TickCount
 	VarSetCapacity(lpKeyState,256,0)
 	SetTimer,Interrupt10,10
@@ -133,19 +136,20 @@ keydownR:
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat = 1 || kName = "Space"))
 	{
 	 	; キーリピートの処理
-		g_OyaRKeyOn := 1
-		g_OyaRTick := Pf_Count()				; A_TickCount
-		g_MRInterval := g_OyaRTick - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
 		g_Oya := g_metaKey
+		g_OyaKeyOn[g_metaKey] := 1
+		g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
+		;g_MRInterval := g_OyaTick[g_metaKey] - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
+		g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
 
-		keyState[g_layoutPos] := g_OyaRTick
+		keyState[g_layoutPos] := g_OyaTick[g_metaKey]
 		
 		Gosub, SendOnHoldO	; 保留キーの打鍵
 		; 連続モードでなければ押されていない状態に
 		if(g_Continue == 1)
 		{
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaRTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+			g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 			g_KeyInPtn := g_metaKey
 		}
 		critical,off
@@ -153,24 +157,25 @@ keydownR:
 	}
 	if(keyState[g_layoutPos] == 0) 	; キーリピートの抑止
 	{
-		g_OyaRState := 1
-		g_OyaRKeyOn := 1
-		g_OyaRTick := Pf_Count()				;A_TickCount
-		g_MRInterval := g_OyaRTick - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
 		g_Oya := g_metaKey
+		g_OyaState[g_metaKey] := 1
+		g_OyaKeyOn[g_metaKey] := 1
+		g_OyaTick[g_metaKey] := Pf_Count()				;A_TickCount
+		;g_MRInterval := g_OyaTick[g_metaKey] - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
+		g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick	; 文字キー押しから右親指キー押しまでの期間
 
-		keyState[g_layoutPos] := g_OyaRTick
+		keyState[g_layoutPos] := g_OyaTick[g_metaKey]
 		
 		if(g_KeyInPtn = "") 		;S1)初期状態
 		{
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaRTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+			g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 			g_KeyInPtn := g_KeyInPtn . g_metaKey	;S3に遷移
 		}
 		else if(g_KeyInPtn = "M")	;S2)Mオン状態
 		{
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaRTick + g_MRInterval
+			g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 			g_KeyInPtn := g_KeyInPtn . g_metaKey
 		}
 		else if(g_KeyInPtn = "L")	;S3)Oオン状態
@@ -178,7 +183,7 @@ keydownR:
 			Gosub, SendOnHoldO	; 保留キーの打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaRTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+				g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 				g_KeyInPtn := g_KeyInPtn . g_metaKey	;S3に遷移
 			}
 		}
@@ -187,21 +192,21 @@ keydownR:
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaRTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+				g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 				g_KeyInPtn := g_KeyInPtn . g_metaKey
 			}
 		}
 		else if(g_KeyInPtn = "LM")	;S5)O-Mオン状態
 		{
 			; 処理B 3キー判定
-			g_LMInterval := g_MojiTick - g_OyaLTick		; 左親指キー押しから文字キー押しまでの期間
-			g_MRInterval := g_OyaRTick - g_MojiTick		; 文字キー押しから右親指キー押しまでの期間
-			if(g_MRInterval > g_LMInterval)
+			g_Interval["LM"] := g_MojiTick - g_OyaTick["L"]		; 左親指キー押しから文字キー押しまでの期間
+			g_Interval["MR"] := g_OyaTick[g_metaKey] - g_MojiTick		; 文字キー押しから右親指キー押しまでの期間
+			if(g_Interval["MR"] > g_Interval["LM"])
 			{
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
 				if(g_Continue == 1) {
 					g_OyaOnHold := g_metaKey
-					g_SendTick := g_OyaRTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+					g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 					g_KeyInPtn := g_KeyInPtn . g_metaKey
 				}
 			}
@@ -214,7 +219,7 @@ keydownR:
 				Gosub, SendOnHoldO	; 保留キーの打鍵
 				if(g_Continue == 1) {
 					g_OyaOnHold := g_metaKey
-					g_SendTick := g_OyaRTick + g_MRInterval
+					g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 					g_KeyInPtn := g_KeyInPtn . g_metaKey
 				}
 				Gosub,SendZeroDelay
@@ -225,7 +230,7 @@ keydownR:
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaRTick + g_MRInterval
+				g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 				g_KeyInPtn := g_KeyInPtn . g_metaKey
 			}
 		}
@@ -242,14 +247,15 @@ keyupR:
 	{
 		RegLogs(g_metaKey . " up")
 		keyState[g_layoutPos] := 0
-		g_OyaRState := 0
-		g_OyarTick := Pf_Count()				;A_TickCount
-		g_M_RInterval := g_OyarTick - g_MojiTick	; 文字キー押しから右親指キー解除までの期間
-		g_R_RInterval := g_OyarTick - g_OyaRTick	; 右親指キー押しから右親指キー解除までの期間
+		g_OyaState[g_metaKey] := 0
+		
+		g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
+		g_Interval["M_" . g_metaKey] := g_OyaUpTick[g_metaKey] - g_MojiTick	; 文字キー押しから右親指キー解除までの期間
+		g_Interval[g_metaKey . "_" . g_metaKey] := g_OyaUpTick[g_metaKey] - g_OyaTick[g_metaKey]	; 右親指キー押しから右親指キー解除までの期間
 
 		if(g_Continue = 1)
 		{
-			if(g_OyaLState = 1)
+			if(g_OyaState["L"] = 1)
 				g_Oya := "L"
 			else
 				g_Oya := "N"
@@ -266,14 +272,14 @@ keyupR:
 		}
 		else if(g_KeyInPtn = "MR")	;S4)M-Oオン状態
 		{
-			if(g_R_RInterval > g_Threshold)
+			if(g_Interval[g_metaKey . "_" . g_metaKey] > g_Threshold)
 			{
 				; タイムアウト状態：親指シフト文字の出力
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
 			} else {
 				; 処理F
-				vOverlap := floor((100*g_R_RInterval)/g_M_RInterval)
-				if(vOverlap <= g_Overlap && g_R_RInterval <= g_Tau)
+				vOverlap := floor((100*g_Interval[g_metaKey . "_" . g_metaKey])/g_Interval["M_" . g_metaKey])
+				if(vOverlap <= g_Overlap && g_Interval[g_metaKey . "_" . g_metaKey] <= g_Tau)
 				{
 					Gosub, SendOnHoldM	; 保留キーの単独打鍵
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
@@ -284,20 +290,19 @@ keyupR:
 		}
 		else if(g_KeyInPtn = "RM")	;S5)O-Mオン状態
 		{
-			if(g_M_RInterval > g_Threshold)
+			if(g_Interval["M_" . g_metaKey] > g_Threshold)
 			{
 				; タイムアウト状態：親指シフト文字の出力
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
 			} else {
 				; 処理D
-				vOverlap := floor((100*g_M_RInterval)/g_R_RInterval)
-				if(vOverlap <= g_Overlap && g_M_RInterval <= g_Tau)
+				vOverlap := floor((100*g_Interval["M_" . g_metaKey])/g_Interval[g_metaKey . "_" . g_metaKey])
+				if(vOverlap <= g_Overlap && g_Interval["M_" . g_metaKey] <= g_Tau)
 				{
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
 					g_KeyInPtn := "M"
 				} else {
-					g_M_RTimeout := g_M_RInterval
-					g_SendTick := g_OyarTick + g_M_RTimeout
+					g_SendTick := g_OyaUpTick[g_metaKey] + g_Interval["M_" . g_metaKey]
 					g_KeyInPtn := "RMr"
 				}
 			}
@@ -306,7 +311,7 @@ keyupR:
 		{
 			; 何もしない
 		}
-		g_OyaRKeyOn := 0
+		g_OyaKeyOn[g_metaKey] := 0
 	}
 	critical,off
 	return
@@ -320,17 +325,17 @@ keydownL:	; 無変換
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat = 1 || kName = "Space"))
 	{
 		; キーリピート
-		g_OyaLKeyOn := 1
-		g_OyaLTick := Pf_Count()	;A_TickCount
-		g_MLInterval := g_OyaLTick - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
 		g_Oya := g_metaKey
-
-		keyState[g_layoutPos] := g_OyaLTick
+		g_OyaKeyOn[g_metaKey] := 1
+		g_OyaTick[g_metaKey] := Pf_Count()	;A_TickCount
+		g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick	; 文字キー押しから左親指キー押しまでの期間
+		
+		keyState[g_layoutPos] := g_OyaTick[g_metaKey]
 		
 		Gosub, SendOnHoldO	; 保留キーの打鍵
 		if(g_Continue == 1) {
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaLTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+			g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 			g_KeyInPtn := g_metaKey
 		}
 		critical,off
@@ -338,24 +343,24 @@ keydownL:	; 無変換
 	}
 	if(keyState[g_layoutPos] == 0)	; キーリピートの抑止
 	{
-		g_OyaLState := 1
-		g_OyaLKeyOn := 1
-		g_OyaLTick := Pf_Count()	;A_TickCount
-		g_MLInterval := g_OyaLTick - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
 		g_Oya := g_metaKey
+		g_OyaState[g_metaKey] := 1
+		g_OyaKeyOn[g_metaKey] := 1
+		g_OyaTick[g_metaKey] := Pf_Count()	;A_TickCount
+		g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
 
-		keyState[g_layoutPos] := g_OyaLTick
+		keyState[g_layoutPos] := g_OyaTick[g_metaKey]
 				
 		if(g_KeyInPtn = "")			;S1)初期状態
 		{
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaLTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+			g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 			g_KeyInPtn := g_metaKey
 		}
 		else if(g_KeyInPtn = "M")	;S2)Mオン状態
 		{
 			g_OyaOnHold := g_metaKey
-			g_SendTick := g_OyaLTick + g_MLInterval
+			g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 			g_KeyInPtn := g_KeyInPtn . g_metaKey
 		}
 		else if(g_KeyInPtn = "R")	;S3)Oオン状態
@@ -363,7 +368,7 @@ keydownL:	; 無変換
 			Gosub, SendOnHoldO	; 保留キーの打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaLTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+				g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 				g_KeyInPtn := g_KeyInPtn . g_metaKey
 			}
 		}
@@ -372,22 +377,21 @@ keydownL:	; 無変換
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaLTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+				g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 				g_KeyInPtn := g_KeyInPtn . g_metaKey
 			}
 		}
 		else if(g_KeyInPtn = "RM")	;S5)O-Mオン状態
 		{
 			; 処理B 3キー判定
-			g_RMInterval := g_MojiTick - g_OyaRTick		; 右親指キー押しから文字キー押しまでの期間
-			g_MLInterval := g_OyaLTick - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
-			;if(g_MRInterval > g_LMInterval)
-			if(g_MLInterval > g_RMInterval)
+			g_Interval["RM"] := g_MojiTick - g_OyaTick["R"]		; 右親指キー押しから文字キー押しまでの期間
+			g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick		; 文字キー押しから左親指キー押しまでの期間
+			if(g_Interval["M" . g_metaKey] > g_Interval["RM"])
 			{
 				Gosub, SendOnHoldMO	; 文字キーを親指シフトして打鍵
 				if(g_Continue == 1) {
 					g_OyaOnHold := g_metaKey
-					g_SendTick := g_OyaLTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
+					g_SendTick := g_OyaTick[g_metaKey] + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
 					g_KeyInPtn := g_KeyInPtn . g_metaKey
 				}
 			} else {
@@ -398,7 +402,7 @@ keydownL:	; 無変換
 				Gosub, SendOnHoldO	; 親指キーの単独打鍵
 				if(g_Continue == 1) {
 					g_OyaOnHold := g_metaKey
-					g_SendTick := g_OyaLTick + g_MLInterval
+					g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 					g_KeyInPtn := g_KeyInPtn . g_metaKey
 				}
 				Gosub,SendZeroDelay
@@ -409,7 +413,7 @@ keydownL:	; 無変換
 			Gosub, SendOnHoldMO		; 文字キーを親指シフトして打鍵
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_metaKey
-				g_SendTick := g_OyaLTick + g_MLInterval
+				g_SendTick := g_OyaTick[g_metaKey] + g_Interval["M" . g_metaKey]
 				g_KeyInPtn := g_KeyInPtn . g_metaKey
 			}
 		}
@@ -426,14 +430,14 @@ keyupL:
 	{
 		RegLogs(g_metaKey . " up")
 		keyState[g_layoutPos] := 0
-		g_OyaLState := 0
-		g_OyalTick := Pf_Count()				;A_TickCount
-		g_M_LInterval := g_OyalTick - g_MojiTick	; 文字キー押しから左親指キー解除までの期間
-		g_L_LInterval := g_OyalTick - g_OyaLTick	; 右親指キー押しから右親指キー解除までの期間
+		g_OyaState[g_metaKey] := 0
+		g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
+		g_Interval["M_" . g_metaKey] := g_OyaUpTick[g_metaKey] - g_MojiTick	; 文字キー押しから左親指キー解除までの期間
+		g_Interval[g_metaKey . "_" . g_metaKey] := g_OyaUpTick[g_metaKey] - g_OyaTick[g_metaKey]	; 右親指キー押しから右親指キー解除までの期間
 
 		if(g_Continue = 1) 
 		{
-			if(g_OyaRState = 1)
+			if(g_OyaState["R"] = 1)
 				g_Oya := "R"
 			else
 				g_Oya := "N"
@@ -450,14 +454,14 @@ keyupL:
 		}
 		else if(g_KeyInPtn = "ML")		;S4)M-Oオン状態
 		{
-			if(g_L_LInterval > g_Threshold)
+			if(g_Interval[g_metaKey . "_" . g_metaKey] > g_Threshold)
 			{
 				; タイムアウト
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
 			} else {
 				; 処理F
-				vOverlap := floor((100*g_L_LInterval)/g_M_LInterval)
-				if(vOverlap <= g_Overlap && g_L_LInterval <= g_Tau)
+				vOverlap := floor((100*g_Interval[g_metaKey . "_" . g_metaKey])/g_Interval["M_" . g_metaKey])
+				if(vOverlap <= g_Overlap && g_Interval[g_metaKey . "_" . g_metaKey] <= g_Tau)
 				{
 					Gosub, SendOnHoldM	; 保留キーの単独打鍵
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
@@ -468,20 +472,19 @@ keyupL:
 		}
 		else if(g_KeyInPtn = "LM")		;S5)O-Mオン状態
 		{
-			if(g_M_LInterval > g_Threshold)
+			if(g_Interval["M" . g_metaKey] > g_Threshold)
 			{
 				; タイムアウト
 				Gosub, SendOnHoldMO	; 保留キーの打鍵
 			} else {
 				; 処理D
-				vOverlap := floor((100*g_M_LInterval)/g_L_LInterval)
-				if(vOverlap <= g_Overlap && g_M_LInterval <= g_Tau)
+				vOverlap := floor((100*g_Interval["M_" . g_metaKey])/g_Interval[g_metaKey . "_" . g_metaKey])
+				if(vOverlap <= g_Overlap && g_Interval["M_" . g_metaKey] <= g_Tau)
 				{
 					Gosub, SendOnHoldO	; 保留キーの単独打鍵
 					g_KeyInPtn := "M"
 				} else {
-					g_M_LTimeout := g_M_LInterval
-					g_SendTick := g_OyalTick + g_M_LTimeout
+					g_SendTick := g_OyaUpTick[g_metaKey] + g_Interval["M_" . g_metaKey]
 					g_KeyInPtn := "LMl"
 				}
 			}
@@ -490,7 +493,7 @@ keyupL:
 		{
 			; 何もしない
 		}
-		g_OyaLKeyOn := 0
+		g_OyaKeyOn[g_metaKey] := 0
 	}
 	critical,off
 	return
@@ -670,10 +673,10 @@ SendOnHoldO:
 	{
 		if(g_KeySingle = "有効" || kName = "Space")
 		{
-			if(g_OyaRKeyOn=1)
+			if(g_OyaKeyOn["R"]==1)
 			{
 				SubSend(MnDown(kName) . MnUp(kName))
-				g_OyaRKeyOn := 0
+				g_OyaKeyOn["R"] := 0
 			}
 		}
 		if(g_KeyInPtn="RM" || g_KeyInPtn="RMr" || g_KeyInPtn="MR")
@@ -689,10 +692,10 @@ SendOnHoldO:
 	{
 		if(g_KeySingle = "有効" || kName = "Space")
 		{
-			if(g_OyaLKeyOn=1)
+			if(g_OyaKeyOn["L"]=1)
 			{
 				SubSend(MnDown(kName) . MnUp(kName))
-				g_OyaLKeyOn := 0
+				g_OyaKeyOn["L"] := 0
 			}
 		}
 		if(g_KeyInPtn ="LM" || g_KeyInPtn ="LMl" || g_KeyInPtn ="ML")
@@ -804,13 +807,13 @@ keydownM:
 			; 処理A 3キー判定
 			if(g_KeyInPtn = "MR")
 			{
-				g_OMInterval := g_MojiTick - g_OyaRTick
-				g_MOInterval := g_MRInterval
+				g_Interval["OM"] := g_MojiTick - g_OyaTick["R"]
+				g_Interval["MO"] := g_Interval["MR"]
 			} else {
-				g_OMInterval := g_MojiTick - g_OyaLTick
-				g_MOInterval := g_MLInterval
+				g_Interval["OM"] := g_MojiTick - g_OyaTick["L"]
+				g_Interval["MO"] := g_Interval["ML"]
 			}
-			if(g_OMInterval <= g_MOInterval)	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
+			if(g_Interval["OM"] <= g_Interval["MO"])	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
 			{
 				Gosub, SendOnHoldM		; 保留キーの単独打鍵
 			} else {
@@ -860,21 +863,22 @@ keydownM:
 	}
 	else
 	{
-		if(g_Oya = "R")
-		{
-			g_OMInterval := g_MojiTick - g_OyaRTick
-		}
-		else if(g_Oya = "L")
-		{
-			g_OMInterval := g_MojiTick - g_OyaLTick
-		}
+		;if(g_Oya = "R")
+		;{
+		;	g_OMInterval := g_MojiTick - g_OyaTick["R"]
+		;}
+		;else if(g_Oya = "L")
+		;{
+		;	g_OMInterval := g_MojiTick - g_OyaTick["L"]
+		;}
+		g_Interval[g_Oya . "M"] := g_MojiTick - g_OyaTick[g_Oya]
 		g_MojiOnHold := g_layoutPos
 		g_RomajiOnHold := g_Romaji
 		g_OyaOnHold := g_Oya
 		g_KoyubiOnHold := g_Koyubi
 		if(g_Continue = 0)	; 連続モードではない
 		{
-			g_SendTick := g_MojiTick + g_OMInterval
+			g_SendTick := g_MojiTick + g_Interval[g_Oya . "M"]
 			g_KeyInPtn := g_Oya . "M"
 		} else {
 			g_SendTick := g_MojiTick + floor((g_Threshold*(100-g_Overlap))/g_Overlap)
@@ -1313,9 +1317,9 @@ keyupM:
 			g_MmInterval := g_MojiUpTick - g_MojiTick
 			if(g_KeyInPtn="MR")
 			{
-				g_OmInterval := g_MojiUpTick - g_OyaRTick
+				g_OmInterval := g_MojiUpTick - g_OyaTick["R"]
 			} else {
-				g_OmInterval := g_MojiUpTick - g_OyaLTick
+				g_OmInterval := g_MojiUpTick - g_OyaTick["L"]
 			}
 			vOverlap := floor((100*g_OmInterval)/g_MmInterval)
 			if(vOverlap <= g_Overlap && g_OmInterval < g_Threshold)	; g_Tau
@@ -1938,10 +1942,10 @@ SetHook(flg)
 	}
 	
 	if(flg="off") {
-		g_OyaRState := 0
-		g_OyaRKeyOn := 0
-		g_OyaLState := 0	
-		g_OyaLKeyOn := 0
+		g_OyaState["R"] := 0
+		g_OyaState["L"] := 0
+		g_OyaKeyOn["R"] := 0
+		g_OyaKeyOn["L"] := 0
 	}
 	Critical,off
 	return
