@@ -991,10 +991,28 @@ keydownS:
 		}
 	}
 	else
-	if(g_KeyInPtn == "SSs") {
+	if(g_KeyInPtn == "SS2") {
 		; M1,M3 のキー入力
 		g_Interval["S_13"] := g_MojiTick - g_MojiUpTick	; 前回の文字キーオフからの期間
-		if(g_Interval["S_13"] < floor((g_Interval["S12"]*(100-g_OverlapSS))/g_OverlapSS)) {
+		if(g_Interval["S_13"] < floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)) {
+			; 同時打鍵を確定
+			Gosub, SendOnHoldSS
+		} else {
+			; 単独打鍵を２つ確定
+			Gosub, SendOnHoldSS2
+		}
+		; 当該キーを単独打鍵として保留
+		g_MojiOnHold := g_layoutPos
+		g_KoyubiOnHold := g_Koyubi
+		g_SendTick := g_MojiTick + floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS)
+		g_KeyInPtn := "S"
+		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+	}
+	else
+	if(g_KeyInPtn == "SS1") {
+		; M1,M3 のキー入力
+		g_Interval["S_23"] := g_MojiTick - g_MojiUpTick	; 前回の文字キーオフからの期間
+		if(g_Interval["S_23"] < floor((g_Interval["S2_2"]*(100-g_OverlapSS))/g_OverlapSS)) {
 			; 同時打鍵を確定
 			Gosub, SendOnHoldSS
 		} else {
@@ -1074,7 +1092,7 @@ SendOnHoldS:
 	{
 		g_keyInPtn := "S"
 	} else
-	if(g_KeyInPtn = "SSs")
+	if(g_KeyInPtn = "SS2" || g_KeyInPtn = "SS1")
 	{
 		g_keyInPtn := "S"
 	}
@@ -1278,7 +1296,7 @@ keyupS:
 			if(g_Interval["S2_1"] < g_ThresholdSS && floor((g_Interval["S12"]*g_OverlapSS)/(100-g_OverlapSS)) < g_Interval["S2_1"]) {
 				; S4)モードに遷移
 				g_SendTick := g_MojiUpTick + floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)
-				g_KeyInPtn := "SSs"
+				g_KeyInPtn := "SS2"
 			} else {
 				; 単独打鍵に切り替え
 				vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
@@ -1301,8 +1319,9 @@ keyupS:
 			g_Interval["S2_2"] := g_MojiUpTick - g_MojiTick	; 前回の文字キー押しからの期間
 			vOverlap := floor((100*g_Interval["S2_2"])/(g_Interval["S12"]+g_Interval["S2_2"]))	; 重なり厚み計算
 			if(g_OverlapSS <= vOverlap && g_Interval["S2_2"] < g_ThresholdSS) {
-				; 同時打鍵を確定
-				Gosub, SendOnHoldSS
+				; S5)モードに遷移
+				g_SendTick := g_MojiUpTick + floor((g_Interval["S2_2"]*(100-g_OverlapSS))/g_OverlapSS)
+				g_KeyInPtn := "SS1"
 			} else {
 				; 単独打鍵を２つ確定
 				Gosub, SendOnHoldSS2
@@ -1310,10 +1329,22 @@ keyupS:
 		}
 	}
 	else 
-	if(g_KeyInPtn == "SSs")
+	if(g_KeyInPtn == "SS2")
 	{
 		g_Interval["S_1_2"] := g_MojiUpTick - g_MojiUpTick2	; 前回の文字キーオフからの期間
 		if(g_Interval["S_1_2"] < floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)) {
+			; 同時打鍵を確定
+			Gosub, SendOnHoldSS
+		} else {
+			; 単独打鍵を２つ確定
+			Gosub, SendOnHoldSS2
+		}
+	}
+	else 
+	if(g_KeyInPtn == "SS1")
+	{
+		g_Interval["S_2_1"] := g_MojiUpTick - g_MojiUpTick2	; 前回の文字キーオフからの期間
+		if(g_Interval["S_2_1"] < floor((g_Interval["S2_2"]*(100-g_OverlapSS))/g_OverlapSS)) {
 			; 同時打鍵を確定
 			Gosub, SendOnHoldSS
 		} else {
@@ -1412,7 +1443,7 @@ Polling:
 			{
 				Gosub, SendOnHoldSS
 			}
-			else if g_KeyInPtn in SSs
+			else if g_KeyInPtn in SS2,SS1
 			{
 				Gosub, SendOnHoldSS2
 			}
@@ -1494,9 +1525,13 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldS
 	}
-	else if(g_KeyInPtn == "SS" || g_KeyInPtn == "SSs")
+	else if(g_KeyInPtn == "SS")
 	{
 		Gosub, SendOnHoldSS
+	}
+	else if(g_KeyInPtn == "SS2" || g_KeyInPtn == "SS1")
+	{
+		Gosub, SendOnHoldSS2
 	}
 	return
 
