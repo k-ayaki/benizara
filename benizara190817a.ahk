@@ -1121,6 +1121,18 @@ SendOnHoldSS:
 	} else {
 		SubSend(vOut)
 	}
+	if(g_keyInPtn == "SS")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S23"] . ":" . g_Interval["S12"] . ":" . g_trigger
+	}
+	else if(g_keyInPtn == "SS1")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_2"] . ":" . g_Interval["S_2_1"] . ":" . g_trigger
+	}
+	else if(g_keyInPtn == "SS2")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_1"] . ":" . g_Interval["S_1_2"] . ":" . g_trigger
+	}
 	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
 	g_KoyubiOnHold := "N"
@@ -1153,7 +1165,18 @@ SendOnHoldSS2:
 	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
 	SubSend(vOut)
-	
+	if(g_keyInPtn == "SS")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S12"] . ":" . (Pf_Count()-g_MojiUpTick) . ":" . g_trigger
+	}
+	else if(g_keyInPtn == "SS1")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_2"] . ":" . g_Interval["S_2_1"] . ":" . g_trigger
+	}
+	else if(g_keyInPtn == "SS2")
+	{
+		g_debugout := g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_1"] . ":" . g_Interval["S_1_2"] . ":" . g_trigger
+	}
 	g_KoyubiOnHold3 := ""
 	g_KoyubiOnHold2 := ""
 	g_KoyubiOnHold  := ""
@@ -1394,11 +1417,11 @@ Interrupt10:
 	if(A_IsCompiled <> 1)
 	{
 		if(ShiftMode["R"] == "文字同時打鍵" ) {
-			_name := ShiftMode["R"]
 			g_S12Interval := g_Interval["S12"]
 			g_S2_1Interval := g_Interval["S2_1"]
 			g_S_1_2Interval := g_Interval["S_1_2"]
-			Tooltip, %_name% %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
+			Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
+			;Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 		if(ShiftMode["R"] == "親指シフト" ) {
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
