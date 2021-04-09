@@ -31,9 +31,11 @@ Init:
 		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-		g_Overlap := 50
-		IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
-		g_Overlap := 70
+		g_OverlapMO := 50
+		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
+		g_OverlapOM := 50
+		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
+		g_OverlapSS := 70
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
@@ -63,11 +65,16 @@ Init:
 		g_ThresholdSS := 10
 	if(g_ThresholdSS > 400)
 		g_ThresholdSS := 400
-	IniRead,g_Overlap,%g_IniFile%,Key,Overlap
-	if(g_Overlap < 10)
-		g_Overlap := 10
-	if(g_Overlap > 90)
-		g_Overlap := 90
+	IniRead,g_OverlapMO,%g_IniFile%,Key,OverlapMO
+	if(g_OverlapMO < 10)
+		g_OverlapMO := 10
+	if(g_OverlapMO > 90)
+		g_OverlapMO := 90
+	IniRead,g_OverlapOM,%g_IniFile%,Key,OverlapOM
+	if(g_OverlapOM < 10)
+		g_OverlapOM := 10
+	if(g_OverlapOM > 90)
+		g_OverlapOM := 90
 	IniRead,g_OverlapSS,%g_IniFile%,Key,OverlapSS
 	if(g_OverlapSS < 10)
 		g_OverlapSS := 10
@@ -100,6 +107,8 @@ Settings:
 	_Threshold := g_Threshold
 	_ThresholdSS := g_ThresholdSS
 	_LayoutFile := g_LayoutFile
+	_OverlapMO := g_OverlapMO
+	_OverlapOM := g_OverlapOM
 	_Overlap := g_Overlap
 	_OverlapSS := g_OverlapSS
 	_OyaKey := g_OyaKey
@@ -152,32 +161,40 @@ _Settings:
 	
 	Gui, Tab, 2
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,親指シフトキーを押し続けながら文字キーを押したときを親指シフトとするか否かを設定します。更に同時打鍵の判定時間を推奨値に設定します。
-	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y65,連続シフト
+	Gui, Add, Edit,X20 Y40 W300 H40 ReadOnly -Vscroll,親指シフトキーの押し続けをシフトオンとします。
+	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y50,連続シフト
 	GuiControl,,vContinue,%_Continue%
 
-	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,キー打鍵が確定する前に候補文字を表示する設定です。候補文字とは異なる打鍵であった場合、バックスペースで消去して、正しい文字で修正します。
-	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y135,零遅延モード
+	Gui, Add, Edit,X20 Y90 W300 H40 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
+	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y100,零遅延モード
 	GuiControl,,vZeroDelay,%_ZeroDelay%
 	
-	Gui, Add, Edit,X20 Y180 W300 H60 ReadOnly -Vscroll,親指シフトキーの単独打鍵を受け付けた際に、無変換や変換をキーリピートさせるか否かを設定します。
-	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y205,キーリピート
+	Gui, Add, Edit,X20 Y140 W300 H40 ReadOnly -Vscroll,親指シフトキーをキーリピートさせます。
+	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y150,キーリピート
 	GuiControl,,vKeyRepeat,%_KeyRepeat%
 	
-	Gui, Add, Edit,X20 Y250 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y250 W230 H20,文字キーと親指キーの重なりの割合：
-	Gui, Add, Edit,vvOverlapNum X+3 Y248 W50 ReadOnly, %_Overlap%
-	Gui, Add, Text,X+10 Y250 c000000,[`%]
+	Gui, Add, Edit,X20 Y190 W300 H60 ReadOnly -Vscroll,親指シフトキー⇒文字キーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y190 W230 H20,親指キー⇒文字キーの重なりの割合：
+	Gui, Add, Edit,vvOverlapNumOM X+3 Y188 W50 ReadOnly, %_OverlapOM%
+	Gui, Add, Text,X+10 Y190 c000000,[`%]
+
+	Gui, Add, Slider, X320 Y220 ggOlSliderOM w350 vvOlSliderOM Range10-90 line10 TickInterval10
+	GuiControl,,vOlSliderOM,%_OverlapOM%
+
+	Gui, Add, Edit,X20 Y260 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y260 W230 H20,文字キー⇒親指キーの重なりの割合：
+	Gui, Add, Edit,vvOverlapNumMO X+3 Y258 W50 ReadOnly, %_OverlapMO%
+	Gui, Add, Text,X+10 Y260 c000000,[`%]
 	
-	Gui, Add, Slider, X320 Y280 ggOlSlider w350 vvOlSlider Range10-90 line10 TickInterval10
-	GuiControl,,vOlSlider,%_Overlap%
+	Gui, Add, Slider, X320 Y290 ggOlSliderMO w350 vvOlSliderMO Range10-90 line10 TickInterval10
+	GuiControl,,vOlSliderMO,%_OverlapMO%
 	
-	Gui, Add, Edit,X20 Y320 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y320 W230 H20,文字キーと親指キーの重なりの判定時間：
-	Gui, Add, Edit,vvThresholdNum X+3 Y318 W50 ReadOnly, %_Threshold%
-	Gui, Add, Text,X+10 Y320 c000000,[mSEC]
+	Gui, Add, Edit,X20 Y330 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y330 W230 H20,文字キーと親指キーの重なりの判定時間：
+	Gui, Add, Edit,vvThresholdNum X+3 Y328 W50 ReadOnly, %_Threshold%
+	Gui, Add, Text,X+10 Y330 c000000,[mSEC]
 	
-	Gui, Add, Slider, X320 Y350 ggThSlider w350 vvThSlider Range10-400 line10 TickInterval10
+	Gui, Add, Slider, X320 Y360 ggThSlider w350 vvThSlider Range10-400 line10 TickInterval10
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
@@ -722,9 +739,17 @@ gThSliderSS:
 ;-----------------------------------------------------------------------
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
-gOlSlider:
-	GuiControlGet, _Overlap , , vOlSlider, 
-	GuiControl,, vOverlapNum, %_Overlap%
+gOlSliderMO:
+	GuiControlGet, _OverlapMO , , vOlSliderMO, 
+	GuiControl,, vOverlapNumMO, %_OverlapMO%
+	return
+
+;-----------------------------------------------------------------------
+; 機能：親指シフト同時打鍵の割合のスライダー操作
+;-----------------------------------------------------------------------
+gOlSliderOM:
+	GuiControlGet, _OverlapOM , , vOlSliderOM, 
+	GuiControl,, vOverlapNumOM, %_OverlapOM%
 	return
 
 ;-----------------------------------------------------------------------
@@ -903,7 +928,8 @@ gButtonOk:
 	g_Threshold := _Threshold
 	g_ThresholdSS := _ThresholdSS
 	g_LayoutFile := _LayoutFile
-	g_Overlap   := _Overlap
+	g_OverlapOM := _OverlapOM
+	g_OverlapMO := _OverlapMO
 	g_OverlapSS := _OverlapSS
 	g_OyaKey := _OyaKey
 	g_KeySingle := _KeySingle
@@ -916,7 +942,8 @@ gButtonOk:
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
 	IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-	IniWrite,%g_Overlap%,%g_IniFile%,Key,Overlap
+	IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
+	IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
