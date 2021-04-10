@@ -53,6 +53,9 @@ ReadLayout:
 	code2Pos := MakeCode2Pos()
 	lpos2Mode := MakeLpos2ModeHash()
 	name2vkey := MakeName2vkeyHash()
+	g_Oya2Layout := Object()
+	g_Oya2Layout["L"] := "A01"
+	g_Oya2Layout["R"] := "A02"
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -448,6 +451,10 @@ SetLayoutProperty:
 		ShiftMode["A"] := "親指シフト"
 		keyAttribute2["AA01"] := "L"
 		keyAttribute2["AA03"] := "R"
+		keyAttribute2["RA01"] := "L"
+		keyAttribute2["RA03"] := "R" 
+		g_Oya2Layout["L"] := "A01"
+		g_Oya2Layout["R"] := "A03"
 		
 		if(LF["ALK"] == 0) {
 			CopyKeyTable("ALK", "ANK")
@@ -500,8 +507,12 @@ SetLayoutProperty:
 	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1 && LF["RNK"]==1)
 	{
 		ShiftMode["R"] := "親指シフト"
+		keyAttribute2["AA01"] := "L"
+		keyAttribute2["AA03"] := "R"
 		keyAttribute2["RA01"] := "L"
 		keyAttribute2["RA03"] := "R"  
+		g_Oya2Layout["L"] := "A01"
+		g_Oya2Layout["R"] := "A03"
 		
 		if(LF["RLK"] == 0) {
 			CopyKeyTable("RLK", "RNK")

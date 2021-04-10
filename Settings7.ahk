@@ -21,27 +21,27 @@ Init:
 	g_IniFile := ".\benizara.ini"
 	if(Path_FileExists(g_IniFile) = 0)
 	{
-		g_LayoutFile := ""
+		g_LayoutFile := ".\NICOLA配列.bnz"
 		IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 		g_Continue := 1
 		IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 		g_Threshold := 100
 		IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
-		g_ThresholdSS := 80
+		g_ThresholdSS := 150
 		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-		g_OverlapMO := 50
-		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
-		g_OverlapOM := 50
+		g_OverlapOM := 35
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
-		g_OverlapSS := 70
+		g_OverlapMO := 70
+		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
+		g_OverlapSS := 35
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 		g_KeySingle := "無効"
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
-		g_KeyRepeat := 1
+		g_KeyRepeat := 0
 		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
@@ -90,7 +90,7 @@ Init:
 		g_KeySingle := "無効"
 	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
 	if g_KeyRepeat not in 1,0
-		g_KeyRepeat := 1
+		g_KeyRepeat := 0
 	return
 	
 ;-----------------------------------------------------------------------
@@ -198,7 +198,7 @@ _Settings:
 	GuiControl,,vThSlider,%_Threshold%
 
 	Gui, Tab, 3
-	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵が確定する前に候補文字を表示する設定です。候補文字とは異なる打鍵であった場合、バックスペースで消去して、正しい文字で修正します。
+	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
 	Gui, Add, Checkbox,ggZeroDelaySS vvZeroDelaySS X+20 Y65,零遅延モード
 	GuiControl,,vZeroDelaySS,%_ZeroDelay%
 	
@@ -767,11 +767,25 @@ gContinue:
 	Gui, Submit, NoHide
 	_Continue := %A_GuiControl%
 	if(_Continue = 1)
+	{
 		_Threshold := 50
+		_OverlapOM := 35
+		_OverlapMO := 70
+	}
 	else
+	{
 		_Threshold := 150
+		_OverlapOM := 50
+		_OverlapMO := 50
+	}
 	GuiControl,,vThSlider,%_Threshold%
 	GuiControl,,vThresholdNum,%_Threshold%
+
+	GuiControl,, vOverlapNumOM, %_OverlapOM%
+	GuiControl,,vOlSliderOM,%_OverlapOM%
+
+	GuiControl,, vOverlapNumMO, %_OverlapMO%
+	GuiControl,,vOlSliderMO,%_OverlapMO%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -797,41 +811,41 @@ RemapOya:
 	_OyaKey := vOyaKey
 	if(vOyaKey = "無変換－変換")
 	{
-		if(ShiftMode["R"] == "親指シフト") {
+		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["RA01"] := "L"
 			keyAttribute2["RA02"] := "X"
 			keyAttribute2["RA03"] := "R"
-		} else
-		if(ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["AA01"] := "L"
 			keyAttribute2["AA02"] := "X"
 			keyAttribute2["AA03"] := "R"
+			g_Oya2Layout["L"] := "A01"
+			g_Oya2Layout["R"] := "A03"
 		}
 	}
 	else if(vOyaKey = "無変換－空白")
 	{
-		if(ShiftMode["R"] == "親指シフト") {
+		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["RA01"] := "L"
 			keyAttribute2["RA02"] := "R"
 			keyAttribute2["RA03"] := "X"
-		} else
-		if(ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["AA01"] := "L"
 			keyAttribute2["AA02"] := "R"
 			keyAttribute2["AA03"] := "X"
+			g_Oya2Layout["L"] := "A01"
+			g_Oya2Layout["R"] := "A02"
 		}
 	}
 	else	; 空白－変換
 	{
-		if(ShiftMode["R"] == "親指シフト") {
+		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["RA01"] := "X"
 			keyAttribute2["RA02"] := "L"
 			keyAttribute2["RA03"] := "R"
-		} else
-		if(ShiftMode["A"] == "親指シフト") {
 			keyAttribute2["AA01"] := "X"
 			keyAttribute2["AA02"] := "L"
 			keyAttribute2["AA03"] := "R"
+			g_Oya2Layout["L"] := "A02"
+			g_Oya2Layout["R"] := "A03"
 		}
 	}
 	Gosub,RefreshLayoutA

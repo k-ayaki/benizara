@@ -68,7 +68,6 @@
 	g_Offset := 20
 	g_trigger := ""
 
-	g_OyaState := Object()
 	g_OyaKeyOn := Object()
 	g_OyaTick   := Object()
 	g_OyaUpTick := Object()
@@ -86,6 +85,10 @@
 	g_metaKeyUp["X"] := "x"
 	g_metaKeyUp["1"] := "_1"
 	g_metaKeyUp["2"] := "_2"
+
+	g_MojiCount := Object()	; 親指キーシフトの文字押下カウンター
+	g_MojiCount["R"] := 0
+	g_MojiCount["L"] := 0
 
 	g_debugout := ""
 	
@@ -114,7 +117,7 @@
 		Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
 	}
 	SetBatchLines, -1
-	SetHook("init")
+	SetHookInit()
 	fPf := Pf_Init()
 	g_OyaTick["R"] := Pf_Count()	;A_TickCount
 	g_OyaTick["L"] := Pf_Count()	;A_TickCount
@@ -124,7 +127,7 @@
 	
 	vIntKeyUp := 0
 	vIntKeyDn := 0
-	SetHook("off")
+	SetHook("off","off")
 	return
 
 
@@ -153,12 +156,12 @@ keydownL:
 
 	gosub,Polling
 	RegLogs(g_metaKey . " down")
+	g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat = 1 || kName = "Space"))
 	{
 	 	; キーリピートの処理
 		g_Oya := g_metaKey
 		g_OyaKeyOn[g_Oya] := 1
-		g_OyaTick[g_Oya] := Pf_Count()				; A_TickCount
 		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_MojiTick	; 文字キー押しから当該親指キー押しまでの期間
 
 		keyState[g_layoutPos] := g_OyaTick[g_Oya]
@@ -176,10 +179,9 @@ keydownL:
 	}
 	if(keyState[g_layoutPos] == 0) 	; キーリピートの抑止
 	{
+		g_MojiCount[g_metaKey] := 0
 		g_Oya := g_metaKey
-		g_OyaState[g_Oya] := 1
 		g_OyaKeyOn[g_Oya] := 1
-		g_OyaTick[g_Oya] := Pf_Count()				;A_TickCount
 		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_MojiTick	; 文字キー押しから当該親指キー押しまでの期間
 
 		keyState[g_layoutPos] := g_OyaTick[g_Oya]
@@ -263,14 +265,12 @@ keyupL:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	gosub,Polling
+	g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
 	if(keyState[g_layoutPos] != 0)	; 右親指シフトキーの単独シフト
 	{
 		RegLogs(g_metaKey . " up")
-		keyState[g_layoutPos] := 0
-		g_OyaState[g_metaKey] := 0
 		
 		if(g_Oya == g_metaKey) {
-			g_OyaUpTick[g_Oya] := Pf_Count()				;A_TickCount
 			g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_MojiTick	; 文字キー押しから右親指キー解除までの期間
 			g_Interval[g_Oya . "_" . g_Oya] := g_OyaUpTick[g_Oya] - g_OyaTick[g_Oya]	; 右親指キー押しから右親指キー解除までの期間
 
@@ -285,7 +285,7 @@ keyupL:
 					; タイムアウト状態：親指シフト文字の出力
 					Gosub, SendOnHoldMO	; 保留キーの打鍵
 				} else {
-						Gosub, SendOnHoldMO	; 保留キーの同時打鍵
+					Gosub, SendOnHoldMO	; 保留キーの同時打鍵
 					; 処理F
 					;vOverlap := floor((100*g_Interval[g_Oya . "_" . g_Oya])/g_Interval["M_" . g_Oya])
 					;if(vOverlap <= g_OverlapOM && g_Interval[g_Oya . "_" . g_Oya] <= g_Tau)
@@ -299,9 +299,9 @@ keyupL:
 			}
 			else if(g_KeyInPtn = g_Oya . "M")	;S5)O-Mオン状態
 			{
-				if(g_Interval["M_" . g_Oya] > g_Threshold)
+				if(g_Interval["M_" . g_Oya] > g_Threshold || g_MojiCount[g_Oya] == 1)
 				{
-					; タイムアウト状態：親指シフト文字の出力
+					; タイムアウト状態または親指シフト１文字目：親指シフト文字の出力
 					Gosub, SendOnHoldMO	; 保留キーの打鍵
 				} else {
 					; 処理D
@@ -309,7 +309,7 @@ keyupL:
 					if(vOverlap <= g_OverlapMO && g_Interval["M_" . g_Oya] <= g_Tau)
 					{
 						;Gosub, SendOnHoldO	; 保留キーの単独打鍵
-						g_SendTick := g_OyaUpTick[g_Oya] + minimum(floor((g_Interval["M_" . g_Oya]*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
+						g_SendTick := g_OyaUpTick[g_Oya] + g_Interval["M_" . g_Oya]
 						g_KeyInPtn := g_KeyInPtn . g_metaKeyUp[g_Oya]	;"RMr" "OMo"
 					} else {
 						Gosub, SendOnHoldMO	; 保留キーの打鍵
@@ -322,20 +322,20 @@ keyupL:
 			}
 		}
 		g_OyaKeyOn[g_metaKey] := 0
-
-		if(g_Continue = 1)
-		{
-			if(g_OyaState[g_OyaAlt[g_Oya]] = 1)
-				g_Oya := g_OyaAlt[g_Oya]
-			else
+	}
+	keyState[g_layoutPos] := 0
+	
+	if(g_Oya == g_metaKey) {
+		if(g_Continue == 1) {
+			g_Oya := g_OyaAlt[g_Oya]
+			if(g_OyaTick[g_Oya] < g_OyaUpTick[g_Oya]) {
 				g_Oya := "N"
-		}
-		else
-		{
-			if(g_Oya == g_metaKey)
-				g_Oya := "N"
+			}
+		} else {
+			g_Oya := "N"
 		}
 	}
+	g_MojiCount[g_metaKey] := 0
 	critical,off
 	return
 
@@ -543,6 +543,9 @@ SendOnHoldO:
 		{
 			if(g_OyaKeyOn["R"]==1)
 			{
+	Tooltip, %kName%, 0, 0, 2 ; debug
+
+
 				SubSend(MnDown(kName) . MnUp(kName))
 				g_OyaKeyOn["R"] := 0
 			}
@@ -562,6 +565,7 @@ SendOnHoldO:
 		{
 			if(g_OyaKeyOn["L"]=1)
 			{
+	Tooltip, %kName%, 0, 0, 2 ; debug
 				SubSend(MnDown(kName) . MnUp(kName))
 				g_OyaKeyOn["L"] := 0
 			}
@@ -726,7 +730,7 @@ keydownM:
 	}
 	Critical,5
 	Gosub,ChkIME
-	
+
 	if(g_Oya = "N")
 	{
 		; 当該キーを単独打鍵として保留
@@ -744,6 +748,9 @@ keydownM:
 		g_RomajiOnHold := g_Romaji
 		g_OyaOnHold := g_Oya
 		g_KoyubiOnHold := g_Koyubi
+
+		g_MojiCount[g_Oya] := g_MojiCount[g_Oya] + 1
+		
 		if(g_Continue = 0)	; 連続モードではない
 		{
 			g_SendTick := g_MojiTick + minimum(floor((g_Interval[g_Oya . "M"]*g_OverlapOM)/(100-g_OverlapOM)),g_Threshold)
@@ -1353,16 +1360,21 @@ Interrupt10:
 	;{
 		;Tooltip, %g_Modifier%, 0, 0, 2 ; debug	
 	;}
-	if(g_Modifier!=0 || g_Pause==1) 
+	if(g_Modifier!=0) 
 	{
 		Gosub,ModeInitialize
-		SetHook("off")
+		SetHook("off","on")
+	} else
+	if(g_Pause==1) 
+	{
+		Gosub,ModeInitialize
+		SetHook("off","off")
 	} else {
 		Gosub,ChkIME
 		if(ShiftMode[g_Romaji] <> "") {
-			SetHook("on")
+			SetHook("on","on")
 		} else {
-			SetHook("off")
+			SetHook("off","on")
 		}
 	}
 	if(keyState["A04"] != 0)
@@ -1384,10 +1396,10 @@ Interrupt10:
 			g_S2_1Interval := g_Interval["S2_1"]
 			g_S_1_2Interval := g_Interval["S_1_2"]
 			;Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
-			Tooltip, %g_debugout%, 0, 0, 2 ; debug
+			;Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 		if(ShiftMode["R"] == "親指シフト" ) {
-			Tooltip, %g_debugout%, 0, 0, 2 ; debug
+			;Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 	}
 
@@ -1599,256 +1611,285 @@ ChkIME:
 	}
 	return
 
-
 ;----------------------------------------------------------------------
-; キーを押下されたときに呼び出されるGotoラベルを定義して、
-; 動的にホットキーをオン・オフする
+; キーを押下されたときに呼び出されるGotoラベルにフックする
 ;----------------------------------------------------------------------
-SetHook(flg)
+SetHookInit()
 {
 	Critical
-	if(flg="init") {
-		hotkey,*sc002,gSC002		;1
-		hotkey,*sc002 up,gSC002up
-		hotkey,*sc003,gSC003		;2
-		hotkey,*sc003 up,gSC003up
-		hotkey,*sc004,gSC004		;3
-		hotkey,*sc004 up,gSC004up
-		hotkey,*sc005,gSC005		;4
-		hotkey,*sc005 up,gSC005up
-		hotkey,*sc006,gSC006		;5
-		hotkey,*sc006 up,gSC006up
-		hotkey,*sc007,gSC007		;6
-		hotkey,*sc007 up,gSC007up
-		hotkey,*sc008,gSC008		;7
-		hotkey,*sc008 up,gSC008up
-		hotkey,*sc009,gSC009		;8
-		hotkey,*sc009 up,gSC009up
-		hotkey,*sc00A,gSC00A		;9
-		hotkey,*sc00A up,gSC00Aup
-		hotkey,*sc00B,gSC00B		;0
-		hotkey,*sc00B up,gSC00Bup
-		hotkey,*sc00C,gSC00C		;-
-		hotkey,*sc00C up,gSC00Cup
-		hotkey,*sc00D,gSC00D		;^
-		hotkey,*sc00D up,gSC00Dup
-		hotkey,*sc07D,gSC07D		;\
-		hotkey,*sc07D up,gSC07Dup
-		hotkey,*sc010,gSC010		;q
-		hotkey,*sc010 up,gSC010up
-		hotkey,*sc011,gSC011		;w
-		hotkey,*sc011 up,gSC011up
-		hotkey,*sc012,gSC012		;e
-		hotkey,*sc012 up,gSC012up
-		hotkey,*sc013,gSC013		;r
-		hotkey,*sc013 up,gSC013up
-		hotkey,*sc014,gSC014		;t
-		hotkey,*sc014 up,gSC014up
-		hotkey,*sc015,gSC015		;y
-		hotkey,*sc015 up,gSC015up
-		hotkey,*sc016,gSC016		;u
-		hotkey,*sc016 up,gSC016up
-		hotkey,*sc017,gSC017		;i
-		hotkey,*sc017 up,gSC017up
-		hotkey,*sc018,gSC018		;o
-		hotkey,*sc018 up,gSC018up
-		hotkey,*sc019,gSC019		;p
-		hotkey,*sc019 up,gSC019up
-		hotkey,*sc01A,gSC01A		;@
-		hotkey,*sc01A up,gSC01Aup
-		hotkey,*sc01B,gSC01B		;[
-		hotkey,*sc01B up,gSC01Bup
-		hotkey,*sc01E,gSC01E		;a
-		hotkey,*sc01E up,gSC01Eup
-		hotkey,*sc01F,gSC01F		;s
-		hotkey,*sc01F up,gSC01Fup
-		hotkey,*sc020,gSC020		;d
-		hotkey,*sc020 up,gSC020up
-		hotkey,*sc021,gSC021		;f
-		hotkey,*sc021 up,gSC021up
-		hotkey,*sc022,gSC022		;g
-		hotkey,*sc022 up,gSC022up
-		hotkey,*sc023,gSC023		;h
-		hotkey,*sc023 up,gSC023up
-		hotkey,*sc024,gSC024 		;j
-		hotkey,*sc024 up,gSC024up
-		hotkey,*sc025,gSC025 		;k
-		hotkey,*sc025 up,gSC025up
-		hotkey,*sc026,gSC026 		;l
-		hotkey,*sc026 up,gSC026up
-		hotkey,*sc027,gSC027 		;';'
-		hotkey,*sc027 up,gSC027up
-		hotkey,*sc028,gSC028 		;'*'
-		hotkey,*sc028 up,gSC028up
-		hotkey,*sc02B,gSC02B 		;']'
-		hotkey,*sc02B up,gSC02Bup
-		hotkey,*sc02C,gSC02C		;z
-		hotkey,*sc02C up,gSC02Cup
-		hotkey,*sc02D,gSC02D		;x
-		hotkey,*sc02D up,gSC02Dup
-		hotkey,*sc02E,gSC02E		;c
-		hotkey,*sc02E up,gSC02Eup
-		hotkey,*sc02F,gSC02F		;v
-		hotkey,*sc02F up,gSC02Fup
-		hotkey,*sc030,gSC030		;b
-		hotkey,*sc030 up,gSC030up
-		hotkey,*sc031,gSC031		;n
-		hotkey,*sc031 up,gSC031up
-		hotkey,*sc032,gSC032		;m
-		hotkey,*sc032 up,gSC032up
-		hotkey,*sc033,gSC033		;,
-		hotkey,*sc033 up,gSC033up
-		hotkey,*sc034,gSC034		;.
-		hotkey,*sc034 up,gSC034up
-		hotkey,*sc035,gSC035		;/
-		hotkey,*sc035 up,gSC035up
-		hotkey,*sc073,gSC073		;\
-		hotkey,*sc073 up,gSC073up
-		hotkey,Tab,gTAB				; \t
-		hotkey,Tab up,gTABup
-		hotkey,Enter,gENTER			; \r
-		hotkey,Enter up,gENTERup
-		hotkey,Backspace,gBACKSPACE	; \b
-		hotkey,Backspace up,gBACKSPACEup
-		hotkey,*sc029,gSC029		;半角／全角
-		hotkey,*sc029 up,gSC029up
-		hotkey,*sc070,gSC070		;ひらがな／カタカナ
-		hotkey,*sc070 up,gSC070up
-		hotkey,LCtrl,gLCTRL
-		hotkey,LCtrl up,gLCTRLup
-		hotkey,RCtrl,gRCTRL
-		hotkey,RCtrl up,gRCTRLup
-		Hotkey,Space,gSpace
-		Hotkey,Space up,gSpaceUp
-		Hotkey,*sc079,gSC079
-		Hotkey,*sc079 up,gSC079up
-		Hotkey,*sc07B,gSC07B
-		Hotkey,*sc07B up,gSC07Bup
+	hotkey,*sc002,gSC002		;1
+	hotkey,*sc002 up,gSC002up
+	hotkey,*sc003,gSC003		;2
+	hotkey,*sc003 up,gSC003up
+	hotkey,*sc004,gSC004		;3
+	hotkey,*sc004 up,gSC004up
+	hotkey,*sc005,gSC005		;4
+	hotkey,*sc005 up,gSC005up
+	hotkey,*sc006,gSC006		;5
+	hotkey,*sc006 up,gSC006up
+	hotkey,*sc007,gSC007		;6
+	hotkey,*sc007 up,gSC007up
+	hotkey,*sc008,gSC008		;7
+	hotkey,*sc008 up,gSC008up
+	hotkey,*sc009,gSC009		;8
+	hotkey,*sc009 up,gSC009up
+	hotkey,*sc00A,gSC00A		;9
+	hotkey,*sc00A up,gSC00Aup
+	hotkey,*sc00B,gSC00B		;0
+	hotkey,*sc00B up,gSC00Bup
+	hotkey,*sc00C,gSC00C		;-
+	hotkey,*sc00C up,gSC00Cup
+	hotkey,*sc00D,gSC00D		;^
+	hotkey,*sc00D up,gSC00Dup
+	hotkey,*sc07D,gSC07D		;\
+	hotkey,*sc07D up,gSC07Dup
+	hotkey,*sc010,gSC010		;q
+	hotkey,*sc010 up,gSC010up
+	hotkey,*sc011,gSC011		;w
+	hotkey,*sc011 up,gSC011up
+	hotkey,*sc012,gSC012		;e
+	hotkey,*sc012 up,gSC012up
+	hotkey,*sc013,gSC013		;r
+	hotkey,*sc013 up,gSC013up
+	hotkey,*sc014,gSC014		;t
+	hotkey,*sc014 up,gSC014up
+	hotkey,*sc015,gSC015		;y
+	hotkey,*sc015 up,gSC015up
+	hotkey,*sc016,gSC016		;u
+	hotkey,*sc016 up,gSC016up
+	hotkey,*sc017,gSC017		;i
+	hotkey,*sc017 up,gSC017up
+	hotkey,*sc018,gSC018		;o
+	hotkey,*sc018 up,gSC018up
+	hotkey,*sc019,gSC019		;p
+	hotkey,*sc019 up,gSC019up
+	hotkey,*sc01A,gSC01A		;@
+	hotkey,*sc01A up,gSC01Aup
+	hotkey,*sc01B,gSC01B		;[
+	hotkey,*sc01B up,gSC01Bup
+	hotkey,*sc01E,gSC01E		;a
+	hotkey,*sc01E up,gSC01Eup
+	hotkey,*sc01F,gSC01F		;s
+	hotkey,*sc01F up,gSC01Fup
+	hotkey,*sc020,gSC020		;d
+	hotkey,*sc020 up,gSC020up
+	hotkey,*sc021,gSC021		;f
+	hotkey,*sc021 up,gSC021up
+	hotkey,*sc022,gSC022		;g
+	hotkey,*sc022 up,gSC022up
+	hotkey,*sc023,gSC023		;h
+	hotkey,*sc023 up,gSC023up
+	hotkey,*sc024,gSC024 		;j
+	hotkey,*sc024 up,gSC024up
+	hotkey,*sc025,gSC025 		;k
+	hotkey,*sc025 up,gSC025up
+	hotkey,*sc026,gSC026 		;l
+	hotkey,*sc026 up,gSC026up
+	hotkey,*sc027,gSC027 		;';'
+	hotkey,*sc027 up,gSC027up
+	hotkey,*sc028,gSC028 		;'*'
+	hotkey,*sc028 up,gSC028up
+	hotkey,*sc02B,gSC02B 		;']'
+	hotkey,*sc02B up,gSC02Bup
+	hotkey,*sc02C,gSC02C		;z
+	hotkey,*sc02C up,gSC02Cup
+	hotkey,*sc02D,gSC02D		;x
+	hotkey,*sc02D up,gSC02Dup
+	hotkey,*sc02E,gSC02E		;c
+	hotkey,*sc02E up,gSC02Eup
+	hotkey,*sc02F,gSC02F		;v
+	hotkey,*sc02F up,gSC02Fup
+	hotkey,*sc030,gSC030		;b
+	hotkey,*sc030 up,gSC030up
+	hotkey,*sc031,gSC031		;n
+	hotkey,*sc031 up,gSC031up
+	hotkey,*sc032,gSC032		;m
+	hotkey,*sc032 up,gSC032up
+	hotkey,*sc033,gSC033		;,
+	hotkey,*sc033 up,gSC033up
+	hotkey,*sc034,gSC034		;.
+	hotkey,*sc034 up,gSC034up
+	hotkey,*sc035,gSC035		;/
+	hotkey,*sc035 up,gSC035up
+	hotkey,*sc073,gSC073		;\
+	hotkey,*sc073 up,gSC073up
+	hotkey,Tab,gTAB				; \t
+	hotkey,Tab up,gTABup
+	hotkey,Enter,gENTER			; \r
+	hotkey,Enter up,gENTERup
+	hotkey,Backspace,gBACKSPACE	; \b
+	hotkey,Backspace up,gBACKSPACEup
+	hotkey,*sc029,gSC029		;半角／全角
+	hotkey,*sc029 up,gSC029up
+	hotkey,*sc070,gSC070		;ひらがな／カタカナ
+	hotkey,*sc070 up,gSC070up
+	
+	;-----------------------------------------------------------------------
+	; 機能：モディファイアキー
+	;-----------------------------------------------------------------------
+	;WindowsキーとAltキーをホットキー登録すると、
+	;WindowsキーやAltキーの単体押しが効かなくなるのでコメントアウトする。
+	;代わりにInterrupt10 でA_Priorkeyを見て、Windowsキーを監視する。
+	;但し、WindowsキーやAltキーを離したことを感知できないことに留意。
+	;ver.0.1.3 にて、GetKeyState でWindowsキーとAltキーとを監視
+	;ver.0.1.3.7 ... Ctrlはやはり必要なので戻す
+	;hotkey,LCtrl,gLCTRL
+	;hotkey,LCtrl up,gLCTRLup
+	;hotkey,RCtrl,gRCTRL
+	;hotkey,RCtrl up,gRCTRLup
+	Hotkey,Space,gSpace
+	Hotkey,Space up,gSpaceUp
+	Hotkey,*sc079,gSC079
+	Hotkey,*sc079 up,gSC079up
+	Hotkey,*sc07B,gSC07B
+	Hotkey,*sc07B up,gSC07Bup
+	Critical,off
+	return
+}
+
+;----------------------------------------------------------------------
+; 動的にホットキーをオン・オフする
+; flg : 文字キーと機能キー
+; oya_flg : 親指キーかつ無変換またｈ変換
+;----------------------------------------------------------------------
+SetHook(flg,oya_flg)
+{
+	global ShiftMode, g_KeySingle, g_OyaKeyOn, g_MojiCount, g_Oya
+	Critical
+	hotkey,*sc002,%flg%		;1
+	hotkey,*sc002 up,%flg%
+	hotkey,*sc003,%flg%		;2
+	hotkey,*sc003 up,%flg%
+	hotkey,*sc004,%flg%		;3
+	hotkey,*sc004 up,%flg%
+	hotkey,*sc005,%flg%		;4
+	hotkey,*sc005 up,%flg%
+	hotkey,*sc006,%flg%		;5
+	hotkey,*sc006 up,%flg%
+	hotkey,*sc007,%flg%		;6
+	hotkey,*sc007 up,%flg%
+	hotkey,*sc008,%flg%		;7
+	hotkey,*sc008 up,%flg%
+	hotkey,*sc009,%flg%		;8
+	hotkey,*sc009 up,%flg%
+	hotkey,*sc00A,%flg%		;9
+	hotkey,*sc00A up,%flg%
+	hotkey,*sc00B,%flg%		;0
+	hotkey,*sc00B up,%flg%
+	hotkey,*sc00C,%flg%		;-
+	hotkey,*sc00C up,%flg%
+	hotkey,*sc00D,%flg%		;^
+	hotkey,*sc00D up,%flg%
+	hotkey,*sc07D,%flg%		;\
+	hotkey,*sc07D up,%flg%
+	hotkey,*sc010,%flg%		;q
+	hotkey,*sc010 up,%flg%
+	hotkey,*sc011,%flg%		;w
+	hotkey,*sc011 up,%flg%
+	hotkey,*sc012,%flg%		;e
+	hotkey,*sc012 up,%flg%
+	hotkey,*sc013,%flg%		;r
+	hotkey,*sc013 up,%flg%
+	hotkey,*sc014,%flg%		;t
+	hotkey,*sc014 up,%flg%
+	hotkey,*sc015,%flg%		;y
+	hotkey,*sc015 up,%flg%
+	hotkey,*sc016,%flg%		;u
+	hotkey,*sc016 up,%flg%
+	hotkey,*sc017,%flg%		;i
+	hotkey,*sc017 up,%flg%
+	hotkey,*sc018,%flg%		;o
+	hotkey,*sc018 up,%flg%
+	hotkey,*sc019,%flg%		;p
+	hotkey,*sc019 up,%flg%
+	hotkey,*sc01A,%flg%		;@
+	hotkey,*sc01A up,%flg%
+	hotkey,*sc01B,%flg%		;[
+	hotkey,*sc01B up,%flg%
+	hotkey,*sc01E,%flg%	;a
+	hotkey,*sc01E up,%flg%
+	hotkey,*sc01F,%flg%		;s
+	hotkey,*sc01F up,%flg%
+	hotkey,*sc020,%flg%		;d
+	hotkey,*sc020 up,%flg%
+	hotkey,*sc021,%flg%		;f
+	hotkey,*sc021 up,%flg%
+	hotkey,*sc022,%flg%		;g
+	hotkey,*sc022 up,%flg%
+	hotkey,*sc023,%flg%		;h
+	hotkey,*sc023 up,%flg%
+	hotkey,*sc024,%flg% 	;j
+	hotkey,*sc024 up,%flg%
+	hotkey,*sc025,%flg% 	;k
+	hotkey,*sc025 up,%flg%
+	hotkey,*sc026,%flg% 	;l
+	hotkey,*sc026 up,%flg%
+	hotkey,*sc027,%flg% 	;';'
+	hotkey,*sc027 up,%flg%
+	hotkey,*sc028,%flg% 	;'*'
+	hotkey,*sc028 up,%flg%
+	hotkey,*sc02B,%flg% 	;']'
+	hotkey,*sc02B up,%flg%
+	hotkey,*sc02C,%flg%		;z
+	hotkey,*sc02C up,%flg%
+	hotkey,*sc02D,%flg%		;x
+	hotkey,*sc02D up,%flg%
+	hotkey,*sc02E,%flg%		;c
+	hotkey,*sc02E up,%flg%
+	hotkey,*sc02F,%flg%		;v
+	hotkey,*sc02F up,%flg%
+	hotkey,*sc030,%flg%		;b
+	hotkey,*sc030 up,%flg%
+	hotkey,*sc031,%flg%		;n
+	hotkey,*sc031 up,%flg%
+	hotkey,*sc032,%flg%		;m
+	hotkey,*sc032 up,%flg%
+	hotkey,*sc033,%flg%		;,
+	hotkey,*sc033 up,%flg%
+	hotkey,*sc034,%flg%		;.
+	hotkey,*sc034 up,%flg%
+	hotkey,*sc035,%flg%		;/
+	hotkey,*sc035 up,%flg%
+	hotkey,*sc073,%flg%		;\
+	hotkey,*sc073 up,%flg%
+	hotkey,Tab,%flg%
+	hotkey,Tab up,%flg%
+	hotkey,Enter,%flg%
+	hotkey,Enter up,%flg%
+	hotkey,Backspace,%flg%
+	hotkey,Backspace up,%flg%
+	hotkey,*sc029,%flg%
+	hotkey,*sc029 up,%flg%
+	hotkey,*sc070,%flg%		;ひらがな／カタカナ
+	hotkey,*sc070 up,%flg%
+	;hotkey,LCtrl,%flg%
+	;hotkey,LCtrl up,%flg%
+	;hotkey,RCtrl,%flg%
+	;hotkey,RCtrl up,%flg%
+	
+	Hotkey,Space,%flg%
+	Hotkey,Space up,%flg%
+
+	if(keyAttribute2["RA01"]!="X" || keyAttribute2["AA01"]!="X") {
+		Hotkey,*sc07B,%oya_flg%
+		Hotkey,*sc07B up,%oya_flg%
 	} else {
-		hotkey,*sc002,%flg%		;1
-		hotkey,*sc002 up,%flg%
-		hotkey,*sc003,%flg%		;2
-		hotkey,*sc003 up,%flg%
-		hotkey,*sc004,%flg%		;3
-		hotkey,*sc004 up,%flg%
-		hotkey,*sc005,%flg%		;4
-		hotkey,*sc005 up,%flg%
-		hotkey,*sc006,%flg%		;5
-		hotkey,*sc006 up,%flg%
-		hotkey,*sc007,%flg%		;6
-		hotkey,*sc007 up,%flg%
-		hotkey,*sc008,%flg%		;7
-		hotkey,*sc008 up,%flg%
-		hotkey,*sc009,%flg%		;8
-		hotkey,*sc009 up,%flg%
-		hotkey,*sc00A,%flg%		;9
-		hotkey,*sc00A up,%flg%
-		hotkey,*sc00B,%flg%		;0
-		hotkey,*sc00B up,%flg%
-		hotkey,*sc00C,%flg%		;-
-		hotkey,*sc00C up,%flg%
-		hotkey,*sc00D,%flg%		;^
-		hotkey,*sc00D up,%flg%
-		hotkey,*sc07D,%flg%		;\
-		hotkey,*sc07D up,%flg%
-		hotkey,*sc010,%flg%		;q
-		hotkey,*sc010 up,%flg%
-		hotkey,*sc011,%flg%		;w
-		hotkey,*sc011 up,%flg%
-		hotkey,*sc012,%flg%		;e
-		hotkey,*sc012 up,%flg%
-		hotkey,*sc013,%flg%		;r
-		hotkey,*sc013 up,%flg%
-		hotkey,*sc014,%flg%		;t
-		hotkey,*sc014 up,%flg%
-		hotkey,*sc015,%flg%		;y
-		hotkey,*sc015 up,%flg%
-		hotkey,*sc016,%flg%		;u
-		hotkey,*sc016 up,%flg%
-		hotkey,*sc017,%flg%		;i
-		hotkey,*sc017 up,%flg%
-		hotkey,*sc018,%flg%		;o
-		hotkey,*sc018 up,%flg%
-		hotkey,*sc019,%flg%		;p
-		hotkey,*sc019 up,%flg%
-		hotkey,*sc01A,%flg%		;@
-		hotkey,*sc01A up,%flg%
-		hotkey,*sc01B,%flg%		;[
-		hotkey,*sc01B up,%flg%
-		hotkey,*sc01E,%flg%	;a
-		hotkey,*sc01E up,%flg%
-		hotkey,*sc01F,%flg%		;s
-		hotkey,*sc01F up,%flg%
-		hotkey,*sc020,%flg%		;d
-		hotkey,*sc020 up,%flg%
-		hotkey,*sc021,%flg%		;f
-		hotkey,*sc021 up,%flg%
-		hotkey,*sc022,%flg%		;g
-		hotkey,*sc022 up,%flg%
-		hotkey,*sc023,%flg%		;h
-		hotkey,*sc023 up,%flg%
-		hotkey,*sc024,%flg% 	;j
-		hotkey,*sc024 up,%flg%
-		hotkey,*sc025,%flg% 	;k
-		hotkey,*sc025 up,%flg%
-		hotkey,*sc026,%flg% 	;l
-		hotkey,*sc026 up,%flg%
-		hotkey,*sc027,%flg% 	;';'
-		hotkey,*sc027 up,%flg%
-		hotkey,*sc028,%flg% 	;'*'
-		hotkey,*sc028 up,%flg%
-		hotkey,*sc02B,%flg% 	;']'
-		hotkey,*sc02B up,%flg%
-		hotkey,*sc02C,%flg%		;z
-		hotkey,*sc02C up,%flg%
-		hotkey,*sc02D,%flg%		;x
-		hotkey,*sc02D up,%flg%
-		hotkey,*sc02E,%flg%		;c
-		hotkey,*sc02E up,%flg%
-		hotkey,*sc02F,%flg%		;v
-		hotkey,*sc02F up,%flg%
-		hotkey,*sc030,%flg%		;b
-		hotkey,*sc030 up,%flg%
-		hotkey,*sc031,%flg%		;n
-		hotkey,*sc031 up,%flg%
-		hotkey,*sc032,%flg%		;m
-		hotkey,*sc032 up,%flg%
-		hotkey,*sc033,%flg%		;,
-		hotkey,*sc033 up,%flg%
-		hotkey,*sc034,%flg%		;.
-		hotkey,*sc034 up,%flg%
-		hotkey,*sc035,%flg%		;/
-		hotkey,*sc035 up,%flg%
-		hotkey,*sc073,%flg%		;\
-		hotkey,*sc073 up,%flg%
-		hotkey,Tab,%flg%
-		hotkey,Tab up,%flg%
-		hotkey,Enter,%flg%
-		hotkey,Enter up,%flg%
-		hotkey,Backspace,%flg%
-		hotkey,Backspace up,%flg%
-		hotkey,*sc029,%flg%
-		hotkey,*sc029 up,%flg%
-		hotkey,*sc070,%flg%		;ひらがな／カタカナ
-		hotkey,*sc070 up,%flg%
-		;hotkey,LCtrl,%flg%
-		;hotkey,LCtrl up,%flg%
-		;hotkey,RCtrl,%flg%
-		;hotkey,RCtrl up,%flg%
-		
-		Hotkey,Space,%flg%
-		Hotkey,Space up,%flg%
-		Hotkey,*sc079,%flg%
-		Hotkey,*sc079 up,%flg%
 		Hotkey,*sc07B,%flg%
 		Hotkey,*sc07B up,%flg%
 	}
-	
+	if(keyAttribute2["RA03"]!="X" || keyAttribute2["AA03"]!="X") {
+		Hotkey,*sc079,%oya_flg%
+		Hotkey,*sc079 up,%oya_flg%
+	} else {
+		Hotkey,*sc079,%flg%
+		Hotkey,*sc079 up,%flg%
+	}
 	if(flg="off") {
-		g_OyaState["R"] := 0
-		g_OyaState["L"] := 0
 		g_OyaKeyOn["R"] := 0
 		g_OyaKeyOn["L"] := 0
+		g_MojiCount["R"] := 0
+		g_MojiCount["L"] := 0
+		g_Oya := "N"
 	}
 	Critical,off
 	return
@@ -1990,835 +2031,4 @@ gRCTRLup:
 	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keyup%g_metaKey%
-
-
-; １段目
-;gSC002:	;1
-;	kName := "1"
-;	g_layoutPos := "E01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC002up:
-;	kName := "1"
-;	g_layoutPos := "E01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC003:	;2
-;	kName := "2"
-;	g_layoutPos := "E02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC003up:
-;	kName := "2"
-;	g_layoutPos := "E02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC004:	;3
-;	kName := "3"
-;	g_layoutPos := "E03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC004up:
-;	kName := "3"
-;	g_layoutPos := "E03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC005:	;4
-;	kName := "4"
-;	g_layoutPos := "E04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC005up:
-;	kName := "4"
-;	g_layoutPos := "E04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC006:	;5
-;	kName := "5"
-;	g_layoutPos := "E05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC006up:
-;	kName := "5"
-;	g_layoutPos := "E05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC007:	;6
-;	kName := "6"
-;	g_layoutPos := "E06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC007up:
-;	kName := "6"
-;	g_layoutPos := "E06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC008:	;7
-;	kName := "7"
-;	g_layoutPos := "E07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC008up:
-;	kName := "7"
-;	g_layoutPos := "E07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC009:	;8
-;	kName := "8"
-;	g_layoutPos := "E08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC009up:
-;	kName := "8"
-;	g_layoutPos := "E08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC00A:	;9
-;	kName := "9"
-;	g_layoutPos := "E09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC00Aup:
-;	kName := "9"
-;	g_layoutPos := "E09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC00B:	;0
-;	kName := "10"
-;	g_layoutPos := "E10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC00Bup:
-;	kName := "10"
-;	g_layoutPos := "E10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC00C:	;-
-;	kName := "-"
-;	g_layoutPos := "E11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC00Cup:
-;	kName := "-"
-;	g_layoutPos := "E11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC00D:	;^
-;	kName := "^"
-;	g_layoutPos := "E12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC00Dup:
-;	kName := "^"
-;	g_layoutPos := "E12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC07D:	;\
-;	kName := "\"
-;	g_layoutPos := "E13"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC07Dup:
-;	kName := "\"
-;	g_layoutPos := "E13"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;;　２段目
-;gSC010:	;q
-;	kName := "q"
-;	g_layoutPos := "D01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC010up:
-;	kName := "q"
-;	g_layoutPos := "D01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC011:	;w
-;	kName := "w"
-;	g_layoutPos := "D02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC011up:	;w
-;	kName := "w"
-;	g_layoutPos := "D02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC012:	;e
-;	kName := "e"
-;	g_layoutPos := "D03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC012up:	;e
-;	kName := "e"
-;	g_layoutPos := "D03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC013:	;r
-;	kName := "r"
-;	g_layoutPos := "D04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC013up:	;r
-;	kName := "r"
-;	g_layoutPos := "D04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC014:	;t
-;	kName := "t"
-;	g_layoutPos := "D05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC014up:	;t
-;	kName := "t"
-;	g_layoutPos := "D05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC015:	;y
-;	kName := "y"
-;	g_layoutPos := "D06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC015up:	;y
-;	kName := "y"
-;	g_layoutPos := "D06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC016:	;u
-;	kName := "u"
-;	g_layoutPos := "D07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC016up:	;u
-;	kName := "u"
-;	g_layoutPos := "D07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC017:	;i
-;	kName := "i"
-;	g_layoutPos := "D08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC017up:	;i
-;	kName := "i"
-;	g_layoutPos := "D08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC018:	;o
-;	kName := "o"
-;	g_layoutPos := "D09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC018up:	;o
-;	kName := "o"
-;	g_layoutPos := "D09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC019:	;p
-;	kName := "p"
-;	g_layoutPos := "D10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC019up:	;p
-;	kName := "p"
-;	g_layoutPos := "D10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC01A:	;@
-;	kName := "@"
-;	g_layoutPos := "D11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC01Aup:	;@
-;	kName := "@"
-;	g_layoutPos := "D11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC01B:	;[
-;	kName := "["
-;	g_layoutPos := "D12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC01Bup:	;[
-;	kName := "["
-;	g_layoutPos := "D12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;; ３段目
-;gSC01E:	;a
-;	kName := "a"
-;	g_layoutPos := "C01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC01Eup:	;a
-;	kName := "a"
-;	g_layoutPos := "C01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC01F:	;s
-;	kName := "s"
-;	g_layoutPos := "C02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC01Fup:	;s
-;	kName := "s"
-;	g_layoutPos := "C02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC020:	;d
-;	kName := "d"
-;	g_layoutPos := "C03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC020up:	;d
-;	kName := "d"
-;	g_layoutPos := "C03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC021:	;f
-;	kName := "f"
-;	g_layoutPos := "C04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC021up:	;f
-;	kName := "f"
-;	g_layoutPos := "C04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC022:	;g
-;	kName := "g"
-;	g_layoutPos := "C05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC022up:	;g
-;	kName := "g"
-;	g_layoutPos := "C05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC023:	;h
-;	kName := "h"
-;	g_layoutPos := "C06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC023up:	;h
-;	kName := "h"
-;	g_layoutPos := "C06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC024: ;j
-;	kName := "j"
-;	g_layoutPos := "C07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC024up: ;j
-;	kName := "j"
-;	g_layoutPos := "C07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC025: ;k
-;	kName := "k"
-;	g_layoutPos := "C08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC025up: ;k
-;	kName := "k"
-;	g_layoutPos := "C08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC026: ;l
-;	kName := "l"
-;	g_layoutPos := "C09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC026up: ;l
-;	kName := "l"
-;	g_layoutPos := "C09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC027: ;';'
-;	kName := ";"
-;	g_layoutPos := "C10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC027up: ;';'
-;	kName := ";"
-;	g_layoutPos := "C10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC028: ;'*'
-;	kName := "*"
-;	g_layoutPos := "C11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC028up: ;'*'
-;	kName := "*"
-;	g_layoutPos := "C11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC02B: ;']'
-;	kName := "]"
-;	g_layoutPos := "C12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC02Bup: ;']'
-;	kName := "]"
-;	g_layoutPos := "C12"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;;４段目
-;gSC02C:	;z
-;	kName := "z"
-;	g_layoutPos := "B01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC02Cup:	;z
-;	kName := "z"
-;	g_layoutPos := "B01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC02D:	;x
-;	kName := "x"
-;	g_layoutPos := "B02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC02Dup:	;x
-;	kName := "x"
-;	g_layoutPos := "B02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC02E:	;c
-;	kName := "c"
-;	g_layoutPos := "B03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC02Eup:	;c
-;	kName := "c"
-;	g_layoutPos := "B03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC02F:	;v
-;	kName := "v"
-;	g_layoutPos := "B04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC02Fup:	;v
-;	kName := "v"
-;	g_layoutPos := "B04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC030:	;b
-;	kName := "b"
-;	g_layoutPos := "B05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC030up:	;b
-;	kName := "b"
-;	g_layoutPos := "B05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC031:	;n
-;	kName := "n"
-;	g_layoutPos := "B06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC031up:	;n
-;	kName := "n"
-;	g_layoutPos := "B06"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC032:	;m
-;	kName := "m"
-;	g_layoutPos := "B07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC032up:	;m
-;	kName := "m"
-;	g_layoutPos := "B07"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC033:	;,
-;	kName := "`,"
-;	g_layoutPos := "B08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC033up:	;,
-;	kName := "`,"
-;	g_layoutPos := "B08"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC034:	;.
-;	kName := "."
-;	g_layoutPos := "B09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC034up:	;.
-;	kName := "."
-;	g_layoutPos := "B09"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC035:	;/
-;	kName := "/"
-;	g_layoutPos := "B10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC035up:	;/
-;	kName := "/"
-;	g_layoutPos := "B10"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC073:	;\
-;	kName := "\"
-;	g_layoutPos := "B11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC073up:	;_
-;	kName := "\"
-;	g_layoutPos := "B11"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;
-;gTAB:
-;	kName := "Tab"
-;	g_layoutPos := "D00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gTABup:
-;	kName := "Tab"
-;	g_layoutPos := "D00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gENTER:
-;	kName := "Enter"
-;	g_layoutPos := "C13"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gENTERup:
-;	kName := "Enter"
-;	g_layoutPos := "C13"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gBACKSPACE:
-;	kName := "Backspace"
-;	g_layoutPos := "E14"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gBACKSPACEup:
-;	kName := "Backspace"
-;	g_layoutPos := "E14"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC029:	;半角／全角
-;	kName := "sc029"
-;	g_layoutPos := "E00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC029up:	;半角／全角
-;	kName := "sc029"
-;	g_layoutPos := "E00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC070:	;ひらがな／カタカナ
-;	kName := "sc070"
-;	g_layoutPos := "A04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC070up:	;ひらがな／カタカナ
-;	kName := "sc070"
-;	g_layoutPos := "A04"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;
-;gSpace:
-;	kName := "Space"
-;	g_layoutPos := "A02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSpaceUp:
-;	kName := "Space"
-;	g_layoutPos := "A02"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC07B:					; 無変換キー（左）
-;	kName := "sc07B"
-;	g_layoutPos := "A01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC07Bup:
-;	kName := "sc07B"
-;	g_layoutPos := "A01"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gSC079:				; 変換キー（右）
-;	kName := "sc079"
-;	g_layoutPos := "A03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gSC079up:
-;	kName := "sc079"
-;	g_layoutPos := "A03"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	kName := keyNameHash[g_layoutPos]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;
-;;-----------------------------------------------------------------------
-;; 機能：モディファイアキー
-;;-----------------------------------------------------------------------
-;;WindowsキーとAltキーをホットキー登録すると、WindowsキーやAltキーの単体押しが効かなくなるのでコメントアウトする。
-;;代わりにInterrupt10 でA_Priorkeyを見て、Windowsキーを監視する。
-;;但し、WindowsキーやAltキーを離したことを感知できないことに留意。
-;;ver.0.1.3 にて、GetKeyState でWindowsキーとAltキーとを監視
-;;ver.0.1.3.7 ... Ctrlはやはり必要なので戻す
-;
-;gLCTRL:
-;	kName := "LCtrl"
-;	g_layoutPos := "A00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gLCTRLup:
-;	kName := "LCtrl"
-;	g_layoutPos := "A00"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
-;gRCTRL:
-;	kName := "RCtrl"
-;	g_layoutPos := "A05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keydown%g_metaKey%
-;gRCTRLup:
-;	kName := "RCtrl"
-;	g_layoutPos := "A05"
-;	g_layoutPos := layoutPosHash[A_ThisHotkey]
-;	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
-;	kName := keyNameHash[g_layoutPos]
-;	goto, keyup%g_metaKey%
 
