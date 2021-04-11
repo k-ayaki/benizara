@@ -43,6 +43,8 @@ Init:
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 		g_KeyRepeat := 0
 		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
+		g_KeyPause := "Pause"
+		IniWrite,%g_KeyPause%,%g_IniFile%,Key,KeyPause
 	}
 	IniRead,g_LayoutFile,%g_IniFile%,FilePath,LayoutFile
 	IniRead,g_Continue,%g_IniFile%,Key,Continue
@@ -91,6 +93,9 @@ Init:
 	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
 	if g_KeyRepeat not in 1,0
 		g_KeyRepeat := 0
+	IniRead,g_KeyPause,%g_IniFile%,Key,KeyPause
+	if g_KeyPause not in Pause,ScrollLock,無効
+		g_KeyPause := "Pause"
 	return
 	
 ;-----------------------------------------------------------------------
@@ -222,12 +227,12 @@ _Settings:
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
 	Gui, Add, Text,X30 Y130,一時停止キー：
-	if(g_PauseKey = "Pause")
-		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause||ScrollLock|無効|
-	else if(g_PauseKey = "ScrollLock")
-		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause|ScrollLock||無効|
+	if(g_KeyPause = "Pause")
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause||ScrollLock|無効|
+	else if(g_KeyPause = "ScrollLock")
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock||無効|
 	else
-		Gui, Add, DropDownList,ggSetPause vvPauseKey X140 Y130 W125,Pause|ScrollLock|無効||
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock|無効||
 
 	Gui, Tab, 5
 	Gui, Font,s10 c000000,Meiryo UI
@@ -913,7 +918,7 @@ gFileSelect:
 
 gSetPause:
 	Gui, Submit, NoHide
-	_pauseKey := vPauseKey
+	_KeyPause := vKeyPause
 	return
 
 ;-----------------------------------------------------------------------
@@ -948,7 +953,7 @@ gButtonOk:
 	g_OyaKey := _OyaKey
 	g_KeySingle := _KeySingle
 	g_KeyRepeat := _KeyRepeat
-	g_PauseKey := _pauseKey
+	g_KeyPause := _KeyPause
 
 	g_IniFile := ".\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
@@ -962,6 +967,7 @@ gButtonOk:
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
 	IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
+	IniWrite,%g_KeyPause%,%g_IniFile%,Key,KeyPause
 	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	return
