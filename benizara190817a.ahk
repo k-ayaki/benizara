@@ -221,7 +221,6 @@ keydownL:
 		{
 			; 処理B 3キー判定
 			g_Interval[g_OyaAlt[g_Oya] . "M"] := g_MojiTick - g_OyaTick[g_OyaAlt[g_Oya]]	; 他の親指キー押しから文字キー押しまでの期間
-			g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_MojiTick						; 文字キー押しから当該親指キー押しまでの期間
 			if(g_Interval["M" . g_Oya] > g_Interval[g_OyaAlt[g_Oya] . "M"])
 			{
 				Gosub, SendOnHoldMO	; 保留キーの打鍵　Mモードに
@@ -308,11 +307,11 @@ keyupL:
 				} else {
 					; 処理D
 					vOverlap := floor((100*g_Interval["M_" . g_Oya])/g_Interval[g_Oya . "_" . g_Oya])
-					if(vOverlap <= g_OverlapOM && g_Interval["M_" . g_Oya] <= g_Tau)
+					if(vOverlap < g_OverlapOM && g_Interval["M_" . g_Oya] <= g_Tau)
 					{
 						;Gosub, SendOnHoldO	; 保留キーの単独打鍵
 						g_SendTick := g_OyaUpTick[g_Oya] + g_Interval["M_" . g_Oya]
-						g_KeyInPtn := g_KeyInPtn . g_metaKeyUp[g_Oya]	;"RMr" "OMo"
+						g_KeyInPtn := g_KeyInPtn . g_metaKeyUp[g_Oya]	;"RMr" "OMo" "LMl"
 					} else {
 						Gosub, SendOnHoldMO	; 保留キーの打鍵
 					}
@@ -1216,10 +1215,10 @@ keyupM:
 			g_Interval["M_M"] := g_MojiUpTick - g_MojiTick
 			g_Interval["R_M"] := g_MojiUpTick - g_OyaTick["R"]
 			vOverlap := floor((100*g_Interval["R_M"])/g_Interval["M_M"])
-			if(vOverlap <= g_OverlapMO && g_Interval["R_M"] < g_Threshold)	; g_Tau
+			if(vOverlap < g_OverlapMO && g_Interval["R_M"] < g_Threshold)	; g_Tau
 			{
 				Gosub, SendOnHoldM
-				g_SendTick := g_MojiUpTick - g_Interval["R_M"] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
+				g_SendTick := g_OyaTick["R"] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 			} else {
 				Gosub, SendOnHoldMO
 			}
@@ -1230,10 +1229,10 @@ keyupM:
 			g_Interval["M_M"] := g_MojiUpTick - g_MojiTick
 			g_Interval["L_M"] := g_MojiUpTick - g_OyaTick["L"]
 			vOverlap := floor((100*g_Interval["L_M"])/g_Interval["M_M"])
-			if(vOverlap <= g_OverlapMO && g_Interval["L_M"] < g_Threshold)	; g_Tau
+			if(vOverlap < g_OverlapMO && g_Interval["L_M"] < g_Threshold)	; g_Tau
 			{
 				Gosub, SendOnHoldM
-				g_SendTick := g_MojiUpTick - g_Interval["L_M"] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
+				g_SendTick :=  g_OyaTick["L"] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 			} else {
 				Gosub, SendOnHoldMO
 			}
