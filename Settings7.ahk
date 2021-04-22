@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.4 .... 2021/3/28
+;	ver.0.1.4.5 .... 2021/4/22
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -86,7 +86,6 @@ Init:
 	if g_OyaKey not in 無変換－変換,無変換－空白,空白－変換
 		g_OyaKey := "無変換－変換"
 	vOyaKey := g_OyaKey
-	gosub, RemapOya
 	IniRead,g_KeySingle,%g_IniFile%,Key,KeySingle
 	if g_KeySingle not in 有効,無効
 		g_KeySingle := "無効"
@@ -96,6 +95,7 @@ Init:
 	IniRead,g_KeyPause,%g_IniFile%,Key,KeyPause
 	if g_KeyPause not in Pause,ScrollLock,無効
 		g_KeyPause := "Pause"
+	gosub, RemapOya
 	return
 	
 ;-----------------------------------------------------------------------
@@ -107,18 +107,6 @@ Settings:
 		msgbox, 既に紅皿設定ダイアログは開いています。
 		return
 	}	
-	_Continue := g_Continue
-	_ZeroDelay := g_ZeroDelay
-	_Threshold := g_Threshold
-	_ThresholdSS := g_ThresholdSS
-	_LayoutFile := g_LayoutFile
-	_OverlapMO := g_OverlapMO
-	_OverlapOM := g_OverlapOM
-	_Overlap := g_Overlap
-	_OverlapSS := g_OverlapSS
-	_OyaKey := g_OyaKey
-	_KeySingle := g_KeySingle
-	_KeyRepeat := g_KeyRepeat
 _Settings:
 	Gui,2:Default
 	Gui, 2:New
@@ -131,21 +119,21 @@ _Settings:
 	Gui, Tab, 1
 	Gui, Add, Edit,X30 Y40 W280 H20 ReadOnly -Vscroll, %g_layoutName%　%g_layoutVersion%
 	Gui, Add, Text,X320 Y40, 定義ファイル：
-	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %_LayoutFile%
+	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %g_LayoutFile%
 	Gui, Add, Button,ggFileSelect X630 Y40 W32 H21,…
 
 	if(ShiftMode["R"] = "親指シフト")
 	{
 		Gui, Add, Text,X30 Y70,親指シフトキー：
-		if(_OyaKey = "無変換－変換")
+		if(g_OyaKey = "無変換－変換")
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換||無変換－空白|空白－変換|
-		else if(_OyaKey = "無変換－空白")
+		else if(g_OyaKey = "無変換－空白")
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白||空白－変換|
 		else
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白|空白－変換||
 	
 		Gui, Add, Text,X290 Y70,単独打鍵：
-		if(_KeySingle = "無効")
+		if(g_KeySingle = "無効")
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効||有効|
 		else
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
@@ -168,60 +156,60 @@ _Settings:
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W300 H40 ReadOnly -Vscroll,親指シフトキーの押し続けをシフトオンとします。
 	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y50,連続シフト
-	GuiControl,,vContinue,%_Continue%
+	GuiControl,,vContinue,%g_Continue%
 
 	Gui, Add, Edit,X20 Y90 W300 H40 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
 	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y100,零遅延モード
-	GuiControl,,vZeroDelay,%_ZeroDelay%
+	GuiControl,,vZeroDelay,%g_ZeroDelay%
 	
 	Gui, Add, Edit,X20 Y140 W300 H40 ReadOnly -Vscroll,親指シフトキーをキーリピートさせます。
 	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y150,キーリピート
-	GuiControl,,vKeyRepeat,%_KeyRepeat%
+	GuiControl,,vKeyRepeat,%g_KeyRepeat%
 	
 	Gui, Add, Edit,X20 Y190 W300 H60 ReadOnly -Vscroll,親指シフトキー⇒文字キーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y190 W230 H20,親指キー⇒文字キーの重なりの割合：
-	Gui, Add, Edit,vvOverlapNumOM X+3 Y188 W50 ReadOnly, %_OverlapOM%
+	Gui, Add, Edit,vvOverlapNumOM X+3 Y188 W50 ReadOnly, %g_OverlapOM%
 	Gui, Add, Text,X+10 Y190 c000000,[`%]
 
 	Gui, Add, Slider, X320 Y220 ggOlSliderOM w350 vvOlSliderOM Range10-90 line10 TickInterval10
-	GuiControl,,vOlSliderOM,%_OverlapOM%
+	GuiControl,,vOlSliderOM,%g_OverlapOM%
 
 	Gui, Add, Edit,X20 Y260 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y260 W230 H20,文字キー⇒親指キーの重なりの割合：
-	Gui, Add, Edit,vvOverlapNumMO X+3 Y258 W50 ReadOnly, %_OverlapMO%
+	Gui, Add, Edit,vvOverlapNumMO X+3 Y258 W50 ReadOnly, %g_OverlapMO%
 	Gui, Add, Text,X+10 Y260 c000000,[`%]
 	
 	Gui, Add, Slider, X320 Y290 ggOlSliderMO w350 vvOlSliderMO Range10-90 line10 TickInterval10
-	GuiControl,,vOlSliderMO,%_OverlapMO%
+	GuiControl,,vOlSliderMO,%g_OverlapMO%
 	
 	Gui, Add, Edit,X20 Y330 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y330 W230 H20,文字キーと親指キーの重なりの判定時間：
-	Gui, Add, Edit,vvThresholdNum X+3 Y328 W50 ReadOnly, %_Threshold%
+	Gui, Add, Edit,vvThresholdNum X+3 Y328 W50 ReadOnly, %g_Threshold%
 	Gui, Add, Text,X+10 Y330 c000000,[mSEC]
 	
 	Gui, Add, Slider, X320 Y360 ggThSlider w350 vvThSlider Range10-400 line10 TickInterval10
-	GuiControl,,vThSlider,%_Threshold%
+	GuiControl,,vThSlider,%g_Threshold%
 
 	Gui, Tab, 3
 	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
 	Gui, Add, Checkbox,ggZeroDelaySS vvZeroDelaySS X+20 Y65,零遅延モード
-	GuiControl,,vZeroDelaySS,%_ZeroDelay%
+	GuiControl,,vZeroDelaySS,%g_ZeroDelay%
 	
 	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y110 W230 H20,文字キー同志の重なりの割合：
-	Gui, Add, Edit,vvOverlapNumSS X+3 Y108 W50 ReadOnly, %_OverlapSS%
+	Gui, Add, Edit,vvOverlapNumSS X+3 Y108 W50 ReadOnly, %g_OverlapSS%
 	Gui, Add, Text,X+10 Y110 c000000,[`%]
 
 	Gui, Add, Slider, X320 Y140 ggOlSliderSS w350 vvOlSliderSS Range10-90 line10 TickInterval10
-	GuiControl,,vOlSliderSS,%_OverlapSS%
+	GuiControl,,vOlSliderSS,%g_OverlapSS%
 	
 	Gui, Add, Edit,X20 Y180 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なり期間が何ミリ秒のときに同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y180 W230 H20,文字キー同志の重なりの判定時間：
-	Gui, Add, Edit,vvThresholdNumSS X+3 Y178 W50 ReadOnly, %_ThresholdSS%
+	Gui, Add, Edit,vvThresholdNumSS X+3 Y178 W50 ReadOnly, %g_ThresholdSS%
 	Gui, Add, Text,X+10 Y180 c000000,[mSEC]
 	
 	Gui, Add, Slider, X320 Y210 ggThSliderSS w350 vvThSliderSS Range10-400 line10 TickInterval10
-	GuiControl,,vThSliderSS,%_ThresholdSS%
+	GuiControl,,vThSliderSS,%g_ThresholdSS%
 	
 	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
@@ -728,16 +716,16 @@ gTabChange:
 ; 機能：親指シフト同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
 gThSlider:
-	GuiControlGet, _Threshold , , vThSlider, 
-	GuiControl,, vThresholdNum, %_Threshold%
+	GuiControlGet, g_Threshold , , vThSlider, 
+	GuiControl,, vThresholdNum, %g_Threshold%
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：文字同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
 gThSliderSS:
-	GuiControlGet, _ThresholdSS , , vThSliderSS, 
-	GuiControl,, vThresholdNumSS, %_ThresholdSS%
+	GuiControlGet, g_ThresholdSS , , vThSliderSS, 
+	GuiControl,, vThresholdNumSS, %g_ThresholdSS%
 	return
 	
 
@@ -745,24 +733,24 @@ gThSliderSS:
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderMO:
-	GuiControlGet, _OverlapMO , , vOlSliderMO, 
-	GuiControl,, vOverlapNumMO, %_OverlapMO%
+	GuiControlGet, g_OverlapMO , , vOlSliderMO, 
+	GuiControl,, vOverlapNumMO, %g_OverlapMO%
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderOM:
-	GuiControlGet, _OverlapOM , , vOlSliderOM, 
-	GuiControl,, vOverlapNumOM, %_OverlapOM%
+	GuiControlGet, g_OverlapOM , , vOlSliderOM, 
+	GuiControl,, vOverlapNumOM, %g_OverlapOM%
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：文字同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderSS:
-	GuiControlGet, _OverlapSS , , vOlSliderSS, 
-	GuiControl,, vOverlapNumSS, %_OverlapSS%
+	GuiControlGet, g_OverlapSS , , vOlSliderSS, 
+	GuiControl,, vOverlapNumSS, %g_OverlapSS%
 	return
 	
 ;-----------------------------------------------------------------------
@@ -770,27 +758,27 @@ gOlSliderSS:
 ;-----------------------------------------------------------------------
 gContinue:
 	Gui, Submit, NoHide
-	_Continue := %A_GuiControl%
-	if(_Continue = 1)
+	g_Continue := %A_GuiControl%
+	if(g_Continue = 1)
 	{
-		_Threshold := 50
-		_OverlapOM := 35
-		_OverlapMO := 70
+		g_Threshold := 50
+		g_OverlapOM := 35
+		g_OverlapMO := 70
 	}
 	else
 	{
-		_Threshold := 150
-		_OverlapOM := 50
-		_OverlapMO := 50
+		g_Threshold := 150
+		g_OverlapOM := 50
+		g_OverlapMO := 50
 	}
-	GuiControl,,vThSlider,%_Threshold%
-	GuiControl,,vThresholdNum,%_Threshold%
+	GuiControl,,vThSlider,%g_Threshold%
+	GuiControl,,vThresholdNum,%g_Threshold%
 
-	GuiControl,, vOverlapNumOM, %_OverlapOM%
-	GuiControl,,vOlSliderOM,%_OverlapOM%
+	GuiControl,, vOverlapNumOM, %g_OverlapOM%
+	GuiControl,,vOlSliderOM,%g_OverlapOM%
 
-	GuiControl,, vOverlapNumMO, %_OverlapMO%
-	GuiControl,,vOlSliderMO,%_OverlapMO%
+	GuiControl,, vOverlapNumMO, %g_OverlapMO%
+	GuiControl,,vOlSliderMO,%g_OverlapMO%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -798,12 +786,15 @@ gContinue:
 ;-----------------------------------------------------------------------
 gZeroDelay:
 	Gui, Submit, NoHide
-	_ZeroDelay := %A_GuiControl%
+	g_ZeroDelay := %A_GuiControl%
 	Return
 
+;-----------------------------------------------------------------------
+; 機能：零遅延モードチェックボックスの操作 / 零遅延モードは共通
+;-----------------------------------------------------------------------
 gZeroDelaySS:
 	Gui, Submit, NoHide
-	_ZeroDelay := %A_GuiControl%
+	g_ZeroDelay := %A_GuiControl%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -812,64 +803,43 @@ gZeroDelaySS:
 ;-----------------------------------------------------------------------
 gOya:
 	Gui, Submit, NoHide
-RemapOya:
-	_OyaKey := vOyaKey
-	if(vOyaKey = "無変換－変換")
-	{
-		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
-			keyAttribute2["RA01"] := "L"
-			keyAttribute2["RA02"] := "X"
-			keyAttribute2["RA03"] := "R"
-			keyAttribute2["AA01"] := "L"
-			keyAttribute2["AA02"] := "X"
-			keyAttribute2["AA03"] := "R"
-			g_Oya2Layout["L"] := "A01"
-			g_Oya2Layout["R"] := "A03"
-		}
-	}
-	else if(vOyaKey = "無変換－空白")
-	{
-		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
-			keyAttribute2["RA01"] := "L"
-			keyAttribute2["RA02"] := "R"
-			keyAttribute2["RA03"] := "X"
-			keyAttribute2["AA01"] := "L"
-			keyAttribute2["AA02"] := "R"
-			keyAttribute2["AA03"] := "X"
-			g_Oya2Layout["L"] := "A01"
-			g_Oya2Layout["R"] := "A02"
-		}
-	}
-	else	; 空白－変換
-	{
-		if(ShiftMode["R"] == "親指シフト" || ShiftMode["A"] == "親指シフト") {
-			keyAttribute2["RA01"] := "X"
-			keyAttribute2["RA02"] := "L"
-			keyAttribute2["RA03"] := "R"
-			keyAttribute2["AA01"] := "X"
-			keyAttribute2["AA02"] := "L"
-			keyAttribute2["AA03"] := "R"
-			g_Oya2Layout["L"] := "A02"
-			g_Oya2Layout["R"] := "A03"
-		}
-	}
+	g_OyaKey := vOyaKey
+	Gosub,RemapOya
 	Gosub,RefreshLayoutA
 	Return
 
+;-----------------------------------------------------------------------
+; 機能：単独打鍵の設定
+;-----------------------------------------------------------------------
 gKeySingle:
 	Gui, Submit, NoHide
-	_KeySingle := vKeySingle
 	g_KeySingle := vKeySingle
-	if(g_KeySingle = "有効")
+	if(g_KeySingle = "有効")	; キーリピートON（事後的にOFF可)
 	{
-		_KeyRepeat := 1
+		g_KeyRepeat := 1
 	}
+	Gosub,RemapOya
 	Gosub,RefreshLayoutA
 	return
 
+;-----------------------------------------------------------------------
+; 機能：親指シフトモードの変数設定
+;-----------------------------------------------------------------------
+RemapOya:
+	if(ShiftMode["A"] == "親指シフト") {
+		RemapOyaKey("A")
+	}
+	if(ShiftMode["R"] == "親指シフト") {
+		RemapOyaKey("R")
+	}
+	return
+
+;-----------------------------------------------------------------------
+; 機能：キーリピートの設定
+;-----------------------------------------------------------------------
 gKeyRepeat:
 	Gui, Submit, NoHide
-	_KeyRepeat := vKeyRepeat
+	g_KeyRepeat := vKeyRepeat
 	return
 	
 gDefFile:
@@ -902,12 +872,11 @@ gFileSelect:
 			
 			; 元ファイルを再読み込みする
 			Gosub, InitLayout2
-			_LayoutFile := g_LayoutFile
 			vLayoutFile := g_LayoutFile
 			GoSub, ReadLayoutFile
 		}
 		Gosub, SetLayoutProperty
-		_LayoutFile := vLayoutFile
+		g_LayoutFile := vLayoutFile
 	}
 	Gui,Destroy
 	Goto,_Settings
@@ -918,7 +887,7 @@ gFileSelect:
 
 gSetPause:
 	Gui, Submit, NoHide
-	_KeyPause := vKeyPause
+	g_KeyPause := vKeyPause
 	return
 
 ;-----------------------------------------------------------------------
@@ -942,19 +911,6 @@ gButtonAdmin:
 ;-----------------------------------------------------------------------
 
 gButtonOk:
-	g_Continue := _Continue
-	g_ZeroDelay := _ZeroDelay
-	g_Threshold := _Threshold
-	g_ThresholdSS := _ThresholdSS
-	g_LayoutFile := _LayoutFile
-	g_OverlapOM := _OverlapOM
-	g_OverlapMO := _OverlapMO
-	g_OverlapSS := _OverlapSS
-	g_OyaKey := _OyaKey
-	g_KeySingle := _KeySingle
-	g_KeyRepeat := _KeyRepeat
-	g_KeyPause := _KeyPause
-
 	g_IniFile := ".\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 	IniWrite,%g_Continue%,%g_IniFile%,Key,Continue

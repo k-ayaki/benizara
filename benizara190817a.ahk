@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.4 .... 2021/04/9
+;	ver.0.1.4.5 .... 2021/04/22
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -10,8 +10,8 @@
 	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
-	g_Ver := "ver.0.1.4.4"
-	g_Date := "2021/4/9"
+	g_Ver := "ver.0.1.4.5"
+	g_Date := "2021/4/22"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -111,11 +111,15 @@
 	Menu, Tray, Add, 紅皿設定,Settings
 	;Menu, Tray, Add, 配列,ShowLayout
 	Menu, Tray, Add, ログ,Logs
-	Menu, Tray, Add, 終了,Menu_Exit
-	if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
-	{
-		Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
-	}
+	Menu, Tray, Add, 一時停止,DoPause
+	Menu, Tray, Add, 再開,DoResume
+	Menu, Tray, Add, 終了,MenuExit
+	Gosub,DoResume
+	;Menu, Tray,disable,再開
+	;if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+	;{
+	;	Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+	;}
 	SetBatchLines, -1
 	SetHookInit()
 	fPf := Pf_Init()
@@ -132,10 +136,37 @@
 	return
 
 
-Menu_Exit:
+MenuExit:
 	SetTimer,Interrupt10,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
 	exitapp
+
+;-----------------------------------------------------------------------
+;	一時停止(Pause)
+;-----------------------------------------------------------------------
+DoPause:
+	Menu, Tray,disable,一時停止
+	Menu, Tray,enable,再開
+	g_Pause := 1
+	if(Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
+	{
+		Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
+	}
+	return
+
+;-----------------------------------------------------------------------
+;	再開（一時停止の解除）
+;-----------------------------------------------------------------------
+DoResume:
+	Menu, Tray,enable,一時停止
+	Menu, Tray,disable,再開
+	g_Pause := 0
+	if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+	{
+		Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+	}
+	return	
+
 
 #include IME.ahk
 #include ReadLayout6.ahk
@@ -1394,6 +1425,7 @@ Interrupt10:
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 		if(ShiftMode["R"] == "親指シフト" ) {
+			g_debugout := keyAttribute2["AA01"] . keyAttribute2["AA03"] . keyAttribute2["RA01"] . keyAttribute2["RA03"] . g_KeySingle
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 	}
@@ -1572,17 +1604,9 @@ GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
 
 pauseKeyDown:
 	if(g_Pause == 1) {
-		g_Pause := 0
-		if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
-		{
-			Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
-		}
+		Gosub, DoResume
 	} else {
-		g_Pause := 1
-		if(Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
-		{
-			Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
-		}
+		Gosub, DoPause
 	}
 	return
 
@@ -1758,7 +1782,7 @@ SetHookInit()
 ;----------------------------------------------------------------------
 SetHook(flg,oya_flg)
 {
-	global ShiftMode, g_KeySingle, g_OyaKeyOn, g_MojiCount, g_Oya
+	global ShiftMode, g_KeySingle, g_OyaKeyOn, g_MojiCount, g_Oya, g_Romaji
 	Critical
 	hotkey,*sc002,%flg%		;1
 	hotkey,*sc002 up,%flg%
@@ -1874,19 +1898,19 @@ SetHook(flg,oya_flg)
 	Hotkey,Space,%flg%
 	Hotkey,Space up,%flg%
 
-	if(keyAttribute2["RA01"]!="X" || keyAttribute2["AA01"]!="X") {
+	if(keyAttribute2[g_Romaji . "A01"]!="X") {
 		Hotkey,*sc07B,%oya_flg%
 		Hotkey,*sc07B up,%oya_flg%
 	} else {
-		Hotkey,*sc07B,%flg%
-		Hotkey,*sc07B up,%flg%
+		Hotkey,*sc07B,off
+		Hotkey,*sc07B up,off
 	}
-	if(keyAttribute2["RA03"]!="X" || keyAttribute2["AA03"]!="X") {
+	if(keyAttribute2[g_Romaji . "A03"]!="X") {
 		Hotkey,*sc079,%oya_flg%
 		Hotkey,*sc079 up,%oya_flg%
 	} else {
-		Hotkey,*sc079,%flg%
-		Hotkey,*sc079 up,%flg%
+		Hotkey,*sc079,off
+		Hotkey,*sc079 up,off
 	}
 	if(flg="off") {
 		g_OyaKeyOn["R"] := 0

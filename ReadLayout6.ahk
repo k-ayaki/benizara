@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.4 .... 2021/3/28
+;	ver.0.1.4.5 .... 2021/4/22
 ;-----------------------------------------------------------------------
 ReadLayout:
 	ksf := Object()	; 表層形
@@ -54,8 +54,6 @@ ReadLayout:
 	lpos2Mode := MakeLpos2ModeHash()
 	name2vkey := MakeName2vkeyHash()
 	g_Oya2Layout := Object()
-	g_Oya2Layout["L"] := "A01"
-	g_Oya2Layout["R"] := "A02"
 
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
@@ -449,12 +447,7 @@ SetLayoutProperty:
 	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1 && LF["ANK"]==1)
 	{
 		ShiftMode["A"] := "親指シフト"
-		keyAttribute2["AA01"] := "L"
-		keyAttribute2["AA03"] := "R"
-		keyAttribute2["RA01"] := "L"
-		keyAttribute2["RA03"] := "R" 
-		g_Oya2Layout["L"] := "A01"
-		g_Oya2Layout["R"] := "A03"
+		RemapOyaKey("A")
 		
 		if(LF["ALK"] == 0) {
 			CopyKeyTable("ALK", "ANK")
@@ -507,12 +500,7 @@ SetLayoutProperty:
 	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1 && LF["RNK"]==1)
 	{
 		ShiftMode["R"] := "親指シフト"
-		keyAttribute2["AA01"] := "L"
-		keyAttribute2["AA03"] := "R"
-		keyAttribute2["RA01"] := "L"
-		keyAttribute2["RA03"] := "R"  
-		g_Oya2Layout["L"] := "A01"
-		g_Oya2Layout["R"] := "A03"
+		RemapOyaKey("R")
 		
 		if(LF["RLK"] == 0) {
 			CopyKeyTable("RLK", "RNK")
@@ -562,6 +550,61 @@ SetLayoutProperty:
 		ShiftMode["R"] := "小指シフト"
 	}
 	return
+
+
+
+;----------------------------------------------------------------------
+;	親指キー設定をキー属性配列に反映させる
+;----------------------------------------------------------------------
+RemapOyaKey(_Romaji) {
+	global keyAttribute2, g_Oya2Layout, g_OyaKey, g_KeySingle
+
+	if(g_OyaKey == "無変換－空白") {
+		keyAttribute2[_Romaji . "A01"] := "L"
+		keyAttribute2[_Romaji . "A02"] := "R"
+		keyAttribute2[_Romaji . "A03"] := "X"
+		g_Oya2Layout["L"] := "A01"
+		g_Oya2Layout["R"] := "A02"
+	}
+	else if(g_OyaKey == "空白－変換") {
+		keyAttribute2[_Romaji . "A01"] := "X"
+		keyAttribute2[_Romaji . "A02"] := "L"
+		keyAttribute2[_Romaji . "A03"] := "R"
+		g_Oya2Layout["L"] := "A02"
+		g_Oya2Layout["R"] := "A03"
+	} else {
+		keyAttribute2[_Romaji . "A01"] := "L"
+		keyAttribute2[_Romaji . "A02"] := "X"
+		keyAttribute2[_Romaji . "A03"] := "R"
+		g_Oya2Layout["L"] := "A01"
+		g_Oya2Layout["R"] := "A03"
+	}
+	if(_Romaji == "R") {
+		; ローマ字モードにて親指シフトモード、かつキー単独打鍵が無効ならば、
+		; 英数モードでも変換キーと無変換キーを無効化
+		if(g_KeySingle == "無効") {
+			if(g_OyaKey == "無変換－空白") {
+				keyAttribute2["AA01"] := "L"
+				keyAttribute2["AA02"] := "R"
+				keyAttribute2["AA03"] := "X"
+			}
+			else if(g_OyaKey == "空白－変換") {
+				keyAttribute2["AA01"] := "X"
+				keyAttribute2["AA02"] := "L"
+				keyAttribute2["AA03"] := "R"
+			} else {
+				keyAttribute2["AA01"] := "L"
+				keyAttribute2["AA02"] := "X"
+				keyAttribute2["AA03"] := "R"
+			}
+		} else {
+			keyAttribute2["AA01"] := "X"
+			keyAttribute2["AA02"] := "X"
+			keyAttribute2["AA03"] := "X"
+		}
+	}
+	return
+}
 
 ;----------------------------------------------------------------------
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
