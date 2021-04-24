@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.5 .... 2021/04/22
+;	ver.0.1.4.6 .... 2021/04/24
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -10,12 +10,12 @@
 	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
-	g_Ver := "ver.0.1.4.5"
-	g_Date := "2021/4/22"
+	g_Ver := "ver.0.1.4.6"
+	g_Date := "2021/4/24"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
-		TrayTip,キーボード配列エミュレーションソフト「紅皿」,多重起動は禁止されています。
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,多重起動は禁止されています。
         ExitApp
 	}
     hMutex := DllCall("CreateMutex", Int, 0, Int, False, Str, MutexName)
@@ -98,7 +98,7 @@
 	g_Tau := 400
 	GoSub,Init
 	Gosub,ReadLayout
-	TrayTip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
+	Traytip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
 	g_allTheLayout := vAllTheLayout
 	g_LayoutFile := vLayoutFile
 	kup_save := Object()
@@ -652,8 +652,8 @@ keydownM:
 		{
 			g_MojiOnHold   := g_layoutPos
 			g_RomajiOnHold := g_Romaji
-			g_OyaOnHold    := g_prefixshift
 			g_KoyubiOnHold := g_Koyubi
+			g_OyaOnHold    := g_prefixshift
 			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
 			SubSend(vOut)
@@ -897,11 +897,15 @@ keydown2:
 		critical,off
 		return
 	}
-	if(g_prefixshift == "")
-	{
-		g_prefixshift := g_metaKey
-		critical,off
-		return
+	if(g_Koyubi == "K") {
+		g_prefixshift := ""
+	} else {
+		if(g_prefixshift == "")
+		{
+			g_prefixshift := g_metaKey
+			critical,off
+			return
+		}
 	}
 	g_MojiOnHold   := g_layoutPos
 	g_RomajiOnHold := g_Romaji
@@ -1425,7 +1429,8 @@ Interrupt10:
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 		if(ShiftMode["R"] == "親指シフト" ) {
-			g_debugout := keyAttribute2["AA01"] . keyAttribute2["AA03"] . keyAttribute2["RA01"] . keyAttribute2["RA03"] . g_KeySingle
+			;g_debugout := keyAttribute2["AA01"] . keyAttribute2["AA03"] . keyAttribute2["RA01"] . keyAttribute2["RA03"] . g_KeySingle
+			g_debugout := g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . kdn[g_Romaji . g_Oya . g_Koyubi . g_layoutPos]
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 	}
@@ -1488,7 +1493,7 @@ Polling:
 ScanModifier:
 	stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
 	stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
-	if(stLShift = 0x80 or stRShift = 0x80)
+	if((stLShift & 0x80)!=0 || (stRShift & 0x80)!=0)
 	{
 		g_Koyubi := "K"
 	} else {
@@ -1616,20 +1621,25 @@ pauseKeyDown:
 ;              よって、最下位ビットのみを見る
 ;----------------------------------------------------------------------
 ChkIME:
-	vImeMode := IME_GET() & 32767
-	if(vImeMode = 0)
-	{
-		vImeConvMode :=IME_GetConvMode()
-		g_Romaji := "A"
-	} else {
-		vImeConvMode :=IME_GetConvMode()
-		if( vImeConvMode & 0x01 == 1) ;半角カナ・全角平仮名・全角カタカナ
+	if(g_Koyubi == "N") {	
+		; 小指シフトオン時に、MS-IMEは英数モードを
+		; Google日本語入力はローマ字モードを返す
+		; 両方とも小指シフト面を反映させるため、変換モードは見ない
+		vImeMode := IME_GET() & 32767
+		if(vImeMode = 0)
 		{
-			g_Romaji := "R"
-		}
-		else ;ローマ字変換モード
-		{
+			vImeConvMode :=IME_GetConvMode()
 			g_Romaji := "A"
+		} else {
+			vImeConvMode :=IME_GetConvMode()
+			if( vImeConvMode & 0x01 == 1) ;半角カナ・全角平仮名・全角カタカナ
+			{
+				g_Romaji := "R"
+			}
+			else ;ローマ字変換モード
+			{
+				g_Romaji := "A"
+			}
 		}
 	}
 	if(A_IsCompiled <> 1)

@@ -117,7 +117,12 @@ _Settings:
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
-	Gui, Add, Edit,X30 Y40 W280 H20 ReadOnly -Vscroll, %g_layoutName%　%g_layoutVersion%
+	Gui, Font, underline
+	Gui, Add, Text,X30 Y40 cBlue ggLayoutURL,%g_layoutName%　%g_layoutVersion%
+	;Gui, Add, Edit,X30 Y40 W280 H20 cBlue ReadOnly -Vscroll ggLayoutURL, %g_layoutName%　%g_layoutVersion%
+	;Gui, Add, Text,X30 Y222 cBlue ggURLdownload,ダウンロードページ
+
+	Gui, Font,Norm
 	Gui, Add, Text,X320 Y40, 定義ファイル：
 	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %g_LayoutFile%
 	Gui, Add, Button,ggFileSelect X630 Y40 W32 H21,…
@@ -252,6 +257,13 @@ _Settings:
 	GuiControl,Focus,vEdit
 	return
 
+;-----------------------------------------------------------------------
+; 機能：紅皿のダウンロードURLを開く
+;-----------------------------------------------------------------------
+gLayoutURL:
+	Run, %g_layoutURL%
+	return
+	
 ;-----------------------------------------------------------------------
 ; 機能：紅皿のダウンロードURLを開く
 ;-----------------------------------------------------------------------
@@ -593,26 +605,47 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRL%element%
 		GuiControl,-Redraw,vkeyRR%element%
 		
+		_st := kst[g_Romaji . "NK" . element]
+		Gosub, SetFontColor
+		GuiControl,Font,vkeyRK%element%
 		_ch := kLabel[g_Romaji . "NK" . element]
 		GuiControl,,vkeyRK%element%,%_ch%
+
+		_st := kst[g_Romaji . "NN" . element]
+		Gosub, SetFontColor
+		GuiControl,Font,vkeyRN%element%
 		_ch := kLabel[g_Romaji . "NN" . element]
-		GuiControl,,vkeyRN%element%,%_ch%	
+		GuiControl,,vkeyRN%element%,%_ch%
+		
+
 		_ch := kLabel[g_Romaji . "LN" . element]
+		_st := kst[g_Romaji . "LN" . element]
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "1N" . element]
+			_st := kst[g_Romaji . "1N" . element]
 		}
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "3N" . element]
+			_st := kst[g_Romaji . "3N" . element]
 		}
+		Gosub, SetFontColor
+		GuiControl,Font,vkeyRL%element%
 		GuiControl,,vkeyRL%element%,%_ch%
+
 		_ch := kLabel[g_Romaji . "RN" . element]
+		_st := kst[g_Romaji . "RN" . element]
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "2N" . element]
+			_st := kst[g_Romaji . "2N" . element]
 		}
 		if(_ch == "") {
 			_ch := kLabel[g_Romaji . "4N" . element]
+			_st := kst[g_Romaji . "4N" . element]
 		}
+		Gosub, SetFontColor
+		GuiControl,Font,vkeyRR%element%
 		GuiControl,,vkeyRR%element%,%_ch%
+
 		GuiControl,+Redraw,vkeyDN%element%
 		GuiControl,+Redraw,vkeyRK%element%
 		GuiControl,+Redraw,vkeyRN%element%
@@ -620,6 +653,21 @@ G2RefreshLayout:
 		GuiControl,+Redraw,vkeyRR%element%
 	}
 	Critical,off
+	return
+
+
+;-----------------------------------------------------------------------
+; 機能：フォント色の設定
+;-----------------------------------------------------------------------
+SetFontColor:
+	if(_st=="e") {
+		Gui, Font,s10 cC00000 Norm,Meiryo UI
+	} else
+	if(_st=="Q") {
+		Gui, Font,s10 c0000FF Norm,Meiryo UI
+	} else {
+		Gui, Font,s10 c000000 Norm,Meiryo UI
+	}
 	return
 
 ;-----------------------------------------------------------------------

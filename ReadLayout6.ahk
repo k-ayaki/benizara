@@ -1,14 +1,14 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.5 .... 2021/4/22
+;	ver.0.1.4.6 .... 2021/4/24
 ;-----------------------------------------------------------------------
 ReadLayout:
-	ksf := Object()	; 表層形
-	kup := Object()
-	kdn := Object()
-	mup := Object()
-	mdn := Object()
+	kst := Object()	; キーの状態
+	kup := Object()	; keyup したときの Send形式
+	kdn := Object()	; keydown したときの Send形式
+	mup := Object()	; キーボードそのものを keyup したときの Send形式
+	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
 	_colhash := Object()
 	_colhash[1] := "E"
@@ -16,6 +16,13 @@ ReadLayout:
 	_colhash[3] := "C"
 	_colhash[4] := "B"
 	_colhash[5] := "A"
+
+	_colkeyshash := Object()
+	_colkeyshash["E"] := 13
+	_colkeyshash["D"] := 12
+	_colkeyshash["C"] := 12
+	_colkeyshash["B"] := 11
+	_colkeyshash["A"] := 4
 	
 	_rowhash := Object()
 	_rowhash[0] := "00"
@@ -65,7 +72,6 @@ ReadLayout:
 	if(_error <> "")
 	{
 		Msgbox,%_error%
-
 		LFA := ""
 		LFN := ""
 	}
@@ -83,6 +89,7 @@ InitLayout2:
 	kLabel := MakeKeyLabelHash()
 	g_layoutName := ""
 	g_layoutVersion := ""
+	g_layoutURL := ""
 	LF := Object()
 	LF["ANN"] := 0
 	LF["ALN"] := 0
@@ -208,12 +215,15 @@ ReadLayoutFile:
 	}
 	Gosub,InitLayout2
 	_mode := ""
+	_modeName := ""
 	_Section := ""
 	_lpos := ""
 	_mline := 0
 	_error := ""
+	_lineCtr := 0
 	Loop
 	{
+		_lineCtr := _lineCtr + 1
 		FileReadLine, _line, %vLayoutFile%, %A_Index%
 		If(ErrorLevel <> 0)
 		{
@@ -240,6 +250,7 @@ ReadLayoutFile:
 				_lpos := ""
 				if(_mode <> "")
 				{
+					_modeName := _line2
 					_mline := 1
 				}
 				continue
@@ -262,11 +273,14 @@ ReadLayoutFile:
 				_mline += 1
 				if(_mline > 4)
 				{
-					GoSub, Mode2Key
+					GoSub, Mode2Key		; 親指シフトレイアウトの処理
 					if(_error <> "")
 					{
+						_error := vLayoutFile . ":" . _modeName . ":" . _error
+
 						_Section := ""
 						_mode := ""
+						_modeName := ""
 						_lpos := ""
 						_mline := 0
 						return
@@ -286,9 +300,11 @@ ReadLayoutFile:
 				_mline += 1
 				if(_mline > 4)
 				{
-					GoSub, Mode3Key
+					GoSub, Mode3Key		; 同時打鍵レイアウトの処理
 					if(_error <> "")
 					{
+						_error := vLayoutFile . ":" . _modeName . ":" . _error
+
 						_Section := ""
 						_mode := ""
 						_lpos := ""
@@ -317,6 +333,11 @@ ReadLayoutFile:
 					if(org[1]=="バージョン")
 					{
 						g_layoutVersion := org[2]
+					}
+					else
+					if(org[1]=="URL")
+					{
+						g_layoutURL := org[2]
 					}
 				}
 				continue
@@ -348,49 +369,97 @@ Mode2Key:
 	_error := ""
 	LF[_mode] := 1
 	_col := "E"
-	org := StrSplit(LF[_mode . "E"],",")
+	org := SplitColumn(LF[_mode . "E"])
 	if(org.MaxIndex() <> 13)
 	{
-		_error := _Section . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のE段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetKeyTable
+	if(_error <> "") 
+		return
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	
 	_col := "D"
-	org := StrSplit(LF[_mode . "D"],",")
+	org := SplitColumn(LF[_mode . "D"])
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _Section . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のD段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetKeyTable
+	if(_error <> "")
+		return
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	
 	_col := "C"
-	org := StrSplit(LF[_mode . "C"],",")
+	org := SplitColumn(LF[_mode . "C"])
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _Section . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のC段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetKeyTable
+	if(_error <> "")
+		return
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 
 	_col := "B"
-	org := StrSplit(LF[_mode . "B"],",")
+	org := SplitColumn(LF[_mode . "B"])
 	if(org.MaxIndex() <> 11)
 	{
-		_error := _Section . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のB段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetKeyTable
+	if(_error <> "")
+		return
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
 	return
+
+;----------------------------------------------------------------------
+;	カラム行をカンマで分割して配列に設定
+;----------------------------------------------------------------------
+SplitColumn(lColumn) {
+	obj := Object()
+	idx := 0
+
+	while(lColumn <> "") {
+		idx := idx + 1
+		StringLeft, _cl, lColumn, 1
+		if(_cl = "'" || _cl = """") {
+			cpos := 2
+			cpos := Instr(lColumn, _cl, false, cpos)
+			if(cpos!=0) {	; 対応する引用符があった
+				cpos := Instr(lColumn, ",", false, cpos + 1)
+				if(cpos!=0) {	; 次のカンマがあった
+					obj[idx] := SubStr(lColumn,1,cpos-1)
+					lColumn := SubStr(lColumn,cpos+1)
+				} else {
+					obj[idx] := lColumn
+					lColumn := ""
+				}
+			} else {
+				obj[idx] := lColumn
+				lColumn := ""
+			}
+		} else {
+			cpos := Instr(lColumn, ",")
+			if(cpos!=0) {	; 次のカンマがあった
+				obj[idx] := SubStr(lColumn,1,cpos-1)
+				lColumn := SubStr(lColumn,cpos+1)
+			} else {
+				obj[idx] := lColumn
+				lColumn := ""
+			}
+		}
+	}
+	return obj
+}
 
 ;----------------------------------------------------------------------
 ;	文字の同時打鍵のレイアウトを処理
@@ -401,40 +470,48 @@ Mode3Key:
 	if(_mode2!="") 
 		LF[_mode2] := 1
 	_col := "E"
-	org := StrSplit(LF[_lpos . "E"],",")
+	org := SplitColumn(LF[_lpos . "E"])
 	if(org.MaxIndex() <> 13)
 	{
-		_error := _Section . "の１段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のE段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetSimulKeyTable
+	if(_error <> "")
+		return
 	
 	_col := "D"
-	org := StrSplit(LF[_lpos . "D"],",")
+	org := SplitColumn(LF[_lpos . "D"])
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _Section . "の２段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のD段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetSimulKeyTable
+	if(_error <> "")
+		return
 	
 	_col := "C"
-	org := StrSplit(LF[_lpos . "C"],",")
+	org := SplitColumn(LF[_lpos . "C"])
 	if(org.MaxIndex() <> 12)
 	{
-		_error := _Section . "の３段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のC段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetSimulKeyTable
+	if(_error <> "")
+		return
 
 	_col := "B"
-	org := StrSplit(LF[_lpos . "B"],",")
+	org := SplitColumn(LF[_lpos . "B"])
 	if(org.MaxIndex() <> 11)
 	{
-		_error := _Section . "の４段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
+		_error := _Section . "のB段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
 	}
 	Gosub, SetSimulKeyTable
+	if(_error <> "")
+		return
 	return
 
 ;----------------------------------------------------------------------
@@ -450,36 +527,14 @@ SetLayoutProperty:
 		RemapOyaKey("A")
 		
 		if(LF["ALK"] == 0) {
-			CopyKeyTable("ALK", "ANK")
+			CopyColumns("ANK", "ALK")
 			_mode := "ALK"
-			_col := "E"
-			org := StrSplit(LF[_mode . "E"],",")
-			Gosub, SetKeyTable
-			_col := "D"
-			org := StrSplit(LF[_mode . "D"],",")
-			Gosub, SetKeyTable
-			_col := "C"
-			org := StrSplit(LF[_mode . "C"],",")
-			Gosub, SetKeyTable
-			_col := "B"
-			org := StrSplit(LF[_mode . "B"],",")
-			Gosub, SetKeyTable
+			Gosub, SetE2BKeyTables
 		}
 		if(LF["ARK"] == 0) {
-			CopyKeyTable("ARK", "ANK")
+			CopyColumns("ANK", "ARK")
 			_mode := "ARK"
-			_col := "E"
-			org := StrSplit(LF[_mode . "E"],",")
-			Gosub, SetKeyTable
-			_col := "D"
-			org := StrSplit(LF[_mode . "D"],",")
-			Gosub, SetKeyTable
-			_col := "C"
-			org := StrSplit(LF[_mode . "C"],",")
-			Gosub, SetKeyTable
-			_col := "B"
-			org := StrSplit(LF[_mode . "B"],",")
-			Gosub, SetKeyTable
+			Gosub, SetE2BKeyTables
 		}
 	} else 
 	if(LF["ANN"]==1 && (LF["A1N"]==1 || LF["A2N"]==1) && LF["ANK"]==1 (LF["A1K"]==1 || LF["A2K"]==1)) 
@@ -501,38 +556,16 @@ SetLayoutProperty:
 	{
 		ShiftMode["R"] := "親指シフト"
 		RemapOyaKey("R")
-		
+
 		if(LF["RLK"] == 0) {
-			CopyKeyTable("RLK", "RNK")
-			_mode := "ALK"
-			_col := "E"
-			org := StrSplit(LF[_mode . "E"],",")
-			Gosub, SetKeyTable
-			_col := "D"
-			org := StrSplit(LF[_mode . "D"],",")
-			Gosub, SetKeyTable
-			_col := "C"
-			org := StrSplit(LF[_mode . "C"],",")
-			Gosub, SetKeyTable
-			_col := "B"
-			org := StrSplit(LF[_mode . "B"],",")
-			Gosub, SetKeyTable
+			CopyColumns("RNK", "RLK")
+			_mode := "RLK"
+			Gosub, SetE2BKeyTables
 		}
 		if(LF["RRK"] == 0) {
-			CopyKeyTable("RRK", "RNK")
-			_mode := "ARK"
-			_col := "E"
-			org := StrSplit(LF[_mode . "E"],",")
-			Gosub, SetKeyTable
-			_col := "D"
-			org := StrSplit(LF[_mode . "D"],",")
-			Gosub, SetKeyTable
-			_col := "C"
-			org := StrSplit(LF[_mode . "C"],",")
-			Gosub, SetKeyTable
-			_col := "B"
-			org := StrSplit(LF[_mode . "B"],",")
-			Gosub, SetKeyTable
+			CopyColumns("RNK","RRK")
+			_mode := "RRK"
+			Gosub, SetE2BKeyTables
 		}
 	} else
 	if(LF["RNN"]==1 && (LF["R1N"]==1 || LF["R2N"]==1) && LF["RNK"]==1 && (LF["R1K"]==1 || LF["R2K"]==1))
@@ -551,7 +584,31 @@ SetLayoutProperty:
 	}
 	return
 
-
+;----------------------------------------------------------------------
+;	E段からB段までカラム列からキー配列表を設定
+;----------------------------------------------------------------------
+SetE2BKeyTables:
+	_col := "E"
+	org := StrSplit(LF[_mode . "E"],",")
+	Gosub, SetKeyTable
+	if(_error <> "")
+		return
+	_col := "D"
+	org := StrSplit(LF[_mode . "D"],",")
+	Gosub, SetKeyTable
+	if(_error <> "")
+		return
+	_col := "C"
+	org := StrSplit(LF[_mode . "C"],",")
+	Gosub, SetKeyTable
+	if(_error <> "")
+		return
+	_col := "B"
+	org := StrSplit(LF[_mode . "B"],",")
+	Gosub, SetKeyTable
+	if(_error <> "") 
+		return
+	return
 
 ;----------------------------------------------------------------------
 ;	親指キー設定をキー属性配列に反映させる
@@ -634,16 +691,18 @@ SetKeyTable:
 			}
 			continue
 		}
-
-		; 引用符つき文字列を登録・・・2020年10月以降のWindows10ではダメになった
-		_qstr := QuotedStr(org[A_Index])
+		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
+		_qstr := GetQuotedStr(org[A_Index])
 		if(_error <> "")
 		{
+			_error := _lpos2 . ":" . _error
 			break
 		}
 		if(_qstr <> "")
 		{
-			kdn[_mode . _lpos2] := _qstr
+			kLabel[_mode . _lpos2] := _qstr
+			kst[_mode . _lpos2] := "Q"
+			kdn[_mode . _lpos2] := Str2Vout(_qstr)
 			kup[_mode . _lpos2] := ""
 			continue
 		}
@@ -652,13 +711,18 @@ SetKeyTable:
 		if(_vk <> "")
 		{
 			kLabel[_mode . _lpos2] := _vk
+			kst[_mode . _lpos2] := "V"	; VKEY
 			kdn[_mode . _lpos2] := "{" . _vk . "}"
 			kup[_mode . _lpos2] := ""
 			continue
 		}
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
-		
+		if(IsKoyubiError(_mode, _aStr)==0) {
+			kst[_mode . _lpos2] := "S"
+		} else {
+			kst[_mode . _lpos2] := "e"
+		}
 		; 送信形式に変換
 		GenSendStr2(_aStr, _down, _up)
 		if( _down <> "")
@@ -679,6 +743,23 @@ SetKeyTable:
 	return
 
 ;----------------------------------------------------------------------
+;	小指シフトモード時の禁止文字でないか否か
+;----------------------------------------------------------------------
+IsKoyubiError(_mode, _aStr) {
+	st := 0
+	if(SubStr(_mode,3,1)=="K") {
+		loop, Parse, _aStr
+		{
+			if(instr("；：［］￥＠／＾",A_LoopField) != 0) {
+				st := 1
+				break
+			}
+		}
+	}
+	return st
+}
+
+;----------------------------------------------------------------------
 ;	ローマ字＋文字同時打鍵のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetSimulKeyTable:
@@ -687,17 +768,22 @@ SetSimulKeyTable:
 		_row2 := _rowhash[A_Index]
 		_lpos2 := _col . _row2
 
-		; 引用符つき文字列を登録・・・2020年10月以降のWindows10ではダメになった
-		_qstr := QuotedStr(org[A_Index])
+		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
+		_qstr := GetQuotedStr(org[A_Index])
 		if(_error <> "")
 		{
+			_error := _lpos2 . ":" . _error
 			break
 		}
 		if(_qstr <> "")
 		{
-			kdn[_lpos . _lpos2] := _qstr
+			_vout := Str2Vout(qstr)
+			
+			kst[_lpos . _lpos2] := "Q"	; 引用符
+			kdn[_lpos . _lpos2] := _vout
 			kup[_lpos . _lpos2] := ""
-			kdn[_lpos2 . _lpos] := _qstr
+			kst[_lpos2 . _lpos] := "Q"	; 引用符
+			kdn[_lpos2 . _lpos] := _vout
 			kup[_lpos2 . _lpos] := ""
 			keyAttribute2["R" . _lpos2] := "S"
 			keyAttribute2["R" . _lpos]  := "S"
@@ -711,8 +797,11 @@ SetSimulKeyTable:
 			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 			if(_mode2 != "") 
 				KLabel[_mode2 . _lpos2] := _vk
+
+			kst[_lpos . _lpos2] := "V"	; 仮想キーコード
 			kdn[_lpos . _lpos2] := "{" . _vk . "}"
 			kup[_lpos . _lpos2] := ""
+			kst[_lpos2 . _lpos] := "V"	; 仮想キーコード
 			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
 			kup[_lpos2 . _lpos] := ""
 			keyAttribute2["R" . _lpos2] := "S"
@@ -730,8 +819,11 @@ SetSimulKeyTable:
 			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 			if(_mode2 != "") 
 				KLabel[_mode2  . _lpos2] := Romaji2Kana(org[A_Index])
+			kst[_lpos . _lpos2] := ""	;
 			kdn[_lpos . _lpos2] := _down
 			kup[_lpos . _lpos2] := _up
+			
+			kst[_lpos2 . _lpos] := ""	; 
 			kdn[_lpos2 . _lpos] := _down
 			kup[_lpos2 . _lpos] := _up
 			keyAttribute2["R" . _lpos2] := "S"
@@ -756,9 +848,9 @@ SetAlphabet:
 	return
 	
 ;----------------------------------------------------------------------
-;	キーテーブルの複写
+;	カラム配列の複写
 ;----------------------------------------------------------------------
-CopyKeyTable(_mddst, _mdsrc)
+CopyColumns(_mdsrc, _mddst)
 {
 	global LF, _rowhash
 
@@ -774,53 +866,46 @@ CopyKeyTable(_mddst, _mdsrc)
 	LF[_mddst . "A"] := LF[_mdsrc . "A"]
 	return
 }
+
 ;----------------------------------------------------------------------
 ;	引用文字
 ;----------------------------------------------------------------------
-QuotedStr(aStr) {
+GetQuotedStr(aStr) {
 	global _error
-	
-	vOut := ""
+
+	aQuo := ""
 	StringLeft, _cl, aStr, 1
 	if(_cl = "'" || _cl = """") {
-		if(strlen(aStr) < 3)
+		StringRight, _cr, aStr, 1
+		if(_cr = _cl)
 		{
+			aQuo := SubStr(aStr, 2, StrLen(aStr) - 2)
+		} else {
 			_error := "引用符が閉じられていません"
 		}
-		else
-		{
-			StringRight, _cr, aStr, 1
-			if(_cr = _cl)
-			{
-				aQuo := SubStr(aStr, 2, StrLen(aStr) - 2)
-				vOut := ParseEscSeq(aQuo)
-			} else {
-				_error := "引用符が閉じられていません"
-			}
+	}
+	return aQuo
+}
+
+;----------------------------------------------------------------------
+;	文字列をAutohotkeyの出力形式に変換
+;----------------------------------------------------------------------
+Str2Vout(aStr) {
+	global z2hHash
+	
+	vOut := ""
+	loop,Parse, aStr
+	{
+		if(z2hHash[A_LoopField]<>"") {
+			_c := z2hHash[A_LoopField]
+			vOut := vOut . "{ASC " . Asc(_c) . "}"
+		} else {
+			vOut := vOut . "{ASC " . Asc(A_LoopField) . "}"
 		}
 	}
 	return vOut
 }
 
-;----------------------------------------------------------------------
-;	引用符内文字のエスケープ処理
-;----------------------------------------------------------------------
-ParseEscSeq(aQuo) {
-	global z2hHash
-
-	vOut := ""
-	_aQuo2 := ""
-	loop,Parse, aQuo
-	{
-		_aQuo2 := _aQuo2 . z2hHash[A_LoopField]
-	}
-	_aQuo3 := ""
-	loop,Parse, _aQuo2
-	{
-		vOut := vOut . "{ASC " . Asc(A_LoopField) . "}"
-	}
-	return vOut
-}
 ;----------------------------------------------------------------------
 ;	bnz/yabファイルの仮想キーコードを、AutoHotKeyでsendできる形式に変換
 ;	入力：v??
@@ -847,7 +932,6 @@ ConvVkey(aStr) {
 	}
 	return
 }
-
 
 ;----------------------------------------------------------------------
 ; かなをローマ字に変換する
