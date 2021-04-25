@@ -83,7 +83,7 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
-	keyAttribute2 := MakeKeyAttribute2Hash()
+	keyAttribute3 := MakeKeyAttribute3Hash()
 	keyState := MakeKeyState()
 	keyNameHash := MakeKeyNameHash()
 	kLabel := MakeKeyLabelHash()
@@ -614,25 +614,35 @@ SetE2BKeyTables:
 ;	親指キー設定をキー属性配列に反映させる
 ;----------------------------------------------------------------------
 RemapOyaKey(_Romaji) {
-	global keyAttribute2, g_Oya2Layout, g_OyaKey, g_KeySingle
+	global keyAttribute3, g_Oya2Layout, g_OyaKey, g_KeySingle
 
 	if(g_OyaKey == "無変換－空白") {
-		keyAttribute2[_Romaji . "A01"] := "L"
-		keyAttribute2[_Romaji . "A02"] := "R"
-		keyAttribute2[_Romaji . "A03"] := "X"
+		keyAttribute3[_Romaji . "NA01"] := "L"
+		keyAttribute3[_Romaji . "NA02"] := "R"
+		keyAttribute3[_Romaji . "NA03"] := "X"
+		keyAttribute3[_Romaji . "KA01"] := "L"
+		keyAttribute3[_Romaji . "KA02"] := "R"
+		keyAttribute3[_Romaji . "KA03"] := "X"		
 		g_Oya2Layout["L"] := "A01"
 		g_Oya2Layout["R"] := "A02"
 	}
 	else if(g_OyaKey == "空白－変換") {
-		keyAttribute2[_Romaji . "A01"] := "X"
-		keyAttribute2[_Romaji . "A02"] := "L"
-		keyAttribute2[_Romaji . "A03"] := "R"
+		keyAttribute3[_Romaji . "NA01"] := "X"
+		keyAttribute3[_Romaji . "NA02"] := "L"
+		keyAttribute3[_Romaji . "NA03"] := "R"
+		keyAttribute3[_Romaji . "KA01"] := "X"
+		keyAttribute3[_Romaji . "KA02"] := "L"
+		keyAttribute3[_Romaji . "KA03"] := "R"
 		g_Oya2Layout["L"] := "A02"
 		g_Oya2Layout["R"] := "A03"
 	} else {
-		keyAttribute2[_Romaji . "A01"] := "L"
-		keyAttribute2[_Romaji . "A02"] := "X"
-		keyAttribute2[_Romaji . "A03"] := "R"
+		keyAttribute3[_Romaji . "NA01"] := "L"
+		keyAttribute3[_Romaji . "NA02"] := "X"
+		keyAttribute3[_Romaji . "NA03"] := "R"
+		keyAttribute3[_Romaji . "KA01"] := "L"
+		keyAttribute3[_Romaji . "KA02"] := "X"
+		keyAttribute3[_Romaji . "KA03"] := "R"
+
 		g_Oya2Layout["L"] := "A01"
 		g_Oya2Layout["R"] := "A03"
 	}
@@ -641,23 +651,35 @@ RemapOyaKey(_Romaji) {
 		; 英数モードでも変換キーと無変換キーを無効化
 		if(g_KeySingle == "無効") {
 			if(g_OyaKey == "無変換－空白") {
-				keyAttribute2["AA01"] := "L"
-				keyAttribute2["AA02"] := "R"
-				keyAttribute2["AA03"] := "X"
+				keyAttribute3["ANA01"] := "L"
+				keyAttribute3["ANA02"] := "R"
+				keyAttribute3["ANA03"] := "X"
+				keyAttribute3["AKA01"] := "L"
+				keyAttribute3["AKA02"] := "R"
+				keyAttribute3["AKA03"] := "X"
 			}
 			else if(g_OyaKey == "空白－変換") {
-				keyAttribute2["AA01"] := "X"
-				keyAttribute2["AA02"] := "L"
-				keyAttribute2["AA03"] := "R"
+				keyAttribute3["ANA01"] := "X"
+				keyAttribute3["ANA02"] := "L"
+				keyAttribute3["ANA03"] := "R"
+				keyAttribute3["AKA01"] := "X"
+				keyAttribute3["AKA02"] := "L"
+				keyAttribute3["AKA03"] := "R"
 			} else {
-				keyAttribute2["AA01"] := "L"
-				keyAttribute2["AA02"] := "X"
-				keyAttribute2["AA03"] := "R"
+				keyAttribute3["ANA01"] := "L"
+				keyAttribute3["ANA02"] := "X"
+				keyAttribute3["ANA03"] := "R"
+				keyAttribute3["AKA01"] := "L"
+				keyAttribute3["AKA02"] := "X"
+				keyAttribute3["AKA03"] := "R"
 			}
 		} else {
-			keyAttribute2["AA01"] := "X"
-			keyAttribute2["AA02"] := "X"
-			keyAttribute2["AA03"] := "X"
+			keyAttribute3["ANA01"] := "X"
+			keyAttribute3["ANA02"] := "X"
+			keyAttribute3["ANA03"] := "X"
+			keyAttribute3["AKA01"] := "X"
+			keyAttribute3["AKA02"] := "X"
+			keyAttribute3["AKA03"] := "X"
 		}
 	}
 	return
@@ -679,16 +701,11 @@ SetKeyTable:
 		{
 			kdn[_mode . _lpos2] := ""
 			kup[_mode . _lpos2] := ""
-			if(_mode = "RNN")
-			{
-				keyAttribute2["R" . _lpos2] := SubStr(org[A_Index],2,1)
-				kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
-			} else
-			if(_mode = "ANN")
-			{
-				keyAttribute2["A" . _lpos2] := SubStr(org[A_Index],2,1)
-				kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
-			}
+
+			kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
+
+			_mode2 := substr(_mode,1,1) . substr(_mode,3,1)
+			keyAttribute3[_mode2 . _lpos2] := SubStr(org[A_Index],2,1)
 			continue
 		}
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
@@ -720,23 +737,27 @@ SetKeyTable:
 		_aStr := kana2Romaji(org[A_Index])
 		if(IsKoyubiError(_mode, _aStr)==0) {
 			kst[_mode . _lpos2] := "S"
+			; 送信形式に変換
+			GenSendStr2(_aStr, _down, _up)
+			if( _down <> "")
+			{
+				if(SubStr(_mode,1,1)=="R")
+				{
+					kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
+				}
+				else
+				{
+					kLabel[_mode . _lpos2] := org[A_Index]
+				}
+				kdn[_mode . _lpos2] := _down
+				kup[_mode . _lpos2] := _up
+			}
 		} else {
+			; シフトモードの禁止文字ならば直接出力
 			kst[_mode . _lpos2] := "e"
-		}
-		; 送信形式に変換
-		GenSendStr2(_aStr, _down, _up)
-		if( _down <> "")
-		{
-			if(SubStr(_mode,1,1)=="R")
-			{
-				kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
-			}
-			else
-			{
-				kLabel[_mode . _lpos2] := org[A_Index]
-			}
-			kdn[_mode . _lpos2] := _down
-			kup[_mode . _lpos2] := _up
+			kLabel[_mode . _lpos2] := _aStr
+			kdn[_mode . _lpos2] := Str2Vout(_aStr)
+			kup[_mode . _lpos2] := ""
 		}
 		continue
 	}
@@ -750,7 +771,7 @@ IsKoyubiError(_mode, _aStr) {
 	if(SubStr(_mode,3,1)=="K") {
 		loop, Parse, _aStr
 		{
-			if(instr("；：［］￥＠／＾",A_LoopField) != 0) {
+			if(instr("；：［］￥＠／＾ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ",A_LoopField) != 0) {
 				st := 1
 				break
 			}
@@ -785,8 +806,10 @@ SetSimulKeyTable:
 			kst[_lpos2 . _lpos] := "Q"	; 引用符
 			kdn[_lpos2 . _lpos] := _vout
 			kup[_lpos2 . _lpos] := ""
-			keyAttribute2["R" . _lpos2] := "S"
-			keyAttribute2["R" . _lpos]  := "S"
+			keyAttribute3["RN" . _lpos2] := "S"
+			keyAttribute3["RN" . _lpos]  := "S"
+			keyAttribute3["RK" . _lpos2] := "S"
+			keyAttribute3["RK" . _lpos]  := "S"
 			continue
 		}
 		; vkeyならば vkeyとして登録
@@ -804,8 +827,10 @@ SetSimulKeyTable:
 			kst[_lpos2 . _lpos] := "V"	; 仮想キーコード
 			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
 			kup[_lpos2 . _lpos] := ""
-			keyAttribute2["R" . _lpos2] := "S"
-			keyAttribute2["R" . _lpos]  := "S"
+			keyAttribute3["RN" . _lpos2] := "S"
+			keyAttribute3["RN" . _lpos]  := "S"
+			keyAttribute3["RK" . _lpos2] := "S"
+			keyAttribute3["RK" . _lpos]  := "S"
 			continue
 		}
 		; かな文字はローマ字に変換
@@ -826,8 +851,10 @@ SetSimulKeyTable:
 			kst[_lpos2 . _lpos] := ""	; 
 			kdn[_lpos2 . _lpos] := _down
 			kup[_lpos2 . _lpos] := _up
-			keyAttribute2["R" . _lpos2] := "S"
-			keyAttribute2["R" . _lpos]  := "S"
+			keyAttribute3["RN" . _lpos2] := "S"
+			keyAttribute3["RN" . _lpos]  := "S"
+			keyAttribute3["RK" . _lpos2] := "S"
+			keyAttribute3["RK" . _lpos]  := "S"
 		}
 		continue
 	}
@@ -896,11 +923,10 @@ Str2Vout(aStr) {
 	vOut := ""
 	loop,Parse, aStr
 	{
-		if(z2hHash[A_LoopField]<>"") {
-			_c := z2hHash[A_LoopField]
-			vOut := vOut . "{ASC " . Asc(_c) . "}"
-		} else {
+		if(A_LoopField=="{" || A_LoopField=="}") {
 			vOut := vOut . "{ASC " . Asc(A_LoopField) . "}"
+		} else {
+			vOut := vOut . "{" . A_LoopField . "}"
 		}
 	}
 	return vOut
@@ -1492,125 +1518,241 @@ MakeKanaHash()
 ;	L:左親指キー
 ;	R:右親指キー
 ;----------------------------------------------------------------------
-MakeKeyAttribute2Hash() {
-	keyAttribute2 := Object()
-	keyAttribute2["AE00"] := "X"	; 半角/全角
-	keyAttribute2["RE00"] := "X"	; 半角/全角
-	keyAttribute2["AE01"] := "M"
-	keyAttribute2["RE01"] := "M"
-	keyAttribute2["AE02"] := "M"
-	keyAttribute2["RE02"] := "M"
-	keyAttribute2["AE03"] := "M"
-	keyAttribute2["RE03"] := "M"
-	keyAttribute2["AE04"] := "M"
-	keyAttribute2["RE04"] := "M"
-	keyAttribute2["AE05"] := "M"
-	keyAttribute2["RE05"] := "M"
-	keyAttribute2["AE06"] := "M"
-	keyAttribute2["RE06"] := "M"
-	keyAttribute2["AE07"] := "M"
-	keyAttribute2["RE07"] := "M"
-	keyAttribute2["AE08"] := "M"
-	keyAttribute2["RE08"] := "M"
-	keyAttribute2["AE09"] := "M"
-	keyAttribute2["RE09"] := "M"
-	keyAttribute2["AE10"] := "M"
-	keyAttribute2["RE10"] := "M"
-	keyAttribute2["AE11"] := "M"
-	keyAttribute2["RE11"] := "M"
-	keyAttribute2["AE12"] := "M"
-	keyAttribute2["RE12"] := "M"
-	keyAttribute2["AE13"] := "M"
-	keyAttribute2["RE13"] := "M"
-	keyAttribute2["AE14"] := "X"	; Backspace
-	keyAttribute2["RE14"] := "X"	; Backspace
-	keyAttribute2["AD00"] := "X"	; Tab
-	keyAttribute2["RD00"] := "X"	; Tab
-	keyAttribute2["AD01"] := "M"
-	keyAttribute2["RD01"] := "M"
-	keyAttribute2["AD02"] := "M"
-	keyAttribute2["RD02"] := "M"
-	keyAttribute2["AD03"] := "M"
-	keyAttribute2["RD03"] := "M"
-	keyAttribute2["AD04"] := "M"
-	keyAttribute2["RD04"] := "M"
-	keyAttribute2["AD05"] := "M"
-	keyAttribute2["RD05"] := "M"
-	keyAttribute2["AD06"] := "M"
-	keyAttribute2["RD06"] := "M"
-	keyAttribute2["AD07"] := "M"
-	keyAttribute2["RD07"] := "M"
-	keyAttribute2["AD08"] := "M"
-	keyAttribute2["RD08"] := "M"
-	keyAttribute2["AD09"] := "M"
-	keyAttribute2["RD09"] := "M"
-	keyAttribute2["AD10"] := "M"
-	keyAttribute2["RD10"] := "M"
-	keyAttribute2["AD11"] := "M"
-	keyAttribute2["RD11"] := "M"
-	keyAttribute2["AD12"] := "M"
-	keyAttribute2["RD12"] := "M"
-	keyAttribute2["AC01"] := "M"
-	keyAttribute2["RC01"] := "M"
-	keyAttribute2["AC02"] := "M"
-	keyAttribute2["RC02"] := "M"
-	keyAttribute2["AC03"] := "M"
-	keyAttribute2["RC03"] := "M"
-	keyAttribute2["AC04"] := "M"
-	keyAttribute2["RC04"] := "M"
-	keyAttribute2["AC05"] := "M"
-	keyAttribute2["RC05"] := "M"
-	keyAttribute2["AC06"] := "M"
-	keyAttribute2["RC06"] := "M"
-	keyAttribute2["AC07"] := "M"
-	keyAttribute2["RC07"] := "M"
-	keyAttribute2["AC08"] := "M"
-	keyAttribute2["RC08"] := "M"
-	keyAttribute2["AC09"] := "M"
-	keyAttribute2["RC09"] := "M"
-	keyAttribute2["AC10"] := "M"
-	keyAttribute2["RC10"] := "M"
-	keyAttribute2["AC11"] := "M"
-	keyAttribute2["RC11"] := "M"
-	keyAttribute2["AC12"] := "M"
-	keyAttribute2["RC12"] := "M"
-	keyAttribute2["AC13"] := "X"	; Enter
-	keyAttribute2["RC13"] := "X"	; Enter
-	keyAttribute2["AB01"] := "M"
-	keyAttribute2["RB01"] := "M"
-	keyAttribute2["AB02"] := "M"
-	keyAttribute2["RB02"] := "M"
-	keyAttribute2["AB03"] := "M"
-	keyAttribute2["RB03"] := "M"
-	keyAttribute2["AB04"] := "M"
-	keyAttribute2["RB04"] := "M"
-	keyAttribute2["AB05"] := "M"
-	keyAttribute2["RB05"] := "M"
-	keyAttribute2["AB06"] := "M"
-	keyAttribute2["RB06"] := "M"
-	keyAttribute2["AB07"] := "M"
-	keyAttribute2["RB07"] := "M"
-	keyAttribute2["AB08"] := "M"
-	keyAttribute2["RB08"] := "M"
-	keyAttribute2["AB09"] := "M"
-	keyAttribute2["RB09"] := "M"
-	keyAttribute2["AB10"] := "M"
-	keyAttribute2["RB10"] := "M"
-	keyAttribute2["AB11"] := "M"
-	keyAttribute2["RB11"] := "M"
-	keyAttribute2["AA00"] := "X"	; LCtrl
-	keyAttribute2["RA00"] := "X"	; LCtrl
-	keyAttribute2["AA01"] := "X"
-	keyAttribute2["RA01"] := "X"
-	keyAttribute2["AA02"] := "X"	; Space
-	keyAttribute2["RA02"] := "X"	; Space
-	keyAttribute2["AA03"] := "X"
-	keyAttribute2["RA03"] := "X"
-	keyAttribute2["AA04"] := "X"	; カタカナひらがな
-	keyAttribute2["RA04"] := "X"	; カタカナひらがな
-	keyAttribute2["AA05"] := "X"	; Rctrl
-	keyAttribute2["RA05"] := "X"	; Rctrl
-	return keyAttribute2
+MakeKeyAttribute3Hash() {
+	keyAttribute3 := Object()
+	keyAttribute3["ANE00"] := "X"	; 半角/全角
+	keyAttribute3["AKE00"] := "X"	; 半角/全角
+	keyAttribute3["RNE00"] := "X"	; 半角/全角
+	keyAttribute3["RKE00"] := "X"	; 半角/全角
+	keyAttribute3["ANE01"] := "M"
+	keyAttribute3["AKE01"] := "M"
+	keyAttribute3["RNE01"] := "M"
+	keyAttribute3["RKE01"] := "M"
+	keyAttribute3["ANE02"] := "M"
+	keyAttribute3["AKE02"] := "M"
+	keyAttribute3["RNE02"] := "M"
+	keyAttribute3["RKE02"] := "M"
+	keyAttribute3["ANE03"] := "M"
+	keyAttribute3["AKE03"] := "M"
+	keyAttribute3["RNE03"] := "M"
+	keyAttribute3["RKE03"] := "M"
+	keyAttribute3["ANE04"] := "M"
+	keyAttribute3["AKE04"] := "M"
+	keyAttribute3["RNE04"] := "M"
+	keyAttribute3["RKE04"] := "M"
+	keyAttribute3["ANE05"] := "M"
+	keyAttribute3["AKE05"] := "M"
+	keyAttribute3["RNE05"] := "M"
+	keyAttribute3["RKE05"] := "M"
+	keyAttribute3["ANE06"] := "M"
+	keyAttribute3["AKE06"] := "M"
+	keyAttribute3["RNE06"] := "M"
+	keyAttribute3["RKE06"] := "M"
+	keyAttribute3["ANE07"] := "M"
+	keyAttribute3["AKE07"] := "M"
+	keyAttribute3["RNE07"] := "M"
+	keyAttribute3["RKE07"] := "M"
+	keyAttribute3["ANE08"] := "M"
+	keyAttribute3["AKE08"] := "M"
+	keyAttribute3["RNE08"] := "M"
+	keyAttribute3["RKE08"] := "M"
+	keyAttribute3["ANE09"] := "M"
+	keyAttribute3["AKE09"] := "M"
+	keyAttribute3["RNE09"] := "M"
+	keyAttribute3["RKE09"] := "M"
+	keyAttribute3["ANE10"] := "M"
+	keyAttribute3["AKE10"] := "M"
+	keyAttribute3["RNE10"] := "M"
+	keyAttribute3["RKE10"] := "M"
+	keyAttribute3["ANE11"] := "M"
+	keyAttribute3["AKE11"] := "M"
+	keyAttribute3["RNE11"] := "M"
+	keyAttribute3["RKE11"] := "M"
+	keyAttribute3["ANE12"] := "M"
+	keyAttribute3["AKE12"] := "M"
+	keyAttribute3["RNE12"] := "M"
+	keyAttribute3["RKE12"] := "M"
+	keyAttribute3["ANE13"] := "M"
+	keyAttribute3["AKE13"] := "M"
+	keyAttribute3["RNE13"] := "M"
+	keyAttribute3["RKE13"] := "M"
+	keyAttribute3["ANE14"] := "X"	; Backspace
+	keyAttribute3["AKE14"] := "X"	; Backspace
+	keyAttribute3["RNE14"] := "X"	; Backspace
+	keyAttribute3["RKE14"] := "X"	; Backspace
+	keyAttribute3["AND00"] := "X"	; Tab
+	keyAttribute3["AKD00"] := "X"	; Tab
+	keyAttribute3["RND00"] := "X"	; Tab
+	keyAttribute3["RKD00"] := "X"	; Tab
+	keyAttribute3["AND01"] := "M"
+	keyAttribute3["AKD01"] := "M"
+	keyAttribute3["RND01"] := "M"
+	keyAttribute3["RKD01"] := "M"
+	keyAttribute3["AND02"] := "M"
+	keyAttribute3["AKD02"] := "M"
+	keyAttribute3["RND02"] := "M"
+	keyAttribute3["RKD02"] := "M"
+	keyAttribute3["AND03"] := "M"
+	keyAttribute3["AKD03"] := "M"
+	keyAttribute3["RND03"] := "M"
+	keyAttribute3["RKD03"] := "M"
+	keyAttribute3["AND04"] := "M"
+	keyAttribute3["AKD04"] := "M"
+	keyAttribute3["RND04"] := "M"
+	keyAttribute3["RKD04"] := "M"
+	keyAttribute3["AND05"] := "M"
+	keyAttribute3["AKD05"] := "M"
+	keyAttribute3["RND05"] := "M"
+	keyAttribute3["RKD05"] := "M"
+	keyAttribute3["AND06"] := "M"
+	keyAttribute3["AKD06"] := "M"
+	keyAttribute3["RND06"] := "M"
+	keyAttribute3["RKD06"] := "M"
+	keyAttribute3["AND07"] := "M"
+	keyAttribute3["AKD07"] := "M"
+	keyAttribute3["RND07"] := "M"
+	keyAttribute3["RKD07"] := "M"
+	keyAttribute3["AND08"] := "M"
+	keyAttribute3["AKD08"] := "M"
+	keyAttribute3["RND08"] := "M"
+	keyAttribute3["RKD08"] := "M"
+	keyAttribute3["AND09"] := "M"
+	keyAttribute3["AKD09"] := "M"
+	keyAttribute3["RND09"] := "M"
+	keyAttribute3["RKD09"] := "M"
+	keyAttribute3["AND10"] := "M"
+	keyAttribute3["AKD10"] := "M"
+	keyAttribute3["RND10"] := "M"
+	keyAttribute3["RKD10"] := "M"
+	keyAttribute3["AND11"] := "M"
+	keyAttribute3["AKD11"] := "M"
+	keyAttribute3["RND11"] := "M"
+	keyAttribute3["RKD11"] := "M"
+	keyAttribute3["AND12"] := "M"
+	keyAttribute3["AKD12"] := "M"
+	keyAttribute3["RND12"] := "M"
+	keyAttribute3["RKD12"] := "M"
+	keyAttribute3["ANC01"] := "M"
+	keyAttribute3["AKC01"] := "M"
+	keyAttribute3["RNC01"] := "M"
+	keyAttribute3["RKC01"] := "M"
+	keyAttribute3["ANC02"] := "M"
+	keyAttribute3["AKC02"] := "M"
+	keyAttribute3["RNC02"] := "M"
+	keyAttribute3["RKC02"] := "M"
+	keyAttribute3["ANC03"] := "M"
+	keyAttribute3["AKC03"] := "M"
+	keyAttribute3["RNC03"] := "M"
+	keyAttribute3["RKC03"] := "M"
+	keyAttribute3["ANC04"] := "M"
+	keyAttribute3["AKC04"] := "M"
+	keyAttribute3["RNC04"] := "M"
+	keyAttribute3["RKC04"] := "M"
+	keyAttribute3["ANC05"] := "M"
+	keyAttribute3["AKC05"] := "M"
+	keyAttribute3["RNC05"] := "M"
+	keyAttribute3["RKC05"] := "M"
+	keyAttribute3["ANC06"] := "M"
+	keyAttribute3["AKC06"] := "M"
+	keyAttribute3["RNC06"] := "M"
+	keyAttribute3["RKC06"] := "M"
+	keyAttribute3["ANC07"] := "M"
+	keyAttribute3["AKC07"] := "M"
+	keyAttribute3["RNC07"] := "M"
+	keyAttribute3["RKC07"] := "M"
+	keyAttribute3["ANC08"] := "M"
+	keyAttribute3["AKC08"] := "M"
+	keyAttribute3["RNC08"] := "M"
+	keyAttribute3["RKC08"] := "M"
+	keyAttribute3["ANC09"] := "M"
+	keyAttribute3["AKC09"] := "M"
+	keyAttribute3["RNC09"] := "M"
+	keyAttribute3["RKC09"] := "M"
+	keyAttribute3["ANC10"] := "M"
+	keyAttribute3["AKC10"] := "M"
+	keyAttribute3["RNC10"] := "M"
+	keyAttribute3["RKC10"] := "M"
+	keyAttribute3["ANC11"] := "M"
+	keyAttribute3["AKC11"] := "M"
+	keyAttribute3["RNC11"] := "M"
+	keyAttribute3["RKC11"] := "M"
+	keyAttribute3["ANC12"] := "M"
+	keyAttribute3["AKC12"] := "M"
+	keyAttribute3["RNC12"] := "M"
+	keyAttribute3["RKC12"] := "M"
+	keyAttribute3["ANC13"] := "X"	; Enter
+	keyAttribute3["AKC13"] := "X"	; Enter
+	keyAttribute3["RNC13"] := "X"	; Enter
+	keyAttribute3["RKC13"] := "X"	; Enter
+	keyAttribute3["ANB01"] := "M"
+	keyAttribute3["AKB01"] := "M"
+	keyAttribute3["RNB01"] := "M"
+	keyAttribute3["RKB01"] := "M"
+	keyAttribute3["ANB02"] := "M"
+	keyAttribute3["AKB02"] := "M"
+	keyAttribute3["RNB02"] := "M"
+	keyAttribute3["RKB02"] := "M"
+	keyAttribute3["ANB03"] := "M"
+	keyAttribute3["AKB03"] := "M"
+	keyAttribute3["RNB03"] := "M"
+	keyAttribute3["RKB03"] := "M"
+	keyAttribute3["ANB04"] := "M"
+	keyAttribute3["AKB04"] := "M"
+	keyAttribute3["RNB04"] := "M"
+	keyAttribute3["RKB04"] := "M"
+	keyAttribute3["ANB05"] := "M"
+	keyAttribute3["AKB05"] := "M"
+	keyAttribute3["RNB05"] := "M"
+	keyAttribute3["RKB05"] := "M"
+	keyAttribute3["ANB06"] := "M"
+	keyAttribute3["AKB06"] := "M"
+	keyAttribute3["RNB06"] := "M"
+	keyAttribute3["RKB06"] := "M"
+	keyAttribute3["ANB07"] := "M"
+	keyAttribute3["AKB07"] := "M"
+	keyAttribute3["RNB07"] := "M"
+	keyAttribute3["RKB07"] := "M"
+	keyAttribute3["ANB08"] := "M"
+	keyAttribute3["AKB08"] := "M"
+	keyAttribute3["RNB08"] := "M"
+	keyAttribute3["RKB08"] := "M"
+	keyAttribute3["ANB09"] := "M"
+	keyAttribute3["AKB09"] := "M"
+	keyAttribute3["RNB09"] := "M"
+	keyAttribute3["RKB09"] := "M"
+	keyAttribute3["ANB10"] := "M"
+	keyAttribute3["AKB10"] := "M"
+	keyAttribute3["RNB10"] := "M"
+	keyAttribute3["RKB10"] := "M"
+	keyAttribute3["ANB11"] := "M"
+	keyAttribute3["AKB11"] := "M"
+	keyAttribute3["RNB11"] := "M"
+	keyAttribute3["RKB11"] := "M"
+	keyAttribute3["ANA00"] := "X"	; LCtrl
+	keyAttribute3["AKA00"] := "X"	; LCtrl
+	keyAttribute3["RNA00"] := "X"	; LCtrl
+	keyAttribute3["RKA00"] := "X"	; LCtrl
+	keyAttribute3["ANA01"] := "X"
+	keyAttribute3["AKA01"] := "X"
+	keyAttribute3["RNA01"] := "X"
+	keyAttribute3["RKA01"] := "X"
+	keyAttribute3["ANA02"] := "X"	; Space
+	keyAttribute3["AKA02"] := "X"	; Space
+	keyAttribute3["RNA02"] := "X"	; Space
+	keyAttribute3["RKA02"] := "X"	; Space
+	keyAttribute3["ANA03"] := "X"
+	keyAttribute3["AKA03"] := "X"
+	keyAttribute3["RNA03"] := "X"
+	keyAttribute3["RKA03"] := "X"
+	keyAttribute3["ANA04"] := "X"	; カタカナひらがな
+	keyAttribute3["AKA04"] := "X"	; カタカナひらがな
+	keyAttribute3["RNA04"] := "X"	; カタカナひらがな
+	keyAttribute3["RKA04"] := "X"	; カタカナひらがな
+	keyAttribute3["ANA05"] := "X"	; Rctrl
+	keyAttribute3["AKA05"] := "X"	; Rctrl
+	keyAttribute3["RNA05"] := "X"	; Rctrl
+	keyAttribute3["RKA05"] := "X"	; Rctrl
+	return keyAttribute3
 }
 
 ;----------------------------------------------------------------------

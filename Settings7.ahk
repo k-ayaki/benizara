@@ -447,12 +447,12 @@ DrawKeyRectA:
 	_col2 := _colhash[_col]
 	_row2 := _rowhash[_row]
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(keyAttribute2[g_Romaji . _col2 . _row2] == "L")
+	if(keyAttribute3[g_Romaji . "N" . _col2 . _row2] == "L")
 	{
 		Gui, Font,s42 cFFFF00,Yu Gothic UI
 	}
 	else
-	if(keyAttribute2[g_Romaji . _col2 . _row2] == "R")
+	if(keyAttribute3[g_Romaji . "K" . _col2 . _row2] == "R")
 	{
 		Gui, Font,s42 c00FFFF,Yu Gothic UI
 	}
@@ -539,14 +539,14 @@ RefreshLayoutA1:
 	Critical
 	Gui, Submit, NoHide
 	GuiControl,-Redraw,vkeyDN%_layoutPos%
-	if(keyAttribute2[g_Romaji . _layoutPos] == "L")
+	if(keyAttribute3[g_Romaji . "N" . _layoutPos] == "L")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
 		GuiControl,Font,vkeyFC%_layoutPos%
 		GuiControl,,vkeyFA%_layoutPos%,左親指
 	}
 	else
-	if(keyAttribute2[g_Romaji . _layoutPos] == "R")
+	if(keyAttribute3[g_Romaji . "N" . _layoutPos] == "R")
 	{
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
 		GuiControl,Font,vkeyFC%_layoutPos%

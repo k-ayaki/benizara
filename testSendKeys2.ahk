@@ -8,3 +8,11 @@
 2::
 	send, {blind}{^ down}{^ up}
 	Return
+
+3::
+	send, {blind}{LShift up}{@ down}{@ up}{LShift down}
+	Return
+
++3::
+	send, {blind}{LShift up}{@ down}{@ up}{LShift down}
+	Return

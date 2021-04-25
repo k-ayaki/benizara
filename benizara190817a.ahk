@@ -897,15 +897,11 @@ keydown2:
 		critical,off
 		return
 	}
-	if(g_Koyubi == "K") {
-		g_prefixshift := ""
-	} else {
-		if(g_prefixshift == "")
-		{
-			g_prefixshift := g_metaKey
-			critical,off
-			return
-		}
+	if(g_prefixshift == "")
+	{
+		g_prefixshift := g_metaKey
+		critical,off
+		return
 	}
 	g_MojiOnHold   := g_layoutPos
 	g_RomajiOnHold := g_Romaji
@@ -1414,23 +1410,29 @@ Interrupt10:
 		{
 			; ひらがな／カタカナキーはキーアップを受信できないから、0.1秒でキーアップと見做す
 			g_layoutPos := "A04"
-			g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
+			g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
 			kName := keyNameHash[g_layoutPos]
 			goto, keyup%g_metaKey%
 		}
 	}
 	if(A_IsCompiled <> 1)
 	{
+		vImeMode := IME_GET() & 32767
+		vImeConvMode := IME_GetConvMode()
+		szConverting := IME_GetConverting()
+
 		if(ShiftMode["R"] == "文字同時打鍵" ) {
 			g_S12Interval := g_Interval["S12"]
 			g_S2_1Interval := g_Interval["S2_1"]
 			g_S_1_2Interval := g_Interval["S_1_2"]
 			;Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
-		}
+		} else
 		if(ShiftMode["R"] == "親指シフト" ) {
-			;g_debugout := keyAttribute2["AA01"] . keyAttribute2["AA03"] . keyAttribute2["RA01"] . keyAttribute2["RA03"] . g_KeySingle
-			g_debugout := g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . kdn[g_Romaji . g_Oya . g_Koyubi . g_layoutPos]
+			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . szConverting . "]"
+			Tooltip, %g_debugout%, 0, 0, 2 ; debug
+		} else {
+			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . szConverting . "]"
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 	}
@@ -1792,7 +1794,7 @@ SetHookInit()
 ;----------------------------------------------------------------------
 SetHook(flg,oya_flg)
 {
-	global ShiftMode, g_KeySingle, g_OyaKeyOn, g_MojiCount, g_Oya, g_Romaji
+	global ShiftMode, g_KeySingle, g_OyaKeyOn, g_MojiCount, g_Oya, g_Romaji, g_Koyubi
 	Critical
 	hotkey,*sc002,%flg%		;1
 	hotkey,*sc002 up,%flg%
@@ -1908,14 +1910,14 @@ SetHook(flg,oya_flg)
 	Hotkey,Space,%flg%
 	Hotkey,Space up,%flg%
 
-	if(keyAttribute2[g_Romaji . "A01"]!="X") {
+	if(keyAttribute3[g_Romaji . g_Koyubi . "A01"]!="X") {
 		Hotkey,*sc07B,%oya_flg%
 		Hotkey,*sc07B up,%oya_flg%
 	} else {
 		Hotkey,*sc07B,off
 		Hotkey,*sc07B up,off
 	}
-	if(keyAttribute2[g_Romaji . "A03"]!="X") {
+	if(keyAttribute3[g_Romaji . g_Koyubi . "A03"]!="X") {
 		Hotkey,*sc079,%oya_flg%
 		Hotkey,*sc079 up,%oya_flg%
 	} else {
@@ -1998,7 +2000,7 @@ gSC079:				; 変換キー（右）
 gLCTRL:
 gRCTRL:
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
+	g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keydown%g_metaKey%
 
@@ -2066,7 +2068,7 @@ gSC079up:
 gLCTRLup:
 gRCTRLup:
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute2[g_Romaji . g_layoutPos]
+	g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keyup%g_metaKey%
 
