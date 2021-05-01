@@ -1972,7 +1972,7 @@ MakekeyNameHash()
 	hash["E11"] := "-"
 	hash["E12"] := "^"
 	hash["E13"] := "\"
-	hash["E14"] := "Backspace"
+	hash["E14"] := "Backspace"	;\b
 
 	hash["D00"] := "Tab"
 	hash["D01"] := "q"
@@ -2055,9 +2055,9 @@ MakeLayoutPosHash()
 	hash["*sc00C"]    := "E11"
 	hash["*sc00D"]    := "E12"
 	hash["*sc07D"]    := "E13"
-	hash["Backspace"] := "E14"	; \b
+	hash["*sc00E"]    := "E14"	; \b
 
-	hash["Tab"]       := "D00"	;tab
+	hash["*sc00F"]    := "D00"	;tab
 	hash["*sc010"]    := "D01"
 	hash["*sc011"]    := "D02"
 	hash["*sc012"]    := "D03"
@@ -2083,7 +2083,7 @@ MakeLayoutPosHash()
 	hash["*sc027"]    := "C10"
 	hash["*sc028"]    := "C11"
 	hash["*sc02B"]    := "C12"
-	hash["Enter"]     := "C13"
+	hash["*sc01C"]    := "C13"	;Enter
 	
 	hash["*sc02C"]    := "B01"
 	hash["*sc02D"]    := "B02"
@@ -2099,7 +2099,7 @@ MakeLayoutPosHash()
 
 	hash["LCtrl"]     := "A00"
 	hash["*sc07B"]    := "A01"
-	hash["Space"]     := "A02"
+	hash["*sc039"]    := "A02"
 	hash["*sc079"]    := "A03"
 	hash["*sc070"]    := "A04"	;カタカナ/ひらがな
 	hash["RCtrl"]     := "A05"
@@ -2118,9 +2118,9 @@ MakeLayoutPosHash()
 	hash["*sc00C up"] := "E11"
 	hash["*sc00D up"] := "E12"
 	hash["*sc07D up"] := "E13"
-	hash["Backspace up"] := "E14"	; \b
+	hash["*sc00E up"] := "E14"	; \b
 
-	hash["Tab up"]    := "D00"	;tab
+	hash["*sc00F up"] := "D00"	;tab
 	hash["*sc010 up"] := "D01"
 	hash["*sc011 up"] := "D02"
 	hash["*sc012 up"] := "D03"
@@ -2146,7 +2146,7 @@ MakeLayoutPosHash()
 	hash["*sc027 up"] := "C10"
 	hash["*sc028 up"] := "C11"
 	hash["*sc02B up"] := "C12"
-	hash["Enter up"]  := "C13"
+	hash["*sc01C up"] := "C13"	;Enter
 
 	hash["*sc02C up"] := "B01"
 	hash["*sc02D up"] := "B02"
@@ -2162,7 +2162,7 @@ MakeLayoutPosHash()
 
 	hash["LCtrl up"]  := "A00"
 	hash["*sc07B up"] := "A01"
-	hash["Space up"]  := "A02"
+	hash["*sc039 up"] := "A02"
 	hash["*sc079 up"] := "A03"
 	hash["*sc070 up"] := "A04"
 	hash["RCtrl up"]  := "A05"
@@ -2176,13 +2176,17 @@ MakefkeyPosHash()
 	hash := Object()
 	hash["半角/全角"] := "E00"		;半角／全角
 	hash["Backspace"] := "E14"
+	hash["sc00E"]     := "E14"
 
 	hash["Tab"]       := "D00"
+	hash["sc00F"]     := "D00"
 	hash["Enter"]     := "C13"
+	hash["sc01C"]     := "C13"
 
 	hash["左Ctrl"] := "A00"
 	hash["無変換"] := "A01"	;無変換
 	hash["Space"]  := "A02"	;スペース
+	hash["sc039"]  := "A02"	;スペース
 	hash["変換"]   := "A03"	;変換
 	hash["カタカナ/ひらがな"] := "A04"	;カタカナ/ひらがな
 	hash["右Ctrl"] := "A05"
@@ -2196,14 +2200,14 @@ MakefkeyCodeHash()
 {
 	hash := Object()
 	hash["半角/全角"] := "sc029"	;半角／全角
-	hash["Backspace"] := "Backspace"
+	hash["Backspace"] := "sc00E"
 
-	hash["Tab"]       := "Tab"
-	hash["Enter"]     := "Enter"
+	hash["Tab"]       := "sc00F"
+	hash["Enter"]     := "sc039"
 
 	hash["左Ctrl"]    := "LCtrl"
 	hash["無変換"]    := "sc07B"	;無変換
-	hash["Space"]     := "Space"	;スペース
+	hash["Space"]     := "sc039"	;スペース
 	hash["変換"]      := "sc079"	;変換
 	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
 	hash["右Ctrl"]    := "RCtrl"
@@ -2217,14 +2221,15 @@ MakeCodeNameHash()
 {
 	hash := Object()
 	hash["sc029"]     := "半/全 "	;半角／全角
-	hash["Backspace"] := "Backsp"
+	hash["sc00E"]     := "Backsp"
 
-	hash["Tab"]       := " Tab  "
-	hash["Enter"]     := "Enter "
+	hash["sc00F"]     := " Tab  "
+	hash["sc039"]     := "Enter "
 
 	hash["LCtrl"]     := "左Ctrl"
 	hash["sc07B"]     := "無変換"	;無変換
 	hash["Space"]     := " 空白 "	;スペース
+	hash["sc039"]     := " 空白 "	;スペース
 	hash["sc079"]     := " 変換 "	;変換
 	hash["sc070"]     := "カ/ひ"	;カタカナ/ひらがな
 	hash["RCtrl"]     := "右Ctrl"

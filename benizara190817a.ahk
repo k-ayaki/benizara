@@ -189,7 +189,7 @@ keydownL:
 	gosub,Polling
 	RegLogs(g_metaKey . " down")
 	g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
-	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat = 1 || kName = "Space"))
+	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat = 1 || kName = "sc039"))
 	{
 	 	; キーリピートの処理
 		g_Oya := g_metaKey
@@ -575,7 +575,7 @@ SendOnHoldM:
 SendOnHoldO:
 	if(g_OyaOnHold = "R")
 	{
-		if(g_KeySingle = "有効" || kName = "Space")
+		if(g_KeySingle = "有効" || kName = "sc039")
 		{
 			if(g_OyaKeyOn["R"]==1)
 			{
@@ -594,7 +594,7 @@ SendOnHoldO:
 	}
 	else if(g_OyaOnHold = "L")
 	{
-		if(g_KeySingle = "有効" || kName = "Space")
+		if(g_KeySingle = "有効" || kName = "sc039")
 		{
 			if(g_OyaKeyOn["L"]=1)
 			{
@@ -1454,7 +1454,7 @@ Polling:
 				;{
 				;	g_Oya := "N"
 				;}
-				if(kName == "Space" || g_KeySingle == "有効") {
+				if(kName == "sc039" || g_KeySingle == "有効") {
 					Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
 				} else {
 					_layout := g_Oya2Layout[g_Oya]
@@ -1753,12 +1753,12 @@ SetHookInit()
 	hotkey,*sc035 up,gSC035up
 	hotkey,*sc073,gSC073		;\
 	hotkey,*sc073 up,gSC073up
-	hotkey,Tab,gTAB				; \t
-	hotkey,Tab up,gTABup
-	hotkey,Enter,gENTER			; \r
-	hotkey,Enter up,gENTERup
-	hotkey,Backspace,gBACKSPACE	; \b
-	hotkey,Backspace up,gBACKSPACEup
+	hotkey,*sc00F,gSC00F				; \t
+	hotkey,*sc00F up,gSC00Fup
+	hotkey,*sc01C,gSC01C			; \r
+	hotkey,*sc01C up,gSC01Cup
+	hotkey,*sc00E,gSC00E	; \b
+	hotkey,*sc00E up,gSC00Eup
 	hotkey,*sc029,gSC029		;半角／全角
 	hotkey,*sc029 up,gSC029up
 	hotkey,*sc070,gSC070		;ひらがな／カタカナ
@@ -1777,8 +1777,8 @@ SetHookInit()
 	;hotkey,LCtrl up,gLCTRLup
 	;hotkey,RCtrl,gRCTRL
 	;hotkey,RCtrl up,gRCTRLup
-	Hotkey,Space,gSpace
-	Hotkey,Space up,gSpaceUp
+	Hotkey,*sc039,gSC039		; Space
+	Hotkey,*sc039 up,gSC039up
 	Hotkey,*sc079,gSC079
 	Hotkey,*sc079 up,gSC079up
 	Hotkey,*sc07B,gSC07B
@@ -1892,12 +1892,12 @@ SetHook(flg,oya_flg)
 	hotkey,*sc035 up,%flg%
 	hotkey,*sc073,%flg%		;\
 	hotkey,*sc073 up,%flg%
-	hotkey,Tab,%flg%
-	hotkey,Tab up,%flg%
-	hotkey,Enter,%flg%
-	hotkey,Enter up,%flg%
-	hotkey,Backspace,%flg%
-	hotkey,Backspace up,%flg%
+	hotkey,*sc00F,%flg%
+	hotkey,*sc00F up,%flg%
+	hotkey,*sc01C,%flg%
+	hotkey,*sc01C up,%flg%
+	hotkey,*sc00E,%flg%
+	hotkey,*sc00E up,%flg%
 	hotkey,*sc029,%flg%
 	hotkey,*sc029 up,%flg%
 	hotkey,*sc070,%flg%		;ひらがな／カタカナ
@@ -1907,8 +1907,8 @@ SetHook(flg,oya_flg)
 	;hotkey,RCtrl,%flg%
 	;hotkey,RCtrl up,%flg%
 	
-	Hotkey,Space,%flg%
-	Hotkey,Space up,%flg%
+	Hotkey,*sc039,%flg%
+	Hotkey,*sc039 up,%flg%
 
 	if(keyAttribute3[g_Romaji . g_Koyubi . "A01"]!="X") {
 		Hotkey,*sc07B,%oya_flg%
@@ -1988,13 +1988,13 @@ gSC034:	;.
 gSC035:	;/
 gSC073:	;\
 
-gTAB:
-gENTER:
-gBACKSPACE:
+gSC00F:
+gSC01C:	;Enter
+gSC00E:	;\b
 gSC029:	;半角／全角
 ;Ａ段目
 gSC070:	;ひらがな／カタカナ
-gSpace:
+gSC039:
 gSC07B:					; 無変換キー（左）
 gSC079:				; 変換キー（右）
 gLCTRL:
@@ -2057,12 +2057,12 @@ gSC034up:	;.
 gSC035up:	;/
 gSC073up:	;_
 
-gTABup:
-gENTERup:
-gBACKSPACEup:
+gSC00Fup:
+gSC01Cup:	;Enter
+gSC00Eup:
 gSC029up:	;半角／全角
 gSC070up:	;ひらがな／カタカナ
-gSpaceUp:
+gSC039up:
 gSC07Bup:
 gSC079up:
 gLCTRLup:
