@@ -7,6 +7,10 @@ ReadLayout:
 	kst := Object()	; キーの状態
 	kup := Object()	; keyup したときの Send形式
 	kdn := Object()	; keydown したときの Send形式
+	kdakdn := Object()	; 濁音
+	kdakup := Object()	; 濁音
+	khdakdn := Object()	; 半濁音
+	khdakup := Object()	; 半濁音
 	mup := Object()	; キーボードそのものを keyup したときの Send形式
 	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
@@ -60,6 +64,9 @@ ReadLayout:
 	code2Pos := MakeCode2Pos()
 	lpos2Mode := MakeLpos2ModeHash()
 	name2vkey := MakeName2vkeyHash()
+	ScanCodeHash := MakeScanCodeHash()
+	DakuonHash := MakeDakuonHash()
+	HandakuonHash := MakeHanDakuonHash()
 	g_Oya2Layout := Object()
 
 	Gosub, InitLayout2
@@ -733,6 +740,14 @@ SetKeyTable:
 			kup[_mode . _lpos2] := ""
 			continue
 		}
+		; 無の指定ならば，元のキーそのもののスキャンコードとする
+		if(org[A_Index] == "無") {
+			kLabel[_mode . _lpos2] := org[A_Index]
+			kst[_mode . _lpos2] := "S"	; scan code
+			kdn[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " down}"
+			kup[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
+			continue
+		}
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
 		if(IsKoyubiError(_mode, _aStr)==0) {
@@ -751,6 +766,20 @@ SetKeyTable:
 				}
 				kdn[_mode . _lpos2] := _down
 				kup[_mode . _lpos2] := _up
+			}
+			; 濁音があればセット
+			if(DakuonHash[org[A_Index]]<>"")
+			{
+				GenSendStr2(DakuonHash[org[A_Index]], _down, _up)
+				kdakdn[_mode . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
+				kdakup[_mode . _lpos2] := _up
+			}
+			; 半濁音があればセット
+			if(HandakuonHash[org[A_Index]]<>"")
+			{
+				GenSendStr2(HandakuonHash[org[A_Index]], _down, _up)
+				khdakdn[_mode . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
+				khdakup[_mode . _lpos2] := _up
 			}
 		} else {
 			; シフトモードの禁止文字ならば直接出力
@@ -835,8 +864,7 @@ SetSimulKeyTable:
 		}
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
-		
-		; 送信形式に変換
+		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr2(_aStr, _down, _up)
 		if( _down <> "")
 		{
@@ -855,6 +883,25 @@ SetSimulKeyTable:
 			keyAttribute3["RN" . _lpos]  := "S"
 			keyAttribute3["RK" . _lpos2] := "S"
 			keyAttribute3["RK" . _lpos]  := "S"
+			
+			; 濁音があればセット
+			if(DakuonHash[org[A_Index]]<>"")
+			{
+				GenSendStr2(DakuonHash[org[A_Index]], _down, _up)
+				kdakdn[_lpos . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
+				kdakup[_lpos . _lpos2] := _up
+				kdakdn[_lpos2 . _lpos] := "{Blind}{Backspace down}{Backspace up}" . _down
+				kdakup[_lpos2 . _lpos] := _up
+			}
+			; 半濁音があればセット
+			if(HandakuonHash[org[A_Index]]<>"")
+			{
+				GenSendStr2(HandakuonHash[org[A_Index]], _down, _up)
+				khdakdn[_lpos . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
+				khdakup[_lpos . _lpos2] := _up
+				khdakdn[_lpos2 . _lpos] := "{Blind}{Backspace down}{Backspace up}" . _down
+				khdakup[_lpos2 . _lpos] := _up
+			}
 		}
 		continue
 	}
@@ -1305,6 +1352,86 @@ MakeRoma3Hash()
 	hash["ヴ"] := "ｖｕ"
 	hash["ゕ"] := "ｌｋａ"
 	hash["ゖ"] := "ｌｋｅ"
+	return hash
+}
+;----------------------------------------------------------------------
+; 濁音ハッシュを生成
+;----------------------------------------------------------------------
+MakeDakuonHash()
+{
+	hash := Object()
+	hash["う"] := "ｖｕ"
+	hash["か"] := "ｇａ"
+	hash["き"] := "ｇｉ"
+	hash["く"] := "ｇｕ"
+	hash["け"] := "ｇｅ"
+	hash["こ"] := "ｇｏ"
+
+	hash["さ"] := "ｚａ"
+	hash["し"] := "ｚｉ"
+	hash["す"] := "ｚｕ"
+	hash["せ"] := "ｚｅ"
+	hash["そ"] := "ｚｏ"
+
+	hash["た"] := "ｄａ"
+	hash["ち"] := "ｄｉ"
+	hash["っ"] := "ｄｕ"
+	hash["て"] := "ｄｅ"
+	hash["と"] := "ｄｏ"
+
+	hash["は"] := "ｂａ"
+	hash["ひ"] := "ｂｉ"
+	hash["ふ"] := "ｂｕ"
+	hash["へ"] := "ｂｅ"
+	hash["ほ"] := "ｂｏ"
+	
+	hash["ｕ"] := "ｖｕ"
+	hash["ｋａ"] := "ｇａ"
+	hash["ｋｉ"] := "ｇｉ"
+	hash["ｋｕ"] := "ｇｕ"
+	hash["ｋｅ"] := "ｇｅ"
+	hash["ｋｏ"] := "ｇｏ"
+
+	hash["ｓａ"] := "ｚａ"
+	hash["ｓｉ"] := "ｚｉ"
+	hash["ｓｕ"] := "ｚｕ"
+	hash["ｓｅ"] := "ｚｅ"
+	hash["ｓｏ"] := "ｚｏ"
+
+	hash["ｔａ"] := "ｄａ"
+	hash["ｔｉ"] := "ｄｉ"
+	hash["ｃｈｉ"] := "ｄｉ"
+	hash["ｔｕ"] := "ｄｕ"
+	hash["ｔｓｕ"] := "ｄｕ"
+	hash["ｔｅ"] := "ｄｅ"
+	hash["ｔｏ"] := "ｄｏ"
+
+	hash["ｈａ"] := "ｂａ"
+	hash["ｈｉ"] := "ｂｉ"
+	hash["ｈｉ"] := "ｂｉ"
+	hash["ｆｕ"] := "ｂｕ"
+	hash["ｈｅ"] := "ｂｅ"
+	hash["ｈｏ"] := "ｂｏ"
+	return hash
+}
+;----------------------------------------------------------------------
+; 半濁音ハッシュ
+;----------------------------------------------------------------------
+MakeHanDakuonHash()
+{
+	hash := Object()
+	hash["は"] := "ｐａ"
+	hash["ひ"] := "ｐｉ"
+	hash["ふ"] := "ｐｕ"
+	hash["へ"] := "ｐｅ"
+	hash["ほ"] := "ｐｏ"
+
+	hash["ｈａ"] := "ｐａ"
+	hash["ｈｉ"] := "ｐｉ"
+	hash["ｈｕ"] := "ｐｕ"
+	hash["ｆｕ"] := "ｐｕ"
+	hash["ｈｅ"] := "ｐｅ"
+	hash["ｈｏ"] := "ｐｏ"
 	return hash
 }
 
@@ -2166,6 +2293,76 @@ MakeLayoutPosHash()
 	hash["*sc079 up"] := "A03"
 	hash["*sc070 up"] := "A04"
 	hash["RCtrl up"]  := "A05"
+	return hash
+}
+;----------------------------------------------------------------------
+;	レイアウト位置からスキャンコードの変換
+;----------------------------------------------------------------------
+MakeScanCodeHash()
+{
+	hash := Object()
+	hash["E00"] := "sc029"	;半角／全角
+	hash["E01"] := "sc002"	;1
+	hash["E02"] := "sc003"
+	hash["E03"] := "sc004"
+	hash["E04"] := "sc005"
+	hash["E05"] := "sc006"
+	hash["E06"] := "sc007"
+	hash["E07"] := "sc008"
+	hash["E08"] := "sc009"
+	hash["E09"] := "sc00A"
+	hash["E10"] := "sc00B"
+	hash["E11"] := "sc00C"
+	hash["E12"] := "sc00D"
+	hash["E13"] := "sc07D"
+	hash["E14"] := "sc00E"	; \b
+
+	hash["D00"] := "sc00F"	;tab
+	hash["D01"] := "sc010"
+	hash["D02"] := "sc011"
+	hash["D03"] := "sc012"
+	hash["D04"] := "sc013"
+	hash["D05"] := "sc014"
+	hash["D06"] := "sc015"
+	hash["D07"] := "sc016"
+	hash["D08"] := "sc017"
+	hash["D09"] := "sc018"
+	hash["D10"] := "sc019"
+	hash["D11"] := "sc01A"
+	hash["D12"] := "sc01B"
+	
+	hash["C01"] := "sc01E"
+	hash["C02"] := "sc01F"
+	hash["C03"] := "sc020"
+	hash["C04"] := "sc021"
+	hash["C05"] := "sc022"
+	hash["C06"] := "sc023"
+	hash["C07"] := "sc024"
+	hash["C08"] := "sc025"
+	hash["C09"] := "sc026"
+	hash["C10"] := "sc027"
+	hash["C11"] := "sc028"
+	hash["C12"] := "sc02B"
+	hash["C13"] := "sc01C"	;Enter
+	
+	hash["B01"] := "sc02C"
+	hash["B02"] := "sc02D"
+	hash["B03"] := "sc02E"
+	hash["B04"] := "sc02F"
+	hash["B05"] := "sc030"
+	hash["B06"] := "sc031"
+	hash["B07"] := "sc032"
+	hash["B08"] := "sc033"
+	hash["B09"] := "sc034"
+	hash["B10"] := "sc035"
+	hash["B11"] := "sc073"
+
+	hash["A00"] := "LCTRL"
+	hash["A01"] := "sc07B"
+	hash["A02"] := "sc039"
+	hash["A03"] := "sc079"
+	hash["A04"] := "sc070"	;カタカナ/ひらがな
+	hash["A05"] := "RCTRL"
 	return hash
 }
 ;----------------------------------------------------------------------

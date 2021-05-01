@@ -481,44 +481,22 @@ RegLogs(thisLog)
 ; 保留キーの出力：セットされた文字のセットされた親指の出力
 ;----------------------------------------------------------------------
 SendOnHoldMO:
-	if(g_KeyInPtn == "ML")
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["ML"] . ":" . (Pf_Count()-g_OyaTick["L"]) . ":" . g_trigger
-	}
-	else if(g_KeyInPtn == "MR")	;S4)M-Oオン状態
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["MR"] . ":" . (Pf_Count()-g_OyaTick["R"]) . ":" . g_trigger
-	}
-	else if(g_KeyInPtn == "LM")
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["LM"] . ":" . (Pf_Count()-g_MojiTick) . ":" . g_trigger
-	}
-	else if(g_KeyInPtn == "RM")	;S5)O-Mオン状態
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["RM"] . ":" . (Pf_Count()-g_MojiTick) . ":" . g_trigger
-	}
-	else if(g_KeyInPtn == "LMl")
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["LM"] . ":" . g_Interval["M_L"] . ":" . (Pf_Count()-g_OyaUpTick["L"]) . ":" . g_trigger
-	}
-	else if(g_KeyInPtn == "RMr")	;S5)O-Mオン状態
-	{
-		g_debugout := g_ZeroDelaySurface . ":" . g_KeyInPtn . ":" . g_Interval["RM"] . ":" . g_Interval["M_R"] . ":" . (Pf_Count()-g_OyaUpTick["R"]) . ":" . g_trigger
-	}
-	vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-	if(g_ZeroDelay = 1)
-	{
-		if(vOut <> g_ZeroDelayOut)
-		{
-			CancelZeroDelayOut()
-			SubSend(vOut)
-		}
-		g_ZeroDelayOut := ""
-		g_ZeroDelaySurface := ""
-	} else {
-		SubSend(vOut)
-	}
+	_mode := g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold
+	SendOnHold(_mode, g_MojiOnHold)
+;	vOut := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+;	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
+;	if(g_ZeroDelay = 1)
+;	{
+;		if(vOut <> g_ZeroDelayOut)
+;		{
+;			CancelZeroDelayOut()
+;			SubSend(vOut)
+;		}
+;		g_ZeroDelayOut := ""
+;		g_ZeroDelaySurface := ""
+;	} else {
+;		SubSend(vOut)
+;	}
 	g_MojiOnHold := ""
 	g_OyaOnHold := "N"
 	g_KoyubiOnHold := "N"
@@ -530,11 +508,15 @@ SendOnHoldMO:
 	return
 
 ;----------------------------------------------------------------------
-; 保留キーの出力：セットされた文字の出力
+; 保留キーの出力関数：
+; _mode : モードまたは文字同時打鍵の第１文字
+; g_MojiOnHold : 現在の打鍵文字の場所 A01-E14
 ;----------------------------------------------------------------------
-SendOnHoldM:
-	vOut                   := kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+SendOnHold(_mode, g_MojiOnHold)
+{
+	global kdn, kup, kup_save, g_ZeroDelay, g_ZeroDelayOut, g_ZeroDelaySurface
+	vOut                   := kdn[_mode . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -547,6 +529,27 @@ SendOnHoldM:
 	} else {
 		SubSend(vOut)
 	}
+	
+}
+;----------------------------------------------------------------------
+; 保留キーの出力：セットされた文字の出力
+;----------------------------------------------------------------------
+SendOnHoldM:
+	SendOnHold(g_RomajiOnHold . "N" . g_KoyubiOnHold, g_MojiOnHold)
+;	vOut := kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+;	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
+;	if(g_ZeroDelay = 1)
+;	{
+;		if(vOut <> g_ZeroDelayOut)
+;		{
+;			CancelZeroDelayOut()
+;			SubSend(vOut)
+;		}
+;		g_ZeroDelayOut := ""
+;		g_ZeroDelaySurface := ""
+;	} else {
+;		SubSend(vOut)
+;	}
 	g_MojiOnHold := ""
 	g_KoyubiOnHold := "N"
 	g_SendTick := ""
@@ -953,7 +956,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	} else
 	if(g_KeyInPtn == "S") {
 		g_MojiTickSave := g_MojiTick
@@ -971,7 +974,7 @@ keydownS:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
+			SendZeroDelayS(g_MojiOnHold2, g_MojiOnHold)
 
 		} else {
 			; 保留中の１文字を確定（出力）
@@ -982,7 +985,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+			SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
 		}
 	}
 	else
@@ -1001,7 +1004,7 @@ keydownS:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelayS(g_MojiOnHold2 . g_MojiOnHold)
+			SendZeroDelayS(g_MojiOnHold2, g_MojiOnHold)
 		} else {
 			; 保留中の同時打鍵を確定
 			Gosub, SendOnHoldSS
@@ -1011,7 +1014,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+			SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
 		}
 	}
 	else
@@ -1025,7 +1028,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	} else {
 		; バグ対策
 		; 当該キーを単独打鍵として保留
@@ -1038,7 +1041,7 @@ keydownS:
 		g_KoyubiOnHold  := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold . g_MojiOnHold)
+		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	}
 	critical,off
 	return
@@ -1046,14 +1049,14 @@ keydownS:
 ;----------------------------------------------------------------------
 ; 同時打鍵用の零遅延モードの先行出力
 ;----------------------------------------------------------------------
-SendZeroDelayS(_index) {
+SendZeroDelayS(_mode, g_MojiOnHold) {
 	global g_ZeroDelay, g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
 	if(g_ZeroDelay == 1)
 	{
 		; 保留キーがあれば先行出力（零遅延モード）
-		vOut                   := kdn[_index]
-		kup_save[g_MojiOnHold] := kup[_index]
-		g_ZeroDelaySurface     := kLabel[_index]
+		vOut                   := kdn[_mode . g_MojiOnHold]
+		kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
+		g_ZeroDelaySurface     := kLabel[_mode . g_MojiOnHold]
 		g_ZeroDelayOut := vOut
 		SubSend(vOut)
 	}
@@ -1068,20 +1071,21 @@ SendOnHoldS:
 	{
 		return
 	}
-	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
-	if(g_ZeroDelay = 1)
-	{
-		if(vOut <> g_ZeroDelayOut)
-		{
-			CancelZeroDelayOut()
-			SubSend(vOut)
-		}
-		g_ZeroDelaySurface := ""
-		g_ZeroDelayOut := ""
-	} else {
-		SubSend(vOut)
-	}
+	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold)
+;	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
+;	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
+;	if(g_ZeroDelay = 1)
+;	{
+;		if(vOut <> g_ZeroDelayOut)
+;		{
+;			CancelZeroDelayOut()
+;			SubSend(vOut)
+;		}
+;		g_ZeroDelaySurface := ""
+;		g_ZeroDelayOut := ""
+;	} else {
+;		SubSend(vOut)
+;	}
 	
 	g_MojiOnHold   := ""
 	g_KoyubiOnHold := "N"
@@ -1108,30 +1112,22 @@ SendOnHoldSS:
 	{
 		return
 	}
-	g_debugout := g_ZeroDelaySurface
-	vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
-
-	if(g_ZeroDelay = 1)
-	{
-		if(vOut <> g_ZeroDelayOut)
-		{
-			CancelZeroDelayOut()
-			SubSend(vOut)
-		}
-		g_ZeroDelaySurface := ""
-		g_ZeroDelayOut := ""
-	} else {
-		SubSend(vOut)
-	}
-	if(g_keyInPtn == "SS")
-	{
-		g_debugout := g_debugout . ":" . g_KeyInPtn . ":" . g_Interval["S23"] . ":" . g_Interval["S12"] . ":" . g_trigger
-	}
-	else if(g_keyInPtn == "SS2")
-	{
-		g_debugout := g_debugout . ":" . g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_1"] . ":" . g_Interval["S_1_2"] . ":" . g_trigger
-	}
+	SendOnHold(g_MojiOnHold2, g_MojiOnHold)	
+;	vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
+;	kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
+;
+;	if(g_ZeroDelay = 1)
+;	{
+;		if(vOut <> g_ZeroDelayOut)
+;		{
+;			CancelZeroDelayOut()
+;			SubSend(vOut)
+;		}
+;		g_ZeroDelaySurface := ""
+;		g_ZeroDelayOut := ""
+;	} else {
+;		SubSend(vOut)
+;	}
 	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
 	g_KoyubiOnHold := "N"
@@ -1147,35 +1143,10 @@ SendOnHoldSS2:
 	{
 		return
 	}
-	g_debugout := g_ZeroDelaySurface
-	Gosub, SendOnHoldS2	; ２文字前を出力
-	;vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-	;kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-	;if(g_ZeroDelay = 1)
-	;{
-	;	if(vOut <> g_ZeroDelayOut)
-	;	{
-	;		CancelZeroDelayOut()
-	;		SubSend(vOut)
-	;	}
-	;	g_ZeroDelaySurface := ""
-	;	g_ZeroDelayOut := ""
-	;} else {
-	;	SubSend(vOut)
-	;}
 	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
 	g_ZeroDelaySurface := kLabel["RN" . g_KoyubiOnHold . g_MojiOnHold]
 	SubSend(vOut)
-	g_debugout := g_debugout . g_ZeroDelaySurface
-	if(g_keyInPtn == "SS")
-	{
-		g_debugout := g_debugout . ":" . g_KeyInPtn . ":" . g_Interval["S12"] . ":" . (Pf_Count()-g_MojiUpTick) . ":" . g_trigger
-	}
-	else if(g_keyInPtn == "SS2")
-	{
-		g_debugout := g_debugout . ":" . g_KeyInPtn . ":" . g_Interval["S12"] . ":" . g_Interval["S2_1"] . ":" . g_Interval["S_1_2"] . ":" . g_trigger
-	}
 	g_ZeroDelaySurface := ""
 	g_KoyubiOnHold3 := ""
 	g_KoyubiOnHold2 := ""
@@ -1195,20 +1166,21 @@ SendOnHoldS2:
 	{
 		return
 	}
-	vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-	kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-	if(g_ZeroDelay = 1)
-	{
-		if(vOut <> g_ZeroDelayOut)
-		{
-			CancelZeroDelayOut()
-			SubSend(vOut)
-		}
-		g_ZeroDelaySurface := ""
-		g_ZeroDelayOut := ""
-	} else {
-		SubSend(vOut)
-	}
+	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2)		
+;	vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
+;	kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
+;	if(g_ZeroDelay = 1)
+;	{
+;		if(vOut <> g_ZeroDelayOut)
+;		{
+;			CancelZeroDelayOut()
+;			SubSend(vOut)
+;		}
+;		g_ZeroDelaySurface := ""
+;		g_ZeroDelayOut := ""
+;	} else {
+;		SubSend(vOut)
+;	}
 	g_MojiOnHold2   := ""
 	g_KoyubiOnHold2 := ""
 	g_keyInPtn := "S"
@@ -1355,7 +1327,7 @@ keyupS:
 				; １文字前の待機
 				g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 				g_KeyInPtn := "S"
-				SendZeroDelayS("RN" . g_KoyubiOnHold2 . g_MojiOnHold)
+				SendZeroDelayS("RN" . g_KoyubiOnHold2, g_MojiOnHold)
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold) {
