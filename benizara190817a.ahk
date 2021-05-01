@@ -68,10 +68,15 @@
 	g_Offset := 20
 	g_trigger := ""
 
-	g_OyaKeyOn := Object()
+	g_OyaKeyOn  := Object()
 	g_OyaTick   := Object()
 	g_OyaUpTick := Object()
-	g_Interval := Object()
+	g_Interval  := Object()
+	g_LastKey   := Object()
+	g_LastKey["濁音"]     := ""
+	g_LastKey["濁音up"]   := ""
+	g_LastKey["半濁音"]   := ""
+	g_LastKey["半濁音up"] := ""
 	
 	g_OyaAlt := Object()	; 反対側の親指キー
 	g_OyaAlt["R"] := "L"
@@ -483,20 +488,7 @@ RegLogs(thisLog)
 SendOnHoldMO:
 	_mode := g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold
 	SendOnHold(_mode, g_MojiOnHold)
-;	vOut := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-;	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-;	if(g_ZeroDelay = 1)
-;	{
-;		if(vOut <> g_ZeroDelayOut)
-;		{
-;			CancelZeroDelayOut()
-;			SubSend(vOut)
-;		}
-;		g_ZeroDelayOut := ""
-;		g_ZeroDelaySurface := ""
-;	} else {
-;		SubSend(vOut)
-;	}
+
 	g_MojiOnHold := ""
 	g_OyaOnHold := "N"
 	g_KoyubiOnHold := "N"
@@ -515,6 +507,7 @@ SendOnHoldMO:
 SendOnHold(_mode, g_MojiOnHold)
 {
 	global kdn, kup, kup_save, g_ZeroDelay, g_ZeroDelayOut, g_ZeroDelaySurface
+	global g_LastKey, 
 	vOut                   := kdn[_mode . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
 	if(g_ZeroDelay = 1)
@@ -529,27 +522,18 @@ SendOnHold(_mode, g_MojiOnHold)
 	} else {
 		SubSend(vOut)
 	}
-	
+	g_LastKey["濁音"]     := kdakdn[_mode . g_MojiOnHold]
+	g_LastKey["濁音up"]   := kdakup[_mode . g_MojiOnHold]
+	g_LastKey["半濁音"]   := khdakdn[_mode . g_MojiOnHold]
+	g_LastKey["半濁音up"] := khdakup[_mode . g_MojiOnHold]
+
 }
 ;----------------------------------------------------------------------
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
 	SendOnHold(g_RomajiOnHold . "N" . g_KoyubiOnHold, g_MojiOnHold)
-;	vOut := kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
-;	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]
-;	if(g_ZeroDelay = 1)
-;	{
-;		if(vOut <> g_ZeroDelayOut)
-;		{
-;			CancelZeroDelayOut()
-;			SubSend(vOut)
-;		}
-;		g_ZeroDelayOut := ""
-;		g_ZeroDelaySurface := ""
-;	} else {
-;		SubSend(vOut)
-;	}
+
 	g_MojiOnHold := ""
 	g_KoyubiOnHold := "N"
 	g_SendTick := ""
@@ -637,10 +621,8 @@ keydownM:
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
-			kup_save[g_layoutPos] := mup["AN" . g_Koyubi . g_layoutPos]
-			SubSend(vOut)
-			
+			SendAN("AN" . g_Koyubi, g_layoutPos)
+
 			g_MojiOnHold := ""
 			g_OyaOnHold  := "N"
 			g_KoyubiOnHold := "N"
@@ -657,9 +639,8 @@ keydownM:
 			g_RomajiOnHold := g_Romaji
 			g_KoyubiOnHold := g_Koyubi
 			g_OyaOnHold    := g_prefixshift
-			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			SubSend(vOut)
+			SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
+			
 			g_prefixshift := ""
 			critical,off
 			return
@@ -668,9 +649,7 @@ keydownM:
 		g_RomajiOnHold := g_Romaji
 		g_OyaOnHold    := "N"
 		g_KoyubiOnHold := g_Koyubi
-		vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-		kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-		SubSend(vOut)
+		SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
 		critical,off
 		return
 	}
@@ -680,9 +659,7 @@ keydownM:
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
-			kup_save[g_layoutPos] := mup["AN" . g_Koyubi . g_layoutPos]
-			SubSend(vOut)
+			SendAN("AN" . g_Koyubi, g_layoutPos)
 			
 			g_MojiOnHold := ""
 			g_OyaOnHold  := "N"
@@ -698,9 +675,7 @@ keydownM:
 		g_RomajiOnHold := g_Romaji
 		g_OyaOnHold    := "N"
 		g_KoyubiOnHold := g_Koyubi
-		vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-		kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-		SubSend(vOut)
+		SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
 		critical,off
 		return
 	}
@@ -751,10 +726,7 @@ keydownM:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
-		kup_save[g_layoutPos] := mup["AN" . g_Koyubi . g_layoutPos]
-		SubSend(vOut)
-		
+		SendAN("AN" . g_Koyubi, g_layoutPos)
 		g_MojiOnHold := ""
 		g_OyaOnHold  := "N"
 		g_KoyubiOnHold := "N"
@@ -801,9 +773,8 @@ SendZeroDelay:
 		{
 			if(kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold] == kdn[g_RomajiOnHold . "L" . g_KoyubiOnHold . g_MojiOnHold])
 			{
-				vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-				kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-				SubSend(vOut)
+				SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)			
+				
 				g_MojiOnHold := ""
 				g_OyaOnHold  := "N"
 				g_KoyubiOnHold := "N"
@@ -814,9 +785,8 @@ SendZeroDelay:
 		; 左右親指シフト面と非シフト面の文字キーに制御コードが有れば、保留しない
 		if(mod(strlen(kdn[g_RomajiOnHold . "N" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "R" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1 or mod(strlen(kdn[g_RomajiOnHold . "L" . g_KoyubiOnHold . g_MojiOnHold]),14)!=1)
 		{
-			vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			SubSend(vOut)
+			SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)			
+			
 			g_MojiOnHold := ""
 			g_OyaOnHold  := "N"
 			g_KoyubiOnHold := "N"
@@ -845,6 +815,36 @@ SendZeroDelay:
 	return
 
 ;----------------------------------------------------------------------
+; 元の109レイアウトで出力
+;----------------------------------------------------------------------
+SendAN(_mode,g_layoutPos)
+{
+	global mdn, mup, kup_save, g_LastKey
+	
+	vOut                  := mdn[_mode . g_layoutPos]
+	kup_save[g_layoutPos] := mup[_mode . g_layoutPos]
+	SubSend(vOut)
+	
+	g_LastKey["濁音"]     := ""
+	g_LastKey["濁音up"]   := ""
+	g_LastKey["半濁音"]   := ""
+	g_LastKey["半濁音up"] := ""
+}
+;----------------------------------------------------------------------
+; キーをすぐさま出力
+;----------------------------------------------------------------------
+SendKey(_mode, g_MojiOnHold){
+	global kdn, kup, kup_save, g_LastKey
+	
+	vOut                   := kdn[_mode . g_MojiOnHold]
+	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
+	SubSend(vOut)
+	g_LastKey["濁音"]     := kdakdn[_mode . g_MojiOnHold]
+	g_LastKey["濁音up"]   := kdakup[_mode . g_MojiOnHold]
+	g_LastKey["半濁音"]   := khdakdn[_mode . g_MojiOnHold]
+	g_LastKey["半濁音up"] := khdakup[_mode . g_MojiOnHold]
+}
+;----------------------------------------------------------------------
 ; 修飾キー押下
 ;----------------------------------------------------------------------
 keydown:
@@ -858,6 +858,11 @@ keydownX:
 	keyState[g_layoutPos] := Pf_Count()
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSend(MnDown(kName))
+		g_LastKey["濁音"]     := ""
+		g_LastKey["濁音up"]   := ""
+		g_LastKey["半濁音"]   := ""
+		g_LastKey["半濁音up"] := ""
+		
 		g_prefixshift := ""
 		critical,off
 		return
@@ -866,6 +871,11 @@ keydownX:
 	
 	Gosub,ModeInitialize
 	SubSend(MnDown(kName))
+	g_LastKey["濁音"]     := ""
+	g_LastKey["濁音up"]   := ""
+	g_LastKey["半濁音"]   := ""
+	g_LastKey["半濁音up"] := ""
+
 	g_KeyInPtn := ""
 	critical,off
 	return
@@ -886,9 +896,7 @@ keydown2:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
-		kup_save[g_layoutPos] := mup["AN" . g_Koyubi . g_layoutPos]
-		SubSend(vOut)
+		SendAN("AN" . g_Koyubi, g_layoutPos)
 		
 		g_MojiOnHold := ""
 		g_OyaOnHold  := "N"
@@ -910,9 +918,9 @@ keydown2:
 	g_RomajiOnHold := g_Romaji
 	g_OyaOnHold    := g_prefixshift
 	g_KoyubiOnHold := g_Koyubi
-	vOut                   := kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-	SubSend(vOut)
+
+	SendKey(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
+
 	g_prefixshift := ""
 	critical,off
 	return
@@ -938,9 +946,7 @@ keydownS:
 		Gosub, ModeInitialize
 		
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		vOut                  := mdn["AN" . g_Koyubi . g_layoutPos]
-		kup_save[g_layoutPos] := mup["AN" . g_Koyubi . g_layoutPos]
-		SubSend(vOut)
+		SendAN("AN" . g_Koyubi, g_layoutPos)
 		
 		g_MojiOnHold   := ""
 		g_OyaOnHold    := "N"
@@ -1072,20 +1078,7 @@ SendOnHoldS:
 		return
 	}
 	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold)
-;	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
-;	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
-;	if(g_ZeroDelay = 1)
-;	{
-;		if(vOut <> g_ZeroDelayOut)
-;		{
-;			CancelZeroDelayOut()
-;			SubSend(vOut)
-;		}
-;		g_ZeroDelaySurface := ""
-;		g_ZeroDelayOut := ""
-;	} else {
-;		SubSend(vOut)
-;	}
+
 	
 	g_MojiOnHold   := ""
 	g_KoyubiOnHold := "N"
@@ -1113,21 +1106,7 @@ SendOnHoldSS:
 		return
 	}
 	SendOnHold(g_MojiOnHold2, g_MojiOnHold)	
-;	vOut                   := kdn[g_MojiOnHold2 . g_MojiOnHold]
-;	kup_save[g_MojiOnHold] := kup[g_MojiOnHold2 . g_MojiOnHold]
-;
-;	if(g_ZeroDelay = 1)
-;	{
-;		if(vOut <> g_ZeroDelayOut)
-;		{
-;			CancelZeroDelayOut()
-;			SubSend(vOut)
-;		}
-;		g_ZeroDelaySurface := ""
-;		g_ZeroDelayOut := ""
-;	} else {
-;		SubSend(vOut)
-;	}
+
 	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
 	g_KoyubiOnHold := "N"
@@ -1143,10 +1122,8 @@ SendOnHoldSS2:
 	{
 		return
 	}
-	vOut                   := kdn["RN" . g_KoyubiOnHold . g_MojiOnHold]
-	kup_save[g_MojiOnHold] := kup["RN" . g_KoyubiOnHold . g_MojiOnHold]
-	g_ZeroDelaySurface := kLabel["RN" . g_KoyubiOnHold . g_MojiOnHold]
-	SubSend(vOut)
+	SendKey("RN" . g_KoyubiOnHold, g_MojiOnHold)
+	
 	g_ZeroDelaySurface := ""
 	g_KoyubiOnHold3 := ""
 	g_KoyubiOnHold2 := ""
@@ -1167,20 +1144,7 @@ SendOnHoldS2:
 		return
 	}
 	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2)		
-;	vOut                    := kdn["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-;	kup_save[g_MojiOnHold2] := kup["RN" . g_KoyubiOnHold2 . g_MojiOnHold2]
-;	if(g_ZeroDelay = 1)
-;	{
-;		if(vOut <> g_ZeroDelayOut)
-;		{
-;			CancelZeroDelayOut()
-;			SubSend(vOut)
-;		}
-;		g_ZeroDelaySurface := ""
-;		g_ZeroDelayOut := ""
-;	} else {
-;		SubSend(vOut)
-;	}
+
 	g_MojiOnHold2   := ""
 	g_KoyubiOnHold2 := ""
 	g_keyInPtn := "S"
