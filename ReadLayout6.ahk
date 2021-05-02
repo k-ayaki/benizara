@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.6 .... 2021/4/24
+;	ver.0.1.4.6 .... 2021/5/2
 ;-----------------------------------------------------------------------
 ReadLayout:
 	kst := Object()	; キーの状態
@@ -770,6 +770,7 @@ SetKeyTable:
 			; 濁音があればセット
 			if(DakuonHash[org[A_Index]]<>"")
 			{
+			_tmp := DakuonHash[org[A_Index]]
 				GenSendStr2(DakuonHash[org[A_Index]], _down, _up)
 				kdakdn[_mode . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
 				kdakup[_mode . _lpos2] := _up
@@ -1384,6 +1385,12 @@ MakeDakuonHash()
 	hash["ふ"] := "ｂｕ"
 	hash["へ"] := "ｂｅ"
 	hash["ほ"] := "ｂｏ"
+
+	hash["ぱ"] := "ｂａ"
+	hash["ぴ"] := "ｂｉ"
+	hash["ぷ"] := "ｂｕ"
+	hash["ぺ"] := "ｂｅ"
+	hash["ぽ"] := "ｂｏ"
 	
 	hash["ｕ"] := "ｖｕ"
 	hash["ｋａ"] := "ｇａ"
@@ -1408,10 +1415,16 @@ MakeDakuonHash()
 
 	hash["ｈａ"] := "ｂａ"
 	hash["ｈｉ"] := "ｂｉ"
-	hash["ｈｉ"] := "ｂｉ"
+	hash["ｈｕ"] := "ｂｕ"
 	hash["ｆｕ"] := "ｂｕ"
 	hash["ｈｅ"] := "ｂｅ"
 	hash["ｈｏ"] := "ｂｏ"
+	
+	hash["ｐａ"] := "ｂａ"
+	hash["ｐｉ"] := "ｂｉ"
+	hash["ｐｕ"] := "ｂｕ"
+	hash["ｐｅ"] := "ｂｅ"
+	hash["ｐｏ"] := "ｂｏ"
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -1426,12 +1439,24 @@ MakeHanDakuonHash()
 	hash["へ"] := "ｐｅ"
 	hash["ほ"] := "ｐｏ"
 
+	hash["ば"] := "ｐａ"
+	hash["び"] := "ｐｉ"
+	hash["ぶ"] := "ｐｕ"
+	hash["べ"] := "ｐｅ"
+	hash["ぼ"] := "ｐｏ"
+
 	hash["ｈａ"] := "ｐａ"
 	hash["ｈｉ"] := "ｐｉ"
 	hash["ｈｕ"] := "ｐｕ"
 	hash["ｆｕ"] := "ｐｕ"
 	hash["ｈｅ"] := "ｐｅ"
 	hash["ｈｏ"] := "ｐｏ"
+	
+	hash["ｂａ"] := "ｐａ"
+	hash["ｂｉ"] := "ｐｉ"
+	hash["ｂｕ"] := "ｐｕ"
+	hash["ｂｅ"] := "ｐｅ"
+	hash["ｂｏ"] := "ｐｏ"
 	return hash
 }
 

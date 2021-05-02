@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.6 .... 2021/04/24
+;	ver.0.1.4.6 .... 2021/05/02
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,7 +11,7 @@
 	#KeyHistory
 #SingleInstance, Off
 	g_Ver := "ver.0.1.4.6"
-	g_Date := "2021/4/24"
+	g_Date := "2021/5/2"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -72,7 +72,7 @@
 	g_OyaTick   := Object()
 	g_OyaUpTick := Object()
 	g_Interval  := Object()
-	g_LastKey   := Object()
+	g_LastKey   := Object()		; 最後に入力したキーを濁音や半濁音に置き換える
 	g_LastKey["濁音"]     := ""
 	g_LastKey["濁音up"]   := ""
 	g_LastKey["半濁音"]   := ""
@@ -278,7 +278,7 @@ keydownL:
 					g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Interval["M" . g_Oya]*g_OverlapMO)/(100-g_OverlapMO)),g_MaxTimeout)
 					g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
 				}
-				Gosub,SendZeroDelay
+				Gosub,SendZeroDelayM
 			}
 		}
 		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; S6)O-M-Oオフ状態
@@ -506,10 +506,18 @@ SendOnHoldMO:
 ;----------------------------------------------------------------------
 SendOnHold(_mode, g_MojiOnHold)
 {
-	global kdn, kup, kup_save, g_ZeroDelay, g_ZeroDelayOut, g_ZeroDelaySurface
-	global g_LastKey, 
+	global kdn, kup, kup_save, g_ZeroDelay, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel
+	global g_LastKey, kdakdn, kdakup, khdakdn, khdakup
 	vOut                   := kdn[_mode . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
+	if(kLabel[_mode . g_MojiOnHold]=="゛") {
+		vOut                   := g_LastKey["濁音"]
+		kup_save[g_MojiOnHold] := g_LastKey["濁音up"]
+	} else
+	if(kLabel[_mode . g_MojiOnHold]=="゜") {
+		vOut                   := g_LastKey["半濁音"]
+		kup_save[g_MojiOnHold] := g_LastKey["半濁音up"]
+	}	
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -761,11 +769,11 @@ keydownM:
 		g_SendTick := g_MojiTick + minimum(floor((g_Interval[g_Oya . "M"]*g_OverlapOM)/(100-g_OverlapOM)),g_Threshold)
 		g_KeyInPtn := g_Oya . "M"
 	}
-	Gosub,SendZeroDelay
+	Gosub,SendZeroDelayM
 	critical,off
 	return
 
-SendZeroDelay:
+SendZeroDelayM:
 	if(g_MojiOnHold<>"")	; 当該キーの保留
 	{
 		; 左右親指シフト面と非シフト面の文字キーが同一ならば、保留しない
@@ -796,21 +804,7 @@ SendZeroDelay:
 	}
 	if(g_MojiOnHold<>"")	; 保留キー有り
 	{
-		if(g_ZeroDelay = 1)
-		{
-			; 保留キーがあれば先行出力（零遅延モード）
-			vOut :=                   kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			kup_save[g_MojiOnHold] := kup[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-			g_ZeroDelaySurface     := kLabel[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold]
-
-			g_ZeroDelayOut := vOut
-			SubSend(vOut)
-		}
-		else
-		{
-			g_ZeroDelaySurface := ""
-			g_ZeroDelayOut := ""
-		}
+		SendZeroDelay(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
 	}
 	return
 
@@ -834,10 +828,19 @@ SendAN(_mode,g_layoutPos)
 ; キーをすぐさま出力
 ;----------------------------------------------------------------------
 SendKey(_mode, g_MojiOnHold){
-	global kdn, kup, kup_save, g_LastKey
+	global kdn, kup, kup_save,kLabel
+	global g_LastKey, kdakdn, kdakup, khdakdn, khdakup
 	
 	vOut                   := kdn[_mode . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
+	if(kLabel[_mode . g_MojiOnHold]=="゛" && g_LastKey["濁音"]!="") {
+		vOut                   := g_LastKey["濁音"]
+		kup_save[g_MojiOnHold] := g_LastKey["濁音up"]
+	} else
+	if(kLabel[_mode . g_MojiOnHold]=="゜" && g_LastKey["半濁音"]!="") {
+		vOut                   := g_LastKey["半濁音"]
+		kup_save[g_MojiOnHold] := g_LastKey["半濁音up"]
+	}
 	SubSend(vOut)
 	g_LastKey["濁音"]     := kdakdn[_mode . g_MojiOnHold]
 	g_LastKey["濁音up"]   := kdakup[_mode . g_MojiOnHold]
@@ -962,7 +965,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	} else
 	if(g_KeyInPtn == "S") {
 		g_MojiTickSave := g_MojiTick
@@ -980,7 +983,7 @@ keydownS:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelayS(g_MojiOnHold2, g_MojiOnHold)
+			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold)
 
 		} else {
 			; 保留中の１文字を確定（出力）
@@ -991,7 +994,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
+			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
 		}
 	}
 	else
@@ -1010,7 +1013,7 @@ keydownS:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelayS(g_MojiOnHold2, g_MojiOnHold)
+			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold)
 		} else {
 			; 保留中の同時打鍵を確定
 			Gosub, SendOnHoldSS
@@ -1020,7 +1023,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
+			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
 		}
 	}
 	else
@@ -1034,7 +1037,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	} else {
 		; バグ対策
 		; 当該キーを単独打鍵として保留
@@ -1047,24 +1050,39 @@ keydownS:
 		g_KoyubiOnHold  := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelayS("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
 	}
 	critical,off
 	return
 
 ;----------------------------------------------------------------------
-; 同時打鍵用の零遅延モードの先行出力
+; 親指シフトと同時打鍵の零遅延モードの先行出力
 ;----------------------------------------------------------------------
-SendZeroDelayS(_mode, g_MojiOnHold) {
+SendZeroDelay(_mode, g_MojiOnHold) {
 	global g_ZeroDelay, g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
+	global g_LastKey, kdakdn, kdakup, khdakdn, khdakup
 	if(g_ZeroDelay == 1)
 	{
 		; 保留キーがあれば先行出力（零遅延モード）
 		vOut                   := kdn[_mode . g_MojiOnHold]
 		kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
 		g_ZeroDelaySurface     := kLabel[_mode . g_MojiOnHold]
+		
+		if(kLabel[_mode . g_MojiOnHold]=="゛" && g_LastKey["濁音"]!="") {
+			vOut                   := g_LastKey["濁音"]
+			kup_save[g_MojiOnHold] := g_LastKey["濁音up"]
+		} else
+		if(kLabel[_mode . g_MojiOnHold]=="゜" && g_LastKey["半濁音"]) {
+			vOut                   := g_LastKey["半濁音"]
+			kup_save[g_MojiOnHold] := g_LastKey["半濁音up"]
+		}
 		g_ZeroDelayOut := vOut
 		SubSend(vOut)
+	}
+	else
+	{
+		g_ZeroDelaySurface := ""
+		g_ZeroDelayOut := ""
 	}
 	return
 }
@@ -1291,7 +1309,7 @@ keyupS:
 				; １文字前の待機
 				g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 				g_KeyInPtn := "S"
-				SendZeroDelayS("RN" . g_KoyubiOnHold2, g_MojiOnHold)
+				SendZeroDelay("RN" . g_KoyubiOnHold2, g_MojiOnHold)
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold) {
@@ -1365,10 +1383,12 @@ Interrupt10:
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		} else
 		if(ShiftMode["R"] == "親指シフト" ) {
-			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . szConverting . "]"
+			_daku := g_LastKey["濁音"]
+			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . _daku . "][" . g_ZeroDelaySurface . "]"
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		} else {
-			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . szConverting . "]"
+			_daku := g_LastKey["濁音"]
+			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . _daku . "]"
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		}
 	}
@@ -1580,11 +1600,11 @@ ChkIME:
 			}
 		}
 	}
-	if(A_IsCompiled <> 1)
-	{
+	;if(A_IsCompiled <> 1)
+	;{
 		;vImeConverting := IME_GetConverting() & 32767
 		;Tooltip, %g_Romaji% %vImeConvMode%, 0, 0, 2 ; debug
-	}
+	;}
 	return
 
 ;----------------------------------------------------------------------
