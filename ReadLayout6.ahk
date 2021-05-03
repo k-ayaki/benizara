@@ -46,7 +46,7 @@ ReadLayout:
 	_rowhash[14]:= "14"
 	_rowhash[15]:= "15"
 	
-	layoutAry := "E01,E02,E03,E04,E05,E06,E07,E08,E09,E10,E11,E12,E13"
+	layoutAry := "E01,E02,E03,E04,E05,E06,E07,E08,E09,E10,E11,E12,E13,E14"
 	layoutAry := layoutAry . ",D01,D02,D03,D04,D05,D06,D07,D08,D09,D10,D11,D12"
 	layoutAry := layoutAry . ",C01,C02,C03,C04,C05,C06,C07,C08,C09,C10,C11,C12"
 	layoutAry := layoutAry . ",B01,B02,B03,B04,B05,B06,B07,B08,B09,B10,B11"
@@ -377,10 +377,13 @@ Mode2Key:
 	LF[_mode] := 1
 	_col := "E"
 	org := SplitColumn(LF[_mode . "E"])
-	if(org.MaxIndex() <> 13)
+	if(org.MaxIndex() < 13 || org.MaxIndex() > 14)
 	{
 		_error := _Section . "のE段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
+	}
+	if(org.MaxIndex() == 13) {
+		org[14] := "後"
 	}
 	Gosub, SetKeyTable
 	if(_error <> "") 
