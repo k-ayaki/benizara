@@ -7,10 +7,6 @@ ReadLayout:
 	kst := Object()	; キーの状態
 	kup := Object()	; keyup したときの Send形式
 	kdn := Object()	; keydown したときの Send形式
-	kdakdn := Object()	; 濁音
-	kdakup := Object()	; 濁音
-	khdakdn := Object()	; 半濁音
-	khdakup := Object()	; 半濁音
 	mup := Object()	; キーボードそのものを keyup したときの Send形式
 	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
@@ -65,8 +61,12 @@ ReadLayout:
 	lpos2Mode := MakeLpos2ModeHash()
 	name2vkey := MakeName2vkeyHash()
 	ScanCodeHash := MakeScanCodeHash()
-	DakuonHash := MakeDakuonHash()
-	HandakuonHash := MakeHanDakuonHash()
+	
+	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
+	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
+	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
+	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
+	
 	g_Oya2Layout := Object()
 
 	Gosub, InitLayout2
@@ -136,27 +136,35 @@ InitLayout2:
 		LF["ARN" . _colhash[A_Index]] := ""
 		LF["A1N" . _colhash[A_Index]] := ""
 		LF["A2N" . _colhash[A_Index]] := ""
+		LF["A3N" . _colhash[A_Index]] := ""
+		LF["A4N" . _colhash[A_Index]] := ""
 
 		LF["ANK" . _colhash[A_Index]] := ""
 		LF["ALK" . _colhash[A_Index]] := ""
 		LF["ARK" . _colhash[A_Index]] := ""
 		LF["A1K" . _colhash[A_Index]] := ""
 		LF["A2K" . _colhash[A_Index]] := ""
+		LF["A3K" . _colhash[A_Index]] := ""
+		LF["A4K" . _colhash[A_Index]] := ""
 
 		LF["RNN" . _colhash[A_Index]] := ""
 		LF["RLN" . _colhash[A_Index]] := ""
 		LF["RRN" . _colhash[A_Index]] := ""
 		LF["R1N" . _colhash[A_Index]] := ""
 		LF["R2N" . _colhash[A_Index]] := ""
+		LF["R3N" . _colhash[A_Index]] := ""
+		LF["R4N" . _colhash[A_Index]] := ""
 
 		LF["RNK" . _colhash[A_Index]] := ""
 		LF["RLK" . _colhash[A_Index]] := ""
 		LF["RRK" . _colhash[A_Index]] := ""
 		LF["R1K" . _colhash[A_Index]] := ""
 		LF["R2K" . _colhash[A_Index]] := ""
+		LF["R3K" . _colhash[A_Index]] := ""
+		LF["R4K" . _colhash[A_Index]] := ""
 	}
 	; デフォルトテーブル
-	LF["ADNE"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥"
+	LF["ADNE"] := "１,２,３,４,５,６,７,８,９,０,ー,＾,￥,後"
 	LF["ADND"] := "ｑ,ｗ,ｅ,ｒ,ｔ,ｙ,ｕ,ｉ,ｏ,ｐ,＠,［"
 	LF["ADNC"] := "ａ,ｓ,ｄ,ｆ,ｇ,ｈ,ｊ,ｋ,ｌ,；,：,］"
 	LF["ADNB"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
@@ -481,10 +489,13 @@ Mode3Key:
 		LF[_mode2] := 1
 	_col := "E"
 	org := SplitColumn(LF[_lpos . "E"])
-	if(org.MaxIndex() <> 13)
+	if(org.MaxIndex() < 13 || org.MaxIndex() > 14)
 	{
 		_error := _Section . "のE段目にエラーがあります。要素数が" . org.MaxIndex() . "です。"
 		return
+	}
+	if(org.MaxIndex() == 13) {
+		org[14] := "後"
 	}
 	Gosub, SetSimulKeyTable
 	if(_error <> "")
@@ -527,7 +538,6 @@ Mode3Key:
 ;----------------------------------------------------------------------
 ;	レイアウトファイルの設定
 ;----------------------------------------------------------------------
-
 SetLayoutProperty:
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
@@ -547,12 +557,12 @@ SetLayoutProperty:
 			Gosub, SetE2BKeyTables
 		}
 	} else 
-	if(LF["ANN"]==1 && (LF["A1N"]==1 || LF["A2N"]==1) && LF["ANK"]==1 (LF["A1K"]==1 || LF["A2K"]==1)) 
+	if(LF["ANN"]==1 && LF["A1N"]==1 && LF["ANK"]==1 LF["A1K"]==1) 
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["ANN"]==1 && (LF["A3N"]==1 || LF["A4N"]==1) && LF["ANK"]==1 (LF["A3K"]==1 || LF["A4K"]==1)) 
+	if(LF["ANN"]==1 && (LF["AMN"]==1 || LF["AIN"]==1) && LF["ANK"]==1 (LF["AMK"]==1 || LF["AIK"]==1)) 
 	{
 		ShiftMode["A"] := "文字同時打鍵"
 	}
@@ -578,12 +588,12 @@ SetLayoutProperty:
 			Gosub, SetE2BKeyTables
 		}
 	} else
-	if(LF["RNN"]==1 && (LF["R1N"]==1 || LF["R2N"]==1) && LF["RNK"]==1 && (LF["R1K"]==1 || LF["R2K"]==1))
+	if(LF["RNN"]==1 && LF["R1N"]==1 && LF["RNK"]==1)
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["RNN"]==1 && (LF["R3N"]==1 || LF["R4N"]==1) && LF["RNK"]==1)
+	if(LF["RNN"]==1 && (LF["RMN"]==1 || LF["RIN"]==1) && LF["RNK"]==1)
 	{
 		ShiftMode["R"] := "文字同時打鍵"
 	}
@@ -707,7 +717,7 @@ SetKeyTable:
 		_lpos2 := _col . _row2
 
 		; 月配列などのプレフィックスシフトキー
-		if(org[A_Index] == " 1" || org[A_Index] == " 2")
+		if(org[A_Index] == " 1" || org[A_Index] == " 2" || org[A_Index] == " 3" || org[A_Index] == " 4")
 		{
 			kdn[_mode . _lpos2] := ""
 			kup[_mode . _lpos2] := ""
@@ -769,21 +779,10 @@ SetKeyTable:
 				}
 				kdn[_mode . _lpos2] := _down
 				kup[_mode . _lpos2] := _up
-			}
-			; 濁音があればセット
-			if(DakuonHash[org[A_Index]]<>"")
-			{
-			_tmp := DakuonHash[org[A_Index]]
-				GenSendStr2(DakuonHash[org[A_Index]], _down, _up)
-				kdakdn[_mode . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
-				kdakup[_mode . _lpos2] := _up
-			}
-			; 半濁音があればセット
-			if(HandakuonHash[org[A_Index]]<>"")
-			{
-				GenSendStr2(HandakuonHash[org[A_Index]], _down, _up)
-				khdakdn[_mode . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
-				khdakup[_mode . _lpos2] := _up
+			} else {
+				kLabel[_mode . _lpos2] := org[A_Index]
+				kdn[_mode . _lpos2] := "{" . ""
+				kup[_mode . _lpos2] := "{" . ""
 			}
 		} else {
 			; シフトモードの禁止文字ならば直接出力
@@ -887,25 +886,9 @@ SetSimulKeyTable:
 			keyAttribute3["RN" . _lpos]  := "S"
 			keyAttribute3["RK" . _lpos2] := "S"
 			keyAttribute3["RK" . _lpos]  := "S"
-			
-			; 濁音があればセット
-			if(DakuonHash[org[A_Index]]<>"")
-			{
-				GenSendStr2(DakuonHash[org[A_Index]], _down, _up)
-				kdakdn[_lpos . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
-				kdakup[_lpos . _lpos2] := _up
-				kdakdn[_lpos2 . _lpos] := "{Blind}{Backspace down}{Backspace up}" . _down
-				kdakup[_lpos2 . _lpos] := _up
-			}
-			; 半濁音があればセット
-			if(HandakuonHash[org[A_Index]]<>"")
-			{
-				GenSendStr2(HandakuonHash[org[A_Index]], _down, _up)
-				khdakdn[_lpos . _lpos2] := "{Blind}{Backspace down}{Backspace up}" . _down
-				khdakup[_lpos . _lpos2] := _up
-				khdakdn[_lpos2 . _lpos] := "{Blind}{Backspace down}{Backspace up}" . _down
-				khdakup[_lpos2 . _lpos] := _up
-			}
+		} else {
+			kLabel[_lpos . _lpos2] := org[A_Index]
+			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 		}
 		continue
 	}
@@ -1111,21 +1094,37 @@ MakeLayout2Hash() {
 
 	Hash["[英数１プリフィックスシフト]"]         := "A1N"	; for 月配列
 	Hash["[英数２プリフィックスシフト]"]         := "A2N"	; for 月配列
+	Hash["[英数３プリフィックスシフト]"]         := "A3N"	; for 月配列
+	Hash["[英数４プリフィックスシフト]"]         := "A4N"	; for 月配列
 	Hash["[英数小指１プリフィックスシフト]"]     := "A1K"	; for 月配列
 	Hash["[英数小指２プリフィックスシフト]"]     := "A2K"	; for 月配列	
+	Hash["[英数小指３プリフィックスシフト]"]     := "A3K"	; for 月配列
+	Hash["[英数小指４プリフィックスシフト]"]     := "A4K"	; for 月配列	
 	Hash["[ローマ字１プリフィックスシフト]"]     := "R1N"	; for 月配列
 	Hash["[ローマ字２プリフィックスシフト]"]     := "R2N"	; for 月配列
+	Hash["[ローマ字３プリフィックスシフト]"]     := "R3N"	; for 月配列
+	Hash["[ローマ字４プリフィックスシフト]"]     := "R4N"	; for 月配列
 	Hash["[ローマ字小指１プリフィックスシフト]"] := "R1K"	; for 月配列
 	Hash["[ローマ字小指２プリフィックスシフト]"] := "R2K"	; for 月配列	
+	Hash["[ローマ字小指３プリフィックスシフト]"] := "R3K"	; for 月配列
+	Hash["[ローマ字小指４プリフィックスシフト]"] := "R4K"	; for 月配列	
 	; やまぶき互換
 	Hash["[1英数シフト無し]"]     := "A1N"	; for 月配列
 	Hash["[2英数シフト無し]"]     := "A2N"	; for 月配列
+	Hash["[3英数シフト無し]"]     := "A3N"	; for 月配列
+	Hash["[4英数シフト無し]"]     := "A4N"	; for 月配列
 	Hash["[1英数小指シフト]"]     := "A1K"	; for 月配列
-	Hash["[2英数小指シフト]"]     := "A2K"	; for 月配列	
+	Hash["[2英数小指シフト]"]     := "A2K"	; for 月配列
+	Hash["[3英数小指シフト]"]     := "A3K"	; for 月配列
+	Hash["[4英数小指シフト]"]     := "A4K"	; for 月配列
 	Hash["[1ローマ字シフト無し]"] := "R1N"	; for 月配列
 	Hash["[2ローマ字シフト無し]"] := "R2N"	; for 月配列
+	Hash["[3ローマ字シフト無し]"] := "R3N"	; for 月配列
+	Hash["[4ローマ字シフト無し]"] := "R4N"	; for 月配列
 	Hash["[1ローマ字小指シフト]"] := "R1K"	; for 月配列
-	Hash["[2ローマ字小指シフト]"] := "R2K"	; for 月配列	
+	Hash["[2ローマ字小指シフト]"] := "R2K"	; for 月配列
+	Hash["[3ローマ字小指シフト]"] := "R3K"	; for 月配列
+	Hash["[4ローマ字小指シフト]"] := "R4K"	; for 月配列
 
 	return Hash
 }
@@ -1156,6 +1155,10 @@ MakeZ2hHash() {
 	hash["前"] := "PgUp"
 	hash["次"] := "PgDn"
 	hash["無"] := ""
+	hash["濁"] := ""
+	hash["半"] := ""
+	hash["拗"] := ""
+	hash["修"] := ""
 	hash[chr(65509)] := "\"
 	hash[chr(8220)]  := """"
 	hash[chr(8221)]  := """"	; 二重引用符
@@ -1261,7 +1264,6 @@ MakeZ2hHash() {
 	hash["～"] := "~"
 	return hash
 }
-
 ;----------------------------------------------------------------------
 ; ローマ字変換用ハッシュを生成
 ; 戻り値：モード名
@@ -1356,110 +1358,324 @@ MakeRoma3Hash()
 	hash["ヴ"] := "ｖｕ"
 	hash["ゕ"] := "ｌｋａ"
 	hash["ゖ"] := "ｌｋｅ"
+
+	hash["ァ"] := "ｌａ"
+	hash["ア"] := "ａ"
+	hash["ィ"] := "ｌｉ"
+	hash["イ"] := "ｉ"
+	hash["ゥ"] := "ｌｕ"
+	hash["ウ"] := "ｕ"
+	hash["ェ"] := "ｌｅ"
+	hash["エ"] := "ｅ"
+	hash["ォ"] := "ｌｏ"
+	hash["オ"] := "ｏ"
+	hash["カ"] := "ｋａ"
+	hash["ガ"] := "ｇａ"
+	hash["キ"] := "ｋｉ"
+	hash["ギ"] := "ｇｉ"
+	hash["ク"] := "ｋｕ"
+	hash["グ"] := "ｇｕ"
+	hash["ケ"] := "ｋｅ"
+	hash["ゲ"] := "ｇｅ"
+	hash["コ"] := "ｋｏ"
+	hash["ゴ"] := "ｇｏ"
+	hash["サ"] := "ｓａ"
+	hash["ザ"] := "ｚａ"
+	hash["シ"] := "ｓｉ"
+	hash["ジ"] := "ｚｉ"
+	hash["ス"] := "ｓｕ"
+	hash["ズ"] := "ｚｕ"
+	hash["セ"] := "ｓｅ"
+	hash["ゼ"] := "ｚｅ"
+	hash["ソ"] := "ｓｏ"
+	hash["ゾ"] := "ｚｏ"
+	hash["タ"] := "ｔａ"
+	hash["ダ"] := "ｄａ"
+	hash["チ"] := "ｔｉ"
+	hash["ヂ"] := "ｄｉ"
+	hash["ッ"] := "ｌｔｕ"
+	hash["ツ"] := "ｔｕ"
+	hash["ヅ"] := "ｄｕ"
+	hash["テ"] := "ｔｅ"
+	hash["デ"] := "ｄｅ"
+	hash["ト"] := "ｔｏ"
+	hash["ド"] := "ｄｏ"
+	hash["ナ"] := "ｎａ"
+	hash["ニ"] := "ｎｉ"
+	hash["ヌ"] := "ｎｕ"
+	hash["ネ"] := "ｎｅ"
+	hash["ノ"] := "ｎｏ"
+	hash["ハ"] := "ｈａ"
+	hash["バ"] := "ｂａ"
+	hash["パ"] := "ｐａ"
+	hash["ヒ"] := "ｈｉ"
+	hash["ビ"] := "ｂｉ"
+	hash["ピ"] := "ｐｉ"
+	hash["フ"] := "ｆｕ"
+	hash["ブ"] := "ｂｕ"
+	hash["プ"] := "ｐｕ"
+	hash["ヘ"] := "ｈｅ"
+	hash["ベ"] := "ｂｅ"
+	hash["ペ"] := "ｐｅ"
+	hash["ホ"] := "ｈｏ"
+	hash["ボ"] := "ｂｏ"
+	hash["ポ"] := "ｐｏ"
+	hash["マ"] := "ｍａ"
+	hash["ミ"] := "ｍｉ"
+	hash["ム"] := "ｍｕ"
+	hash["メ"] := "ｍｅ"
+	hash["モ"] := "ｍｏ"
+	hash["ャ"] := "ｌｙａ"
+	hash["ヤ"] := "ｙａ"
+	hash["ュ"] := "ｌｙｕ"
+	hash["ユ"] := "ｙｕ"
+	hash["ョ"] := "ｌｙｏ"
+	hash["ヨ"] := "ｙｏ"
+	hash["ラ"] := "ｒａ"
+	hash["リ"] := "ｒｉ"
+	hash["ル"] := "ｒｕ"
+	hash["レ"] := "ｒｅ"
+	hash["ロ"] := "ｒｏ"
+	hash["ヮ"] := "ｌｗａ"
+	hash["ワ"] := "ｗａ"
+	hash["ヰ"] := "ｗｙｉ"
+	hash["ヱ"] := "ｗｙｅ"
+	hash["ヲ"] := "ｗｏ"
+	hash["ン"] := "ｎｎ"
+	hash["ヴ"] := "ｖｕ"
+	hash["ヵ"] := "ｌｋａ"
+	hash["ヶ"] := "ｌｋｅ"
+	return hash
+}
+
+;----------------------------------------------------------------------
+; 濁音表層ハッシュを生成
+;----------------------------------------------------------------------
+MakeDakuonSurfaceHash()
+{
+	hash := Object()
+	hash["う"] := "ゔ"
+	hash["ぅ"] := "ゔ"
+	hash["か"] := "が"
+	hash["き"] := "ぎ"
+	hash["く"] := "ぐ"
+	hash["け"] := "げ"
+	hash["こ"] := "ご"
+
+	hash["さ"] := "ざ"
+	hash["し"] := "じ"
+	hash["す"] := "ず"
+	hash["せ"] := "ぜ"
+	hash["そ"] := "ぞ"
+
+	hash["た"] := "だ"
+	hash["ち"] := "ぢ"
+	hash["つ"] := "づ"
+	hash["っ"] := "づ"
+	hash["て"] := "で"
+	hash["と"] := "ど"
+
+	hash["は"] := "ば"
+	hash["ひ"] := "び"
+	hash["ふ"] := "ぶ"
+	hash["へ"] := "べ"
+	hash["ほ"] := "ぼ"
+
+	hash["ぱ"] := "ば"
+	hash["ぴ"] := "び"
+	hash["ぷ"] := "ぶ"
+	hash["ぺ"] := "べ"
+	hash["ぽ"] := "ぼ"
+
+	hash["ゔ"] := "う"
+	hash["が"] := "か"
+	hash["ぎ"] := "き"
+	hash["ぐ"] := "く"
+	hash["げ"] := "け"
+	hash["ご"] := "こ"
+
+	hash["ざ"] := "さ"
+	hash["じ"] := "し"
+	hash["ず"] := "す"
+	hash["ぜ"] := "せ"
+	hash["ぞ"] := "そ"
+
+	hash["だ"] := "た"
+	hash["ぢ"] := "ち"
+	hash["づ"] := "つ"
+	hash["で"] := "て"
+	hash["ど"] := "と"
+
+	hash["ば"] := "は"
+	hash["び"] := "ひ"
+	hash["ぶ"] := "ふ"
+	hash["べ"] := "へ"
+	hash["ぼ"] := "ほ"
+	return hash
+}
+
+;----------------------------------------------------------------------
+; 半濁音表層ハッシュ
+;----------------------------------------------------------------------
+MakeHanDakuonSurfaceHash()
+{
+	hash := Object()
+	hash["は"] := "ぱ"
+	hash["ひ"] := "ぴ"
+	hash["ふ"] := "ぷ"
+	hash["へ"] := "ぺ"
+	hash["ほ"] := "ぽ"
+
+	hash["ば"] := "ぱ"
+	hash["び"] := "ぴ"
+	hash["ぶ"] := "ぷ"
+	hash["べ"] := "ぺ"
+	hash["ぼ"] := "ぽ"
+
+	hash["ぱ"] := "は"
+	hash["ぴ"] := "ひ"
+	hash["ぷ"] := "ふ"
+	hash["ぺ"] := "へ"
+	hash["ぽ"] := "ほ"
 	return hash
 }
 ;----------------------------------------------------------------------
-; 濁音ハッシュを生成
+; 拗音表層ハッシュ
 ;----------------------------------------------------------------------
-MakeDakuonHash()
+MakeYouonSurfaceHash()
 {
 	hash := Object()
-	hash["う"] := "ｖｕ"
-	hash["か"] := "ｇａ"
-	hash["き"] := "ｇｉ"
-	hash["く"] := "ｇｕ"
-	hash["け"] := "ｇｅ"
-	hash["こ"] := "ｇｏ"
+	hash["あ"] := "ぁ"
+	hash["い"] := "ぃ"
+	hash["う"] := "ぅ"
+	hash["ゔ"] := "ぅ"
+	hash["え"] := "ぇ"
+	hash["お"] := "ぉ"
+	hash["か"] := "ゕ"
+	hash["が"] := "ゕ"
+	hash["け"] := "ゖ"
+	hash["げ"] := "ゖ"
+	hash["つ"] := "っ"
+	hash["づ"] := "っ"
 
-	hash["さ"] := "ｚａ"
-	hash["し"] := "ｚｉ"
-	hash["す"] := "ｚｕ"
-	hash["せ"] := "ｚｅ"
-	hash["そ"] := "ｚｏ"
-
-	hash["た"] := "ｄａ"
-	hash["ち"] := "ｄｉ"
-	hash["っ"] := "ｄｕ"
-	hash["て"] := "ｄｅ"
-	hash["と"] := "ｄｏ"
-
-	hash["は"] := "ｂａ"
-	hash["ひ"] := "ｂｉ"
-	hash["ふ"] := "ｂｕ"
-	hash["へ"] := "ｂｅ"
-	hash["ほ"] := "ｂｏ"
-
-	hash["ぱ"] := "ｂａ"
-	hash["ぴ"] := "ｂｉ"
-	hash["ぷ"] := "ｂｕ"
-	hash["ぺ"] := "ｂｅ"
-	hash["ぽ"] := "ｂｏ"
+	hash["や"] := "ゃ"
+	hash["ゆ"] := "ゅ"
+	hash["よ"] := "ょ"
+	hash["わ"] := "ゎ"
 	
-	hash["ｕ"] := "ｖｕ"
-	hash["ｋａ"] := "ｇａ"
-	hash["ｋｉ"] := "ｇｉ"
-	hash["ｋｕ"] := "ｇｕ"
-	hash["ｋｅ"] := "ｇｅ"
-	hash["ｋｏ"] := "ｇｏ"
+	hash["ぁ"] := "あ"
+	hash["ぃ"] := "い"
+	hash["ぅ"] := "う"
+	hash["ぇ"] := "え"
+	hash["ぉ"] := "お"
+	hash["ゕ"] := "か"
+	hash["ゕ"] := "が"
+	hash["ゖ"] := "け"
+	hash["ゖ"] := "げ"
+	hash["っ"] := "つ"
 
-	hash["ｓａ"] := "ｚａ"
-	hash["ｓｉ"] := "ｚｉ"
-	hash["ｓｕ"] := "ｚｕ"
-	hash["ｓｅ"] := "ｚｅ"
-	hash["ｓｏ"] := "ｚｏ"
-
-	hash["ｔａ"] := "ｄａ"
-	hash["ｔｉ"] := "ｄｉ"
-	hash["ｃｈｉ"] := "ｄｉ"
-	hash["ｔｕ"] := "ｄｕ"
-	hash["ｔｓｕ"] := "ｄｕ"
-	hash["ｔｅ"] := "ｄｅ"
-	hash["ｔｏ"] := "ｄｏ"
-
-	hash["ｈａ"] := "ｂａ"
-	hash["ｈｉ"] := "ｂｉ"
-	hash["ｈｕ"] := "ｂｕ"
-	hash["ｆｕ"] := "ｂｕ"
-	hash["ｈｅ"] := "ｂｅ"
-	hash["ｈｏ"] := "ｂｏ"
-	
-	hash["ｐａ"] := "ｂａ"
-	hash["ｐｉ"] := "ｂｉ"
-	hash["ｐｕ"] := "ｂｕ"
-	hash["ｐｅ"] := "ｂｅ"
-	hash["ｐｏ"] := "ｂｏ"
+	hash["ゃ"] := "や"
+	hash["ゅ"] := "ゆ"
+	hash["ょ"] := "よ"
+	hash["ゎ"] := "わ"
 	return hash
 }
 ;----------------------------------------------------------------------
-; 半濁音ハッシュ
+; 修正表層ハッシュを生成
 ;----------------------------------------------------------------------
-MakeHanDakuonHash()
+MakeCorrectSurfaceHash()
 {
 	hash := Object()
-	hash["は"] := "ｐａ"
-	hash["ひ"] := "ｐｉ"
-	hash["ふ"] := "ｐｕ"
-	hash["へ"] := "ｐｅ"
-	hash["ほ"] := "ｐｏ"
+	hash["あ"] := "ぁ"
+	hash["ぁ"] := "あ"
 
-	hash["ば"] := "ｐａ"
-	hash["び"] := "ｐｉ"
-	hash["ぶ"] := "ｐｕ"
-	hash["べ"] := "ｐｅ"
-	hash["ぼ"] := "ｐｏ"
+	hash["い"] := "ぃ"
+	hash["ぃ"] := "い"
 
-	hash["ｈａ"] := "ｐａ"
-	hash["ｈｉ"] := "ｐｉ"
-	hash["ｈｕ"] := "ｐｕ"
-	hash["ｆｕ"] := "ｐｕ"
-	hash["ｈｅ"] := "ｐｅ"
-	hash["ｈｏ"] := "ｐｏ"
+	hash["う"] := "ゔ"
+	hash["ゔ"] := "ぅ"
+	hash["ぅ"] := "ゔ"
+
+	hash["ぇ"] := "え"
+	hash["え"] := "ぇ"
+	hash["ぉ"] := "お"
+	hash["お"] := "ぉ"
+
+	hash["か"] := "が"
+	hash["が"] := "ゕ"
+	hash["ゕ"] := "か"
 	
-	hash["ｂａ"] := "ｐａ"
-	hash["ｂｉ"] := "ｐｉ"
-	hash["ｂｕ"] := "ｐｕ"
-	hash["ｂｅ"] := "ｐｅ"
-	hash["ｂｏ"] := "ｐｏ"
+	hash["き"] := "ぎ"
+	hash["ぎ"] := "き"
+
+	hash["く"] := "ぐ"
+	hash["ぐ"] := "く"
+
+	hash["け"] := "げ"
+	hash["げ"] := "ゖ"
+	hash["ゖ"] := "け"
+
+	hash["こ"] := "ご"
+	hash["ご"] := "こ"
+
+	hash["さ"] := "ざ"
+	hash["ざ"] := "さ"
+
+	hash["し"] := "じ"
+	hash["じ"] := "し"
+
+	hash["す"] := "ず"
+	hash["ず"] := "す"
+
+	hash["せ"] := "ぜ"
+	hash["ぜ"] := "せ"
+
+	hash["そ"] := "ぞ"
+	hash["ぞ"] := "そ"
+
+	hash["た"] := "だ"
+	hash["だ"] := "た"
+	hash["ち"] := "ぢ"
+	hash["ぢ"] := "ち"
+	hash["つ"] := "づ"
+	hash["づ"] := "っ"
+	hash["っ"] := "つ"
+	hash["て"] := "で"
+	hash["で"] := "て"
+	hash["と"] := "ど"
+	hash["ど"] := "と"
+
+	hash["は"] := "ぱ"
+	hash["ぱ"] := "ば"
+	hash["ば"] := "は"
+	
+	hash["ひ"] := "ぴ"
+	hash["ぴ"] := "び"
+	hash["び"] := "ひ"
+
+	hash["ふ"] := "ぷ"
+	hash["ぷ"] := "ぶ"
+	hash["ぶ"] := "ふ"
+
+	hash["へ"] := "ぺ"
+	hash["ぺ"] := "べ"
+	hash["べ"] := "へ"
+
+	hash["ほ"] := "ぽ"
+	hash["ぽ"] := "ぼ"
+	hash["ぼ"] := "ほ"
+
+	hash["や"] := "ゃ"
+	hash["ゃ"] := "や"
+
+	hash["ゆ"] := "ゅ"
+	hash["ゅ"] := "ゆ"
+
+	hash["よ"] := "ょ"
+	hash["ょ"] := "よ"
+
+	hash["ゎ"] := "わ"
+	hash["わ"] := "ゎ"
 	return hash
 }
 
@@ -1560,7 +1776,9 @@ MakeKanaHash()
 	hash["ｘｗａ"] := "ゎ"
 	hash["ｗａ"]   := "わ"
 	hash["ｗｉ"]   := "うぃ"
+	hash["ｗｙｉ"] := "ゐ"
 	hash["ｗｅ"]   := "うぇ"
+	hash["ｗｙｅ"] := "ゑ"
 	hash["ｗｏ"]   := "を"
 	hash["ｎｎ"]   := "ん"
 	hash["ｖｕ"]   := "ゔ"
@@ -1607,6 +1825,12 @@ MakeKanaHash()
 	hash["ｚｙｕ"] := "じゅ"
 	hash["ｚｙｅ"] := "じぇ"
 	hash["ｚｙｏ"] := "じょ"
+
+	hash["ｊｙａ"] := "じゃ"
+	hash["ｊｙｉ"] := "じぃ"
+	hash["ｊｙｕ"] := "じゅ"
+	hash["ｊｙｅ"] := "じぇ"
+	hash["ｊｙｏ"] := "じょ"
 
 	hash["ｔｈａ"] := "てゃ"
 	hash["ｔｈｉ"] := "てぃ"
@@ -1661,7 +1885,6 @@ MakeKanaHash()
 	hash["ｒｙｕ"] := "りゅ"
 	hash["ｒｙｅ"] := "りぇ"
 	hash["ｒｙｏ"] := "りょ"
-
 	return hash
 }
 
@@ -2467,10 +2690,10 @@ MakeCodeNameHash()
 MakeLpos2ModeHash()
 {
 	hash := Object()
-	hash["C02"] := "R4N"	;第４指（薬指）
-	hash["C03"] := "R3N"	;第３指（中指）
-	hash["C08"] := "R3N"	;第３指（中指）
-	hash["C09"] := "R4N"	;第４指（薬指）
+	hash["C02"] := "RIN"	;第４指（薬指）Ring finger
+	hash["C03"] := "RMN"	;第３指（中指）Middle finger
+	hash["C08"] := "RMN"	;第３指（中指）Middle finger
+	hash["C09"] := "RIN"	;第４指（薬指）Ring finger
 	return hash
 }
 
