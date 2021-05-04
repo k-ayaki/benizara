@@ -31,6 +31,8 @@ Init:
 		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
+		g_ZeroDelaySS := 0
+		IniWrite,%g_ZeroDelaySS%,%g_IniFile%,Key,ZeroDelaySS
 		g_OverlapOM := 35
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
@@ -57,6 +59,11 @@ Init:
 		g_ZeroDelay := 1
 	if(g_ZeroDelay<0)
 		g_ZeroDelay := 0
+	IniRead,g_ZeroDelaySS,%g_IniFile%,Key,ZeroDelaySS
+	if(g_ZeroDelaySS>1) 
+		g_ZeroDelaySS := 1
+	if(g_ZeroDelaySS<0)
+		g_ZeroDelaySS := 0
 	IniRead,g_Threshold,%g_IniFile%,Key,Threshold
 	if(g_Threshold < 10)
 		g_Threshold := 10
@@ -113,7 +120,7 @@ _Settings:
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X530 Y405 W80 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X620 Y405 W80 H22,キャンセル
-	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W690 H390, 配列||親指シフト|文字同時打鍵|一時停止|管理者権限|紅皿について
+	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W740 H390, 配列||親指シフト|文字同時打鍵|一時停止|管理者権限|紅皿について
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
@@ -154,7 +161,7 @@ _Settings:
 	Gui, Font,s10 c000000,Meiryo UI
 	Gosub,G2DrawKeyFrame
 	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Edit,vvEdit X60 Y370 W600 H20 -Vscroll,
+	Gui, Add, Edit,vvEdit X60 Y370 W650 H20 -Vscroll,
 	Gosub, G2RefreshLayout
 	
 	Gui, Tab, 2
@@ -176,7 +183,7 @@ _Settings:
 	Gui, Add, Edit,vvOverlapNumOM X+3 Y188 W50 ReadOnly, %g_OverlapOM%
 	Gui, Add, Text,X+10 Y190 c000000,[`%]
 
-	Gui, Add, Slider, X320 Y220 ggOlSliderOM w350 vvOlSliderOM Range10-90 line10 TickInterval10
+	Gui, Add, Slider, X320 Y220 ggOlSliderOM w400 vvOlSliderOM Range10-90 line10 TickInterval10
 	GuiControl,,vOlSliderOM,%g_OverlapOM%
 
 	Gui, Add, Edit,X20 Y260 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
@@ -184,7 +191,7 @@ _Settings:
 	Gui, Add, Edit,vvOverlapNumMO X+3 Y258 W50 ReadOnly, %g_OverlapMO%
 	Gui, Add, Text,X+10 Y260 c000000,[`%]
 	
-	Gui, Add, Slider, X320 Y290 ggOlSliderMO w350 vvOlSliderMO Range10-90 line10 TickInterval10
+	Gui, Add, Slider, X320 Y290 ggOlSliderMO w400 vvOlSliderMO Range10-90 line10 TickInterval10
 	GuiControl,,vOlSliderMO,%g_OverlapMO%
 	
 	Gui, Add, Edit,X20 Y330 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
@@ -192,20 +199,20 @@ _Settings:
 	Gui, Add, Edit,vvThresholdNum X+3 Y328 W50 ReadOnly, %g_Threshold%
 	Gui, Add, Text,X+10 Y330 c000000,[mSEC]
 	
-	Gui, Add, Slider, X320 Y360 ggThSlider w350 vvThSlider Range10-400 line10 TickInterval10
+	Gui, Add, Slider, X320 Y360 ggThSlider w400 vvThSlider Range10-400 line10 TickInterval10
 	GuiControl,,vThSlider,%g_Threshold%
 
 	Gui, Tab, 3
 	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
 	Gui, Add, Checkbox,ggZeroDelaySS vvZeroDelaySS X+20 Y65,零遅延モード
-	GuiControl,,vZeroDelaySS,%g_ZeroDelay%
+	GuiControl,,vZeroDelaySS,%g_ZeroDelaySS%
 	
 	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y110 W230 H20,文字キー同志の重なりの割合：
 	Gui, Add, Edit,vvOverlapNumSS X+3 Y108 W50 ReadOnly, %g_OverlapSS%
 	Gui, Add, Text,X+10 Y110 c000000,[`%]
 
-	Gui, Add, Slider, X320 Y140 ggOlSliderSS w350 vvOlSliderSS Range10-90 line10 TickInterval10
+	Gui, Add, Slider, X320 Y140 ggOlSliderSS w400 vvOlSliderSS Range10-90 line10 TickInterval10
 	GuiControl,,vOlSliderSS,%g_OverlapSS%
 	
 	Gui, Add, Edit,X20 Y180 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なり期間が何ミリ秒のときに同時打鍵であるかを決定します。
@@ -213,12 +220,12 @@ _Settings:
 	Gui, Add, Edit,vvThresholdNumSS X+3 Y178 W50 ReadOnly, %g_ThresholdSS%
 	Gui, Add, Text,X+10 Y180 c000000,[mSEC]
 	
-	Gui, Add, Slider, X320 Y210 ggThSliderSS w350 vvThSliderSS Range10-400 line10 TickInterval10
+	Gui, Add, Slider, X320 Y210 ggThSliderSS w400 vvThSliderSS Range10-400 line10 TickInterval10
 	GuiControl,,vThSliderSS,%g_ThresholdSS%
 	
 	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
+	Gui, Add, Edit,X20 Y40 W690 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
 	Gui, Add, Text,X30 Y130,一時停止キー：
 	if(g_KeyPause = "Pause")
 		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause||ScrollLock|無効|
@@ -229,7 +236,7 @@ _Settings:
 
 	Gui, Tab, 5
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W640 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
+	Gui, Add, Edit,X20 Y40 W690 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
 	{
 		Gui, Add, Text,X30 Y+30,紅皿は管理者権限で動作しています。
@@ -249,7 +256,7 @@ _Settings:
 	Gui, Font, underline
 	Gui, Add, Text,X30 Y222 cBlue ggURLdownload,ダウンロードページ
 	Gui, Add, Text,X30 Y262 cBlue ggURLsupport,サポートページ
-	Gui, Show, W720 H440, 紅皿設定
+	Gui, Show, W770 H440, 紅皿設定
 
 	s_Romaji := ""
 	s_KeySingle := ""
@@ -284,10 +291,10 @@ gURLsupport:
 G2DrawKeyFrame:
 	Critical
 	_ch := GuiLayoutHash[g_Romaji]
-	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W670 H270,%_ch%
+	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W720 H270,%_ch%
 	_col := 1
 	_ypos := 105
-	loop,13
+	loop,14
 	{
 		_row := A_Index
 		Gosub,DrawKeyE2B
@@ -625,8 +632,8 @@ G2RefreshLayout:
 			_st := kst[g_Romaji . "1N" . element]
 		}
 		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "3N" . element]
-			_st := kst[g_Romaji . "3N" . element]
+			_ch := kLabel[g_Romaji . "MN" . element]
+			_st := kst[g_Romaji . "MN" . element]
 		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRL%element%
@@ -639,8 +646,8 @@ G2RefreshLayout:
 			_st := kst[g_Romaji . "2N" . element]
 		}
 		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "4N" . element]
-			_st := kst[g_Romaji . "4N" . element]
+			_ch := kLabel[g_Romaji . "IN" . element]
+			_st := kst[g_Romaji . "IN" . element]
 		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRR%element%
@@ -682,7 +689,7 @@ ReadKeyboardState:
 	{
 		return
 	}
-	loop, 13
+	loop, 14
 	{
 		_layoutPos := "E" . _rowhash[A_Index]
 		_vkey := vkeyHash[_layoutPos]
@@ -838,11 +845,11 @@ gZeroDelay:
 	Return
 
 ;-----------------------------------------------------------------------
-; 機能：零遅延モードチェックボックスの操作 / 零遅延モードは共通
+; 機能：零遅延モードチェックボックスの操作
 ;-----------------------------------------------------------------------
 gZeroDelaySS:
 	Gui, Submit, NoHide
-	g_ZeroDelay := %A_GuiControl%
+	g_ZeroDelaySS := %A_GuiControl%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -965,6 +972,7 @@ gButtonOk:
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
 	IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
+	IniWrite,%g_ZeroDelaySS%,%g_IniFile%,Key,ZeroDelaySS
 	IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
 	IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS

@@ -63,6 +63,7 @@
 	g_OverlapOM := 50
 	g_OverlapSS := 70
 	g_ZeroDelay := 1		; 零遅延モード
+	g_ZeroDelaySS := 0		; 零遅延モード（文字同時打鍵）
 	g_ZeroDelayOut := ""
 	g_ZeroDelaySurface := ""	; 零遅延モードで出力される表層文字列
 	g_Offset := 20
@@ -276,7 +277,7 @@ keydownL:
 			{
 				if(g_ZeroDelayOut<>"")
 				{
-					CancelZeroDelayOut()
+					CancelZeroDelayOut(g_ZeroDelay)
 				}
 				Gosub, SendOnHoldO	; 保留キーの打鍵
 				if(g_Continue == 1) {
@@ -399,9 +400,9 @@ minimum(val0, val1) {
 ;----------------------------------------------------------------------
 ; 零遅延モード出力のキャンセル
 ;----------------------------------------------------------------------
-CancelZeroDelayOut() {
-	global g_ZeroDelaySurface, g_ZeroDelay
-	if(g_ZeroDelay == 1) {	
+CancelZeroDelayOut(g_ZeroDelay) {
+	global g_ZeroDelaySurface, g_ZeroDelayOut
+	if(g_ZeroDelay == 1) {
 		_len := StrLen(g_ZeroDelaySurface)
 		loop, %_len%
 		{
@@ -493,7 +494,7 @@ RegLogs(thisLog)
 ;----------------------------------------------------------------------
 SendOnHoldMO:
 	_mode := g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold
-	SendOnHold(_mode, g_MojiOnHold)
+	SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 
 	g_MojiOnHold := ""
 	g_OyaOnHold := "N"
@@ -510,9 +511,9 @@ SendOnHoldMO:
 ; _mode : モードまたは文字同時打鍵の第１文字
 ; g_MojiOnHold : 現在の打鍵文字の場所 A01-E14
 ;----------------------------------------------------------------------
-SendOnHold(_mode, g_MojiOnHold)
+SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 {
-	global kdn, kup, kup_save, g_ZeroDelay, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel
+	global kdn, kup, kup_save, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel
 	global g_LastKey
 	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
 	
@@ -570,7 +571,7 @@ SendOnHold(_mode, g_MojiOnHold)
 	{
 		if(vOut <> g_ZeroDelayOut)
 		{
-			CancelZeroDelayOut()
+			CancelZeroDelayOut(g_ZeroDelay)
 			SubSend(vOut)
 		}
 		g_ZeroDelayOut := ""
@@ -615,7 +616,7 @@ SendOnHold(_mode, g_MojiOnHold)
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
-	SendOnHold(g_RomajiOnHold . "N" . g_KoyubiOnHold, g_MojiOnHold)
+	SendOnHold(g_RomajiOnHold . "N" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
 
 	g_MojiOnHold := ""
 	g_KoyubiOnHold := "N"
@@ -881,7 +882,7 @@ SendZeroDelayM:
 	}
 	if(g_MojiOnHold<>"")	; 保留キー有り
 	{
-		SendZeroDelay(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
 	}
 	return
 
@@ -1120,7 +1121,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 	} else
 	if(g_KeyInPtn == "S") {
 		g_MojiTickSave := g_MojiTick
@@ -1133,13 +1134,12 @@ keydownS:
 			g_KoyubiOnHold  := g_Koyubi
 			if(g_ZeroDelay == 1)
 			{
-				CancelZeroDelayOut()
+				CancelZeroDelayOut(g_ZeroDelaySS)
 			}
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold)
-
+			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold, g_ZeroDelaySS)
 		} else {
 			; 保留中の１文字を確定（出力）
 			Gosub, SendOnHoldS
@@ -1149,7 +1149,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
+			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 		}
 	}
 	else
@@ -1168,7 +1168,7 @@ keydownS:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick + g_ThresholdSS
 			g_KeyInPtn := "SS"
-			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold)
+			SendZeroDelay(g_MojiOnHold2, g_MojiOnHold, g_ZeroDelaySS)
 		} else {
 			; 保留中の同時打鍵を確定
 			Gosub, SendOnHoldSS
@@ -1178,7 +1178,7 @@ keydownS:
 			g_KoyubiOnHold := g_Koyubi
 			g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 			g_KeyInPtn := "S"
-			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
+			SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 		}
 	}
 	else
@@ -1192,7 +1192,7 @@ keydownS:
 		g_KoyubiOnHold := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 	} else {
 		; バグ対策
 		; 当該キーを単独打鍵として保留
@@ -1205,7 +1205,7 @@ keydownS:
 		g_KoyubiOnHold  := g_Koyubi
 		g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 		g_KeyInPtn := "S"
-		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold)
+		SendZeroDelay("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 	}
 	critical,off
 	return
@@ -1213,8 +1213,8 @@ keydownS:
 ;----------------------------------------------------------------------
 ; 親指シフトと同時打鍵の零遅延モードの先行出力
 ;----------------------------------------------------------------------
-SendZeroDelay(_mode, g_MojiOnHold) {
-	global g_ZeroDelay, g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
+SendZeroDelay(_mode, g_MojiOnHold, g_ZeroDelay) {
+	global g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
 	global g_LastKey
 
 	if(g_ZeroDelay == 1)
@@ -1259,7 +1259,7 @@ SendOnHoldS:
 	{
 		return
 	}
-	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold)
+	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 
 	
 	g_MojiOnHold   := ""
@@ -1287,7 +1287,7 @@ SendOnHoldSS:
 	{
 		return
 	}
-	SendOnHold(g_MojiOnHold2, g_MojiOnHold)	
+	SendOnHold(g_MojiOnHold2, g_MojiOnHold,g_ZeroDelaySS)	
 
 	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
@@ -1304,8 +1304,8 @@ SendOnHoldSS2:
 	{
 		return
 	}
-	SendKey("RN" . g_KoyubiOnHold2, g_MojiOnHold2)
-	SendKey("RN" . g_KoyubiOnHold, g_MojiOnHold)
+	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelaySS)
+	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelaySS)
 	
 	g_ZeroDelaySurface := ""
 	g_KoyubiOnHold3 := ""
@@ -1326,7 +1326,7 @@ SendOnHoldS2:
 	{
 		return
 	}
-	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2)		
+	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelaySS)
 
 	g_MojiOnHold2   := ""
 	g_KoyubiOnHold2 := ""
@@ -1474,7 +1474,7 @@ keyupS:
 				; １文字前の待機
 				g_SendTick := g_MojiTick + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout)
 				g_KeyInPtn := "S"
-				SendZeroDelay("RN" . g_KoyubiOnHold2, g_MojiOnHold)
+				SendZeroDelay("RN" . g_KoyubiOnHold2, g_MojiOnHold, g_ZeroDelaySS)
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold) {
