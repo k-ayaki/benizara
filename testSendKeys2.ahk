@@ -1,18 +1,18 @@
 ﻿
-	; Autohotkey のユニコード直接出力
+	; Autohotkey のsc出力テスト
+*SC027::
+	send, {blind}{\ down}
+	Return
+
+*SC027 up::
+	send, {blind}{\ up}
+	Return
+
 1::
-	send, {@}
+	send, {blind}{a down}
+	Return
+	
+1 up::
+	send, {blind}{a up}
 	Return
 
-	; Autohotkey の通常のキー出力
-2::
-	send, {blind}{^ down}{^ up}
-	Return
-
-3::
-	send, {blind}{LShift up}{@ down}{@ up}{LShift down}
-	Return
-
-+3::
-	send, {blind}{LShift up}{@ down}{@ up}{LShift down}
-	Return

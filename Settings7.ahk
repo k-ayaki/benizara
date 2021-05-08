@@ -27,7 +27,7 @@ Init:
 		IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 		g_Threshold := 100
 		IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
-		g_ThresholdSS := 150
+		g_ThresholdSS := 250
 		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
@@ -113,7 +113,8 @@ Settings:
 	{
 		msgbox, 既に紅皿設定ダイアログは開いています。
 		return
-	}	
+	}
+	vLayoutFile := g_LayoutFile
 _Settings:
 	Gui,2:Default
 	Gui, 2:New
@@ -131,7 +132,7 @@ _Settings:
 
 	Gui, Font,Norm
 	Gui, Add, Text,X320 Y40, 定義ファイル：
-	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %g_LayoutFile%
+	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %vLayoutFile%
 	Gui, Add, Button,ggFileSelect X630 Y40 W32 H21,…
 
 	if(ShiftMode["R"] = "親指シフト")
@@ -929,6 +930,7 @@ gFileSelect:
 			Gosub, InitLayout2
 			vLayoutFile := g_LayoutFile
 			GoSub, ReadLayoutFile
+			GuiControl,, vFilePath, %vLayoutFile%
 		}
 		Gosub, SetLayoutProperty
 		g_LayoutFile := vLayoutFile

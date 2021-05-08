@@ -1549,7 +1549,7 @@ Interrupt10:
 		} else
 		if(ShiftMode["R"] == "親指シフト" ) {
 			_surf := g_LastKey["表層"]
-			_tmp := CorrectSurfaceHash[g_LastKey["表層"]]
+			_tmp := kdn["RNNE14"]
 			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . _surf . "][" . _tmp . "]" 
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		} else {

@@ -170,14 +170,14 @@ InitLayout2:
 	LF["ADNB"] := "ｚ,ｘ,ｃ,ｖ,ｂ,ｎ,ｍ,，,．,／,￥"
 	SetkLabel("ANN","ADN")
 
-	LF["ADKE"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜"
+	LF["ADKE"] := "！,”,＃,＄,％,＆,’, （,）,無,＝,～,｜,後"
 	LF["ADKD"] := "Ｑ,Ｗ,Ｅ,Ｒ,Ｔ,Ｙ,Ｕ,Ｉ,Ｏ,Ｐ,‘,｛"
 	LF["ADKC"] := "Ａ,Ｓ,Ｄ,Ｆ,Ｇ,Ｈ,Ｊ,Ｋ,Ｌ,＋,＊,｝"
 	LF["ADKB"] := "Ｚ,Ｘ,Ｃ,Ｖ,Ｂ,Ｎ,Ｍ,＜,＞,？,＿"
 	SetkLabel("ANK","ADK")
 	
 	; NULLテーブル
-	LF["NULE"] := "　,　,　,　,　,　,　,　,　,　,　,　,　"
+	LF["NULE"] := "　,　,　,　,　,　,　,　,　,　,　,　,　,　"
 	LF["NULD"] := "　,　,　,　,　,　,　,　,　,　,　,　"
 	LF["NULC"] := "　,　,　,　,　,　,　,　,　,　,　,　"
 	LF["NULB"] := "　,　,　,　,　,　,　,　,　,　,　"
@@ -225,7 +225,7 @@ ReadLayoutFile:
 	vAllTheLayout := ""
 	if(Path_FileExists(vLayoutFile) = 0)
 	{
-		_error := "ファイルが存在しません " . %vLayoutFile%
+		_error := "ファイルが存在しません " . vLayoutFile
 		return
 	}
 	Gosub,InitLayout2
@@ -246,7 +246,7 @@ ReadLayoutFile:
 		}
 		; コメント部分の除去
 	    cpos := InStr(_line,";")
-    	if(cpos <> 0)
+    	if(cpos == 1)
     	{
 			_line2 := SubStr(_line,1,%cpos%-1)
 		} else {
@@ -729,13 +729,13 @@ SetKeyTable:
 			continue
 		}
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
-		_qstr := GetQuotedStr(org[A_Index])
+		_qstr := GetQuotedStr(org[A_Index], _quotation)
 		if(_error <> "")
 		{
 			_error := _lpos2 . ":" . _error
 			break
 		}
-		if(_qstr <> "")
+		if(_quotation!="")
 		{
 			kLabel[_mode . _lpos2] := _qstr
 			kst[_mode . _lpos2] := "Q"
@@ -822,19 +822,20 @@ SetSimulKeyTable:
 		_lpos2 := _col . _row2
 
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
-		_qstr := GetQuotedStr(org[A_Index])
+		_qstr := GetQuotedStr(org[A_Index], _quotation)
 		if(_error <> "")
 		{
 			_error := _lpos2 . ":" . _error
 			break
 		}
-		if(_qstr <> "")
+		if(_quotation <> "")
 		{
-			_vout := Str2Vout(qstr)
-			
+			_vout := Str2Vout(_qstr)
+			kLabel[_lpos . _lpos2] := _qstr			
 			kst[_lpos . _lpos2] := "Q"	; 引用符
 			kdn[_lpos . _lpos2] := _vout
 			kup[_lpos . _lpos2] := ""
+			kLabel[_lpos2 . _lpos] := _qstr			
 			kst[_lpos2 . _lpos] := "Q"	; 引用符
 			kdn[_lpos2 . _lpos] := _vout
 			kup[_lpos2 . _lpos] := ""
@@ -931,19 +932,21 @@ CopyColumns(_mdsrc, _mddst)
 ;----------------------------------------------------------------------
 ;	引用文字
 ;----------------------------------------------------------------------
-GetQuotedStr(aStr) {
+GetQuotedStr(aStr,BYREF quotation) {
 	global _error
 
 	aQuo := ""
-	StringLeft, _cl, aStr, 1
-	if(_cl = "'" || _cl = """") {
+	StringLeft, quotation, aStr, 1
+	if(quotation = "'" || quotation = """") {
 		StringRight, _cr, aStr, 1
-		if(_cr = _cl)
+		if(_cr = quotation)
 		{
 			aQuo := SubStr(aStr, 2, StrLen(aStr) - 2)
 		} else {
 			_error := "引用符が閉じられていません"
 		}
+	} else {
+		quotation := ""
 	}
 	return aQuo
 }
@@ -1954,10 +1957,10 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKE13"] := "M"
 	keyAttribute3["RNE13"] := "M"
 	keyAttribute3["RKE13"] := "M"
-	keyAttribute3["ANE14"] := "X"	; Backspace
-	keyAttribute3["AKE14"] := "X"	; Backspace
-	keyAttribute3["RNE14"] := "X"	; Backspace
-	keyAttribute3["RKE14"] := "X"	; Backspace
+	keyAttribute3["ANE14"] := "M"	; Backspace
+	keyAttribute3["AKE14"] := "M"	; Backspace
+	keyAttribute3["RNE14"] := "M"	; Backspace
+	keyAttribute3["RKE14"] := "M"	; Backspace
 	keyAttribute3["AND00"] := "X"	; Tab
 	keyAttribute3["AKD00"] := "X"	; Tab
 	keyAttribute3["RND00"] := "X"	; Tab
