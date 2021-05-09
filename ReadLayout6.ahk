@@ -61,6 +61,7 @@ ReadLayout:
 	lpos2Mode := MakeLpos2ModeHash()
 	name2vkey := MakeName2vkeyHash()
 	ScanCodeHash := MakeScanCodeHash()
+	Chr2vkeyHash := MakeChr2vkeyHash()
 	
 	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
 	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
@@ -1049,7 +1050,7 @@ Romaji2Kana(aStr)
 ;----------------------------------------------------------------------
 GenSendStr2(aStr,BYREF _dn,BYREF _up)
 {
-	global z2hHash
+	global z2hHash, Chr2vkeyHash
 	_len := strlen(aStr)	; 全角
 	if(_len = 0)
 	{
@@ -1060,8 +1061,11 @@ GenSendStr2(aStr,BYREF _dn,BYREF _up)
 	_up := ""
 	loop,Parse, aStr
 	{
-		_c2 := z2hHash[A_LoopField]
-		if(_c2 <> "")
+		_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
+		if(_c2 == "") {
+			_c2 := z2hHash[A_LoopField]
+		}
+		if(_c2 != "")
 		{
 			if(A_Index = _len)
 			{
@@ -2720,6 +2724,19 @@ MakeName2vkeyHash()
 	hash["LWin"]       := 91
 	hash["RWin"]       := 92
 	hash["AppsKey"]    := 93
+	return hash
+}
+
+;----------------------------------------------------------------------
+;	文字名からvkeyへの変換
+;http://kts.sakaiweb.com/virtualkeycodes.html
+;----------------------------------------------------------------------
+MakeChr2vkeyHash()
+{
+	hash := Object()
+	hash["，"] := "vkBC"	;VK_OEM_COMMA
+	hash["．"] := "vkBE"	;VK_OEM_PERIOD
+	hash["／"] := "vkBF"	;VK_DEVIDE
 	return hash
 }
 

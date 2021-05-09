@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.6 .... 2021/05/04
+;	ver.0.1.4.7 .... 2021/05/09
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -10,8 +10,8 @@
 	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
-	g_Ver := "ver.0.1.4.6"
-	g_Date := "2021/5/4"
+	g_Ver := "ver.0.1.4.9"
+	g_Date := "2021/5/10"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -144,7 +144,11 @@
 	
 	vIntKeyUp := 0
 	vIntKeyDn := 0
+
 	SetHook("off","off")
+
+	g_hookShift := "off"
+	SetHookShift("off")
 	return
 
 
@@ -1614,13 +1618,15 @@ Polling:
 	return
 
 ScanModifier:
-	stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
-	stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
-	if((stLShift & 0x80)!=0 || (stRShift & 0x80)!=0)
-	{
-		g_Koyubi := "K"
-	} else {
-		g_Koyubi := "N"
+	if(g_hookShift == "off") {
+		stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
+		stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
+		if((stLShift & 0x80)!=0 || (stRShift & 0x80)!=0)
+		{
+			g_Koyubi := "K"
+		} else {
+			g_Koyubi := "N"
+		}
 	}
 	Critical
 	g_Modifier := 0x00
@@ -1898,6 +1904,12 @@ SetHookInit()
 	;hotkey,LCtrl up,gLCTRLup
 	;hotkey,RCtrl,gRCTRL
 	;hotkey,RCtrl up,gRCTRLup
+	
+	Hotkey,*sc02A,gSC02A		; LShift
+	Hotkey,*sc02A up,gSC02Aup
+	Hotkey,*sc136,gSC136		; RShift
+	Hotkey,*sc136 up,gSC136up
+	
 	Hotkey,*sc039,gSC039		; Space
 	Hotkey,*sc039 up,gSC039up
 	Hotkey,*sc079,gSC079
@@ -2056,6 +2068,23 @@ SetHook(flg,oya_flg)
 	return
 }
 
+SetHookShift(flg)
+{
+	Hotkey,*sc02A,%flg%		; LShift
+	Hotkey,*sc02A up,%flg%
+	Hotkey,*sc136,%flg%		; RShift
+	Hotkey,*sc136 up,%flg%
+	return
+}
+
+gSC02A:		; LShift
+gSC136:		; RShift
+	g_Koyubi := "K"
+	return
+gSC02Aup:
+gSC136up:
+	g_Koyubi := "N"
+	return
 
 gSC002:	;1
 gSC003:	;2

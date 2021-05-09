@@ -9,10 +9,25 @@
 	Return
 
 1::
-	send, {blind}{a down}
+	send, {blind}{. down}
 	Return
 	
 1 up::
-	send, {blind}{a up}
+	send, {blind}{. up}
 	Return
 
+2::
+	send, {blind}{sc034 down}
+	Return
+	
+2 up::
+	send, {blind}{sc034 up}
+	Return
+
+3::
+	send, {blind}{vkBE down}
+	Return
+	
+3 up::
+	send, {blind}{vkBE up}
+	Return
