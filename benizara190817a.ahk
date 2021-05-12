@@ -77,14 +77,6 @@
 	g_LastKey   := Object()		; 最後に入力したキーを濁音や半濁音に置き換える
 	g_LastKey["ラベル"] := ""
 	g_LastKey["表層"]     := ""
-	g_LastKey["濁音"]     := ""
-	g_LastKey["濁音up"]   := ""
-	g_LastKey["半濁音"]   := ""
-	g_LastKey["半濁音up"] := ""
-	g_LastKey["拗音"]     := ""
-	g_LastKey["拗音up"]   := ""
-	g_LastKey["修正"]     := ""
-	g_LastKey["修正up"]   := ""
 
 	g_OyaAlt := Object()	; 反対側の親指キー
 	g_OyaAlt["R"] := "L"
@@ -529,8 +521,10 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 	if(kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁") {
 		_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["濁音"]
-			kup_save[g_MojiOnHold] := g_LastKey["濁音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -538,8 +532,10 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 	if(kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半") {
 		_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["半濁音"]
-			kup_save[g_MojiOnHold] := g_LastKey["半濁音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -547,8 +543,10 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 	if(kLabel[_mode . g_MojiOnHold]=="拗") {
 		_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["拗音"]
-			kup_save[g_MojiOnHold] := g_LastKey["拗音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -556,21 +554,15 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 	if(kLabel[_mode . g_MojiOnHold]=="修") {
 		_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["修正"]
-			kup_save[g_MojiOnHold] := g_LastKey["修正up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
 	} else {
 		g_LastKey["表層"]     := _thisKey
-		g_LastKey["濁音"]     := ""
-		g_LastKey["濁音up"]   := ""
-		g_LastKey["半濁音"]   := ""
-		g_LastKey["半濁音up"] := ""
-		g_LastKey["拗音"]     := ""
-		g_LastKey["拗音up"]   := ""
-		g_LastKey["修正"]     := ""
-		g_LastKey["修正up"]   := ""
 	}
 	if(g_ZeroDelay = 1)
 	{
@@ -583,38 +575,6 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 		g_ZeroDelaySurface := ""
 	} else {
 		SubSend(vOut)
-	}
-	; 濁音があればセット
-	if(DakuonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(DakuonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["濁音"]   := _down
-		g_LastKey["濁音up"] := _up
-	}
-	; 半濁音があればセット
-	if(HandakuonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(HandakuonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["半濁音"]   := _down
-		g_LastKey["半濁音up"] := _up
-	}
-	; 拗音があればセット
-	if(YouonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(YouonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["拗音"]   := _down
-		g_LastKey["拗音up"] := _up
-	}
-	; 修正があればセット
-	if(CorrectSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(CorrectSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["修正"]   := _down
-		g_LastKey["修正up"] := _up
 	}
 }
 ;----------------------------------------------------------------------
@@ -902,14 +862,6 @@ SendAN(_mode,g_layoutPos)
 	kup_save[g_layoutPos] := mup[_mode . g_layoutPos]
 	SubSend(vOut)
 	g_LastKey["表層"]     := ""
-	g_LastKey["濁音"]     := ""
-	g_LastKey["濁音up"]   := ""
-	g_LastKey["半濁音"]   := ""
-	g_LastKey["半濁音up"] := ""
-	g_LastKey["拗音"]     := ""
-	g_LastKey["拗音up"]   := ""
-	g_LastKey["修正"]     := ""
-	g_LastKey["修正up"]   := ""
 }
 ;----------------------------------------------------------------------
 ; キーをすぐさま出力
@@ -925,8 +877,10 @@ SendKey(_mode, g_MojiOnHold){
 	if(kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁") {
 		_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["濁音"]
-			kup_save[g_MojiOnHold] := g_LastKey["濁音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -934,8 +888,10 @@ SendKey(_mode, g_MojiOnHold){
 	if(kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半") {
 		_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["半濁音"]
-			kup_save[g_MojiOnHold] := g_LastKey["半濁音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -943,8 +899,10 @@ SendKey(_mode, g_MojiOnHold){
 	if(kLabel[_mode . g_MojiOnHold]=="拗") {
 		_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["拗音"]
-			kup_save[g_MojiOnHold] := g_LastKey["拗音up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
@@ -952,55 +910,17 @@ SendKey(_mode, g_MojiOnHold){
 	if(kLabel[_mode . g_MojiOnHold]=="修") {
 		_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
 		if(_nextKey!="") {
-			vOut                   := g_LastKey["修正"]
-			kup_save[g_MojiOnHold] := g_LastKey["修正up"]
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_LastKey["表層"]     := _nextKey
 		_thisKey := _nextKey
 	} else {
 		g_LastKey["表層"]     := _thisKey
-		g_LastKey["濁音"]     := ""
-		g_LastKey["濁音up"]   := ""
-		g_LastKey["半濁音"]   := ""
-		g_LastKey["半濁音up"] := ""
-		g_LastKey["拗音"]     := ""
-		g_LastKey["拗音up"]   := ""
-		g_LastKey["修正"]     := ""
-		g_LastKey["修正up"]   := ""	
 	}
 	SubSend(vOut)
-	; 次の濁音があればセット
-	if(DakuonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(DakuonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["濁音"]   := _down
-		g_LastKey["濁音up"] := _up
-	}
-	; 次の半濁音があればセット
-	if(HandakuonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(HandakuonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["半濁音"]   := _down
-		g_LastKey["半濁音up"] := _up
-	}
-	; 次の拗音があればセット
-	if(YouonSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(YouonSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["拗音"]   := _down
-		g_LastKey["拗音up"] := _up
-	}
-	; 次の修正があればセット
-	if(CorrectSurfaceHash[_thisKey]<>"")
-	{
-		_aStr := "後" . kana2Romaji(CorrectSurfaceHash[_thisKey])
-		GenSendStr2(_mode, _aStr, _down, _up)
-		g_LastKey["修正"]   := _down
-		g_LastKey["修正up"] := _up
-	}
 }
 ;----------------------------------------------------------------------
 ; 修飾キー押下
@@ -1017,12 +937,6 @@ keydownX:
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSend(MnDown(kName))
 		g_LastKey["表層"] := ""
-		g_LastKey["濁音"]     := ""
-		g_LastKey["濁音up"]   := ""
-		g_LastKey["半濁音"]   := ""
-		g_LastKey["半濁音up"] := ""
-		g_LastKey["拗音"]     := ""
-		g_LastKey["拗音up"]   := ""	
 		g_prefixshift := ""
 		critical,off
 		return
@@ -1032,14 +946,6 @@ keydownX:
 	Gosub,ModeInitialize
 	SubSend(MnDown(kName))
 	g_LastKey["表層"] := ""
-	g_LastKey["濁音"]     := ""
-	g_LastKey["濁音up"]   := ""
-	g_LastKey["半濁音"]   := ""
-	g_LastKey["半濁音up"] := ""
-	g_LastKey["拗音"]     := ""
-	g_LastKey["拗音up"]   := ""
-	g_LastKey["修正"]     := ""
-	g_LastKey["修正up"]   := ""	
 	g_KeyInPtn := ""
 	critical,off
 	return
