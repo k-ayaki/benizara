@@ -10,6 +10,7 @@
 	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
+	SetStoreCapsLockMode,On
 	g_Ver := "ver.0.1.4.9"
 	g_Date := "2021/5/10"
 	MutexName := "benizara"
@@ -586,33 +587,33 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 	; 濁音があればセット
 	if(DakuonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(DakuonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["濁音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(DakuonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["濁音"]   := _down
 		g_LastKey["濁音up"] := _up
 	}
 	; 半濁音があればセット
 	if(HandakuonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(HandakuonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["半濁音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(HandakuonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["半濁音"]   := _down
 		g_LastKey["半濁音up"] := _up
 	}
 	; 拗音があればセット
 	if(YouonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(YouonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["拗音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(YouonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["拗音"]   := _down
 		g_LastKey["拗音up"] := _up
 	}
 	; 修正があればセット
 	if(CorrectSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(CorrectSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["修正"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(CorrectSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["修正"]   := _down
 		g_LastKey["修正up"] := _up
 	}
 }
@@ -971,33 +972,33 @@ SendKey(_mode, g_MojiOnHold){
 	; 次の濁音があればセット
 	if(DakuonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(DakuonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["濁音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(DakuonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["濁音"]   := _down
 		g_LastKey["濁音up"] := _up
 	}
 	; 次の半濁音があればセット
 	if(HandakuonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(HandakuonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["半濁音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(HandakuonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["半濁音"]   := _down
 		g_LastKey["半濁音up"] := _up
 	}
 	; 次の拗音があればセット
 	if(YouonSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(YouonSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["拗音"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(YouonSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["拗音"]   := _down
 		g_LastKey["拗音up"] := _up
 	}
 	; 次の修正があればセット
 	if(CorrectSurfaceHash[_thisKey]<>"")
 	{
-		_aStr := kana2Romaji(CorrectSurfaceHash[_thisKey])
-		GenSendStr2(_aStr, _down, _up)
-		g_LastKey["修正"]   := "{Blind}{BS down}{BS up}" . _down
+		_aStr := "後" . kana2Romaji(CorrectSurfaceHash[_thisKey])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		g_LastKey["修正"]   := _down
 		g_LastKey["修正up"] := _up
 	}
 }
@@ -1520,7 +1521,10 @@ Interrupt10:
 		SetHook("off","off")
 	} else {
 		Gosub,ChkIME
-		if(ShiftMode[g_Romaji] <> "") {
+		;if(ShiftMode[g_Romaji] <> "") {
+		
+		; 現在の配列面が定義されていればキーフック
+		if(LF[g_Romaji . "N" . g_Koyubi]==1) {
 			SetHook("on","on")
 		} else {
 			SetHook("off","on")
@@ -1552,9 +1556,7 @@ Interrupt10:
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		} else
 		if(ShiftMode["R"] == "親指シフト" ) {
-			_surf := g_LastKey["表層"]
-			_tmp := kdn["RNNE14"]
-			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . _surf . "][" . _tmp . "]" 
+			g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos
 			Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		} else {
 			g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . g_prefixshift . "]" . ShiftMode[g_Romaji]
@@ -1750,10 +1752,10 @@ pauseKeyDown:
 ;              よって、最下位ビットのみを見る
 ;----------------------------------------------------------------------
 ChkIME:
-	if(g_Koyubi == "N") {	
-		; 小指シフトオン時に、MS-IMEは英数モードを
-		; Google日本語入力はローマ字モードを返す
+	if(LF[g_Romaji . "NK"]==0 || g_Koyubi == "N") {		
+		; 小指シフトオン時に、MS-IMEは英数モードを、Google日本語入力はローマ字モードを返す
 		; 両方とも小指シフト面を反映させるため、変換モードは見ない
+		; 小指シフト面が設定されていなければ変換モードを見る
 		vImeMode := IME_GET() & 32767
 		if(vImeMode = 0)
 		{

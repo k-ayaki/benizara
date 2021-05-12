@@ -542,28 +542,28 @@ Mode3Key:
 SetLayoutProperty:
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
-	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1 && LF["ANK"]==1)
+	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1)
 	{
 		ShiftMode["A"] := "親指シフト"
 		RemapOyaKey("A")
 		
-		if(LF["ALK"] == 0) {
+		if(LF["ANK"]==1 && LF["ALK"] == 0) {
 			CopyColumns("ANK", "ALK")
 			_mode := "ALK"
 			Gosub, SetE2BKeyTables
 		}
-		if(LF["ARK"] == 0) {
+		if(LF["ANK"]==1 && LF["ARK"] == 0) {
 			CopyColumns("ANK", "ARK")
 			_mode := "ARK"
 			Gosub, SetE2BKeyTables
 		}
 	} else 
-	if(LF["ANN"]==1 && LF["A1N"]==1 && LF["ANK"]==1 LF["A1K"]==1) 
+	if(LF["ANN"]==1 && LF["A1N"]==1) 
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["ANN"]==1 && (LF["AMN"]==1 || LF["AIN"]==1) && LF["ANK"]==1 (LF["AMK"]==1 || LF["AIK"]==1)) 
+	if(LF["ANN"]==1 && (LF["AMN"]==1 || LF["AIN"]==1)) 
 	{
 		ShiftMode["A"] := "文字同時打鍵"
 	}
@@ -573,28 +573,28 @@ SetLayoutProperty:
 		ShiftMode["A"] := "小指シフト"
 	}
 	ShiftMode["R"] := ""
-	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1 && LF["RNK"]==1)
+	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1)
 	{
 		ShiftMode["R"] := "親指シフト"
 		RemapOyaKey("R")
 
-		if(LF["RLK"] == 0) {
+		if(LF["RNK"]==1 && LF["RLK"] == 0) {
 			CopyColumns("RNK", "RLK")
 			_mode := "RLK"
 			Gosub, SetE2BKeyTables
 		}
-		if(LF["RRK"] == 0) {
+		if(LF["RNK"]==1 && LF["RRK"] == 0) {
 			CopyColumns("RNK","RRK")
 			_mode := "RRK"
 			Gosub, SetE2BKeyTables
 		}
 	} else
-	if(LF["RNN"]==1 && LF["R1N"]==1 && LF["RNK"]==1)
+	if(LF["RNN"]==1 && LF["R1N"]==1)
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["RNN"]==1 && (LF["RMN"]==1 || LF["RIN"]==1) && LF["RNK"]==1)
+	if(LF["RNN"]==1 && (LF["RMN"]==1 || LF["RIN"]==1))
 	{
 		ShiftMode["R"] := "文字同時打鍵"
 	}
@@ -764,33 +764,25 @@ SetKeyTable:
 		}
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
-		if(IsKoyubiError(_mode, _aStr)==0) {
-			kst[_mode . _lpos2] := "S"
-			; 送信形式に変換
-			GenSendStr2(_aStr, _down, _up)
-			if( _down <> "")
+		kst[_mode . _lpos2] := "S"
+		; 送信形式に変換
+		GenSendStr2(_mode, _aStr, _down, _up)
+		if( _down <> "")
+		{
+			if(SubStr(_mode,1,1)=="R")
 			{
-				if(SubStr(_mode,1,1)=="R")
-				{
-					kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
-				}
-				else
-				{
-					kLabel[_mode . _lpos2] := org[A_Index]
-				}
-				kdn[_mode . _lpos2] := _down
-				kup[_mode . _lpos2] := _up
-			} else {
-				kLabel[_mode . _lpos2] := org[A_Index]
-				kdn[_mode . _lpos2] := "{" . ""
-				kup[_mode . _lpos2] := "{" . ""
+				kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
 			}
+			else
+			{
+				kLabel[_mode . _lpos2] := org[A_Index]
+			}
+			kdn[_mode . _lpos2] := _down
+			kup[_mode . _lpos2] := _up
 		} else {
-			; シフトモードの禁止文字ならば直接出力
-			kst[_mode . _lpos2] := "e"
-			kLabel[_mode . _lpos2] := _aStr
-			kdn[_mode . _lpos2] := Str2Vout(_aStr)
-			kup[_mode . _lpos2] := ""
+			kLabel[_mode . _lpos2] := org[A_Index]
+			kdn[_mode . _lpos2] := "{" . ""
+			kup[_mode . _lpos2] := "{" . ""
 		}
 		continue
 	}
@@ -870,7 +862,7 @@ SetSimulKeyTable:
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		GenSendStr2(_aStr, _down, _up)
+		GenSendStr2(_mode, _aStr, _down, _up)
 		if( _down <> "")
 		{
 			kLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
@@ -1048,7 +1040,7 @@ Romaji2Kana(aStr)
 ; 引数　：aStr：対応するキー入力
 ; 戻り値：Sendの引数
 ;----------------------------------------------------------------------
-GenSendStr2(aStr,BYREF _dn,BYREF _up)
+GenSendStr2(_mode, aStr,BYREF _dn,BYREF _up)
 {
 	global z2hHash, Chr2vkeyHash
 	_len := strlen(aStr)	; 全角
@@ -1077,7 +1069,14 @@ GenSendStr2(aStr,BYREF _dn,BYREF _up)
 		}
 	}
 	if(_dn = "{Blind}")
+	{
 		_dn := ""
+	}
+	else
+	if(IsKoyubiError(_mode, aStr)==1) 
+	{
+		_dn := "{capslock}" . _dn . "{capslock}"
+	}
 	return _dn
 }
 
@@ -1147,7 +1146,7 @@ MakeGuiLayoutHash() {
 ;----------------------------------------------------------------------
 MakeZ2hHash() {
 	hash := Object()
-	hash["後"] := "Backspace"
+	hash["後"] := "BS"	;"Backspace"
 	hash["逃"] := "Esc"
 	hash["入"] := "Enter"
 	hash["空"] := "Space"
