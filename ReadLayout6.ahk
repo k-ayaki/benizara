@@ -764,7 +764,6 @@ SetKeyTable:
 		}
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
-		kst[_mode . _lpos2] := "S"
 		; 送信形式に変換
 		GenSendStr2(_mode, _aStr, _down, _up)
 		if( _down <> "")
@@ -777,12 +776,14 @@ SetKeyTable:
 			{
 				kLabel[_mode . _lpos2] := org[A_Index]
 			}
+			kst[_mode . _lpos2] := "S"
 			kdn[_mode . _lpos2] := _down
 			kup[_mode . _lpos2] := _up
 		} else {
 			kLabel[_mode . _lpos2] := org[A_Index]
-			kdn[_mode . _lpos2] := "{" . ""
-			kup[_mode . _lpos2] := "{" . ""
+			kst[_mode . _lpos2] := "S"
+			kdn[_mode . _lpos2] := ""
+			kup[_mode . _lpos2] := ""
 		}
 		continue
 	}
