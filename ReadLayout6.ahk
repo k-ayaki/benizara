@@ -797,7 +797,7 @@ IsKoyubiError(_mode, _aStr) {
 	if(SubStr(_mode,3,1)=="K") {
 		loop, Parse, _aStr
 		{
-			if(instr("；：［］￥＠／＾ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ",A_LoopField) != 0) {
+			if(instr("１２３４５６７８９０－＾￥ｑｗｅｒｔｙｕｉｏｐ＠［ａｓｄｆｇｈｊｋｌ；：］ｚｘｃｖｂｎｍ，．／￥",A_LoopField) != 0) {
 				st := 1
 				break
 			}
@@ -1054,10 +1054,10 @@ GenSendStr2(_mode, aStr,BYREF _dn,BYREF _up)
 	_up := ""
 	loop,Parse, aStr
 	{
-		_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
-		if(_c2 == "") {
+		;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
+		;if(_c2 == "") {
 			_c2 := z2hHash[A_LoopField]
-		}
+		;}
 		if(_c2 != "")
 		{
 			if(A_Index = _len)
@@ -1132,7 +1132,6 @@ MakeLayout2Hash() {
 	Hash["[2ローマ字小指シフト]"] := "R2K"	; for 月配列
 	Hash["[3ローマ字小指シフト]"] := "R3K"	; for 月配列
 	Hash["[4ローマ字小指シフト]"] := "R4K"	; for 月配列
-
 	return Hash
 }
 
@@ -1161,6 +1160,7 @@ MakeZ2hHash() {
 	hash["終"] := "End"
 	hash["前"] := "PgUp"
 	hash["次"] := "PgDn"
+	hash["表"] := "tab"
 	hash["無"] := ""
 	hash["濁"] := ""
 	hash["半"] := ""
@@ -1601,7 +1601,7 @@ MakeCorrectSurfaceHash()
 
 	hash["う"] := "ゔ"
 	hash["ゔ"] := "ぅ"
-	hash["ぅ"] := "ゔ"
+	hash["ぅ"] := "う"
 
 	hash["ぇ"] := "え"
 	hash["え"] := "ぇ"
@@ -2615,12 +2615,12 @@ MakeScanCodeHash()
 	hash["B10"] := "sc035"
 	hash["B11"] := "sc073"
 
-	hash["A00"] := "LCTRL"
+	hash["A00"] := "sc01D"
 	hash["A01"] := "sc07B"
 	hash["A02"] := "sc039"
 	hash["A03"] := "sc079"
 	hash["A04"] := "sc070"	;カタカナ/ひらがな
-	hash["A05"] := "RCTRL"
+	hash["A05"] := "sc11D"
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -2734,9 +2734,116 @@ MakeName2vkeyHash()
 MakeChr2vkeyHash()
 {
 	hash := Object()
-	hash["，"] := "vkBC"	;VK_OEM_COMMA
-	hash["．"] := "vkBE"	;VK_OEM_PERIOD
-	hash["／"] := "vkBF"	;VK_DEVIDE
+	hash["全"] := "vkF3"	;半角／全角 VK_OEM_AUTO
+	hash["１"] := "vk31"
+	hash["２"] := "vk32"
+	hash["３"] := "vk33"
+	hash["４"] := "vk34"
+	hash["５"] := "vk35"
+	hash["６"] := "vk36"
+	hash["７"] := "vk37"
+	hash["８"] := "vk38"
+	hash["９"] := "vk39"
+	hash["０"] := "vk30"
+	hash["－"] := "vkBD"	;-= VK_OEM_MINUS
+	hash["＾"] := "vkDE"	;^~ VK_OEM_7
+	hash["￥"] := "vkDC"	;\| VK_OEM_5
+	hash["後"] := "vk08"	;VK_BACK
+
+	hash["表"] := "vk09"	;VK_TAB
+	hash["ｑ"] := "vk51"	;q
+	hash["ｗ"] := "vk57"	;w
+	hash["ｅ"] := "vk45"	;e
+	hash["ｒ"] := "vk52"	;r
+	hash["ｔ"] := "vk54"	;t
+	hash["ｙ"] := "vk59"	;y
+	hash["ｕ"] := "vk55"	;u
+	hash["ｉ"] := "vk49"	;i
+	hash["ｏ"] := "vk4F"	;o
+	hash["ｐ"] := "vk50"	;p
+	hash["＠"] := "vkC0"	;@ VK_OEM_3
+	hash["［"] := "vkDB"	;[ VK_OEM_4
+	
+	hash["ａ"] := "vk41"	;a
+	hash["ｓ"] := "vk53"	;s
+	hash["ｄ"] := "vk44"	;d
+	hash["ｆ"] := "vk46"	;f
+	hash["ｇ"] := "vk47"	;g
+	hash["ｈ"] := "vk48"	;h
+	hash["ｊ"] := "vk4A"	;j
+	hash["ｋ"] := "vk4B"	;k
+	hash["ｌ"] := "vk4C"	;l
+	hash["；"] := "vkBB"	;; VK_OEM_PLUS
+	hash["："] := "vkBA"	;: VK_OEM_1
+	hash["］"] := "vkDD"	;] VK_OEM_6
+	hash["入"] := "vk0D"	;  VK_ENTER
+
+	hash["ｚ"] := "vk5A"	;z
+	hash["ｘ"] := "vk58"	;x
+	hash["ｃ"] := "vk43"	;c
+	hash["ｖ"] := "vk56"	;v
+	hash["ｂ"] := "vk42"	;b
+	hash["ｎ"] := "vk4E"	;n
+	hash["ｍ"] := "vk4D"	;m
+	hash["，"] := "vkBC"	;,< VK_OEM_COMMA
+	hash["．"] := "vkBE"	;.> VK_OEM_PERIOD
+	hash["／"] := "vkBF"	;/? VK_OEM_2
+	hash["￥"] := "vkE2"	;\
+	
+	hash["空"] := "vk20"	;スペース
+	hash["日"] := "vkF2"	;カタカナ/ひらがな VK_OEM_COPY
+
+	hash["！"] := "vk31"
+	hash["”"] := "vk32"
+	hash["＃"] := "vk33"
+	hash["＄"] := "vk34"
+	hash["％"] := "vk35"
+	hash["＆"] := "vk36"
+	hash["’"] := "vk37"
+	hash["（"] := "vk38"
+	hash["）"] := "vk39"
+	hash["＝"] := "vkBD"	;-= VK_OEM_MINUS
+	hash["～"] := "vkDE"	;^~ VK_OEM_7
+	hash["｜"] := "vkDC"	;\| VK_OEM_5
+	hash["後"] := "vk08"	;VK_BACK
+
+	hash["Ｑ"] := "vk51"	;q
+	hash["Ｗ"] := "vk57"	;w
+	hash["Ｅ"] := "vk45"	;e
+	hash["Ｒ"] := "vk52"	;r
+	hash["Ｔ"] := "vk54"	;t
+	hash["Ｙ"] := "vk59"	;y
+	hash["Ｕ"] := "vk55"	;u
+	hash["Ｉ"] := "vk49"	;i
+	hash["Ｏ"] := "vk4F"	;o
+	hash["Ｐ"] := "vk50"	;p
+	hash["‘"] := "vkC0"	;@ VK_OEM_3
+	hash["｛"] := "vkDB"	;[ VK_OEM_4
+	
+	hash["Ａ"] := "vk41"	;a
+	hash["Ｓ"] := "vk53"	;s
+	hash["Ｄ"] := "vk44"	;d
+	hash["Ｆ"] := "vk46"	;f
+	hash["Ｇ"] := "vk47"	;g
+	hash["Ｈ"] := "vk48"	;h
+	hash["Ｊ"] := "vk4A"	;j
+	hash["Ｋ"] := "vk4B"	;k
+	hash["Ｌ"] := "vk4C"	;l
+	hash["＋"] := "vkBB"	;; VK_OEM_PLUS
+	hash["＊"] := "vkBA"	;: VK_OEM_1
+	hash["｝"] := "vkDD"	;] VK_OEM_6
+
+	hash["Ｚ"] := "vk5A"	;z
+	hash["Ｘ"] := "vk58"	;x
+	hash["Ｃ"] := "vk43"	;c
+	hash["Ｖ"] := "vk56"	;v
+	hash["Ｂ"] := "vk42"	;b
+	hash["Ｎ"] := "vk4E"	;n
+	hash["Ｍ"] := "vk4D"	;m
+	hash["＜"] := "vkBC"	;,< VK_OEM_COMMA
+	hash["＞"] := "vkBE"	;.> VK_OEM_PERIOD
+	hash["？"] := "vkBF"	;/? VK_OEM_2
+	hash["＿"] := "vkE2"	;\
 	return hash
 }
 

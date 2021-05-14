@@ -75,7 +75,6 @@
 	g_OyaUpTick := Object()
 	g_Interval  := Object()
 	g_LastKey   := Object()		; 最後に入力したキーを濁音や半濁音に置き換える
-	g_LastKey["ラベル"] := ""
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
 
@@ -513,56 +512,22 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 {
 	global kdn, kup, kup_save, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel, kst
 	global g_LastKey
-	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
 	
 	vOut                   := kdn[_mode . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
-	_thisKey := kLabel[_mode . g_MojiOnHold]
-	
-	g_LastKey["ラベル"] := _thisKey
-	if(g_LastKey["状態"]=="S" && (kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁")) {
-		_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
+
+	_nextKey := nextDakuten(_mode,g_MojiOnHold)
+	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && (kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半")) {
-		_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && kLabel[_mode . g_MojiOnHold]=="拗") {
-		_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && kLabel[_mode . g_MojiOnHold]=="修") {
-		_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
+		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		vOut                   := _down
+		kup_save[g_MojiOnHold] := _up
 	} else {
 		g_LastKey["表層"] := kLabel[_mode . g_MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . g_MojiOnHold]
 	}
+
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -867,52 +832,19 @@ SendAN(_mode,g_layoutPos)
 ; キーをすぐさま出力
 ;----------------------------------------------------------------------
 SendKey(_mode, g_MojiOnHold){
-	global kdn, kup, kup_save,kLabel,g_LastKey, kst
-	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
-		
+	global kdn, kup, kup_save,kLabel
+	global g_LastKey, kst
+	
 	vOut                   := kdn[_mode . g_MojiOnHold]
 	kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
-	_thisKey := kLabel[_mode . g_MojiOnHold]
-	g_LastKey["ラベル"] := _thisKey
-	if(g_LastKey["状態"]=="S" && (kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁")) {
-		_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
+
+	_nextKey := nextDakuten(_mode,g_MojiOnHold)
+	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && (kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半")) {
-		_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && kLabel[_mode . g_MojiOnHold]=="拗") {
-		_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
-	} else
-	if(g_LastKey["状態"]=="S" && kLabel[_mode . g_MojiOnHold]=="修") {
-		_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
-		}
-		g_LastKey["表層"] := _nextKey
+		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
+		GenSendStr2(_mode, _aStr, _down, _up)
+		vOut                   := _down
+		kup_save[g_MojiOnHold] := _up
 	} else {
 		g_LastKey["表層"] := kLabel[_mode . g_MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . g_MojiOnHold]
@@ -1134,43 +1066,12 @@ SendZeroDelay(_mode, g_MojiOnHold, g_ZeroDelay) {
 		kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
 		g_ZeroDelaySurface     := kLabel[_mode . g_MojiOnHold]
 		
-		if(g_LastKey["状態"]=="S") {
-			if(kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁") {
-				_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
-				if(_nextKey!="") {
-					_aStr := kana2Romaji(_nextKey)
-					GenSendStr2(_mode, _aStr, _down, _up)
-					vOut                   := _down
-					kup_save[g_MojiOnHold] := _up
-				}
-			} else
-			if(kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半") {
-				_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
-				if(_nextKey!="") {
-					_aStr := kana2Romaji(_nextKey)
-					GenSendStr2(_mode, _aStr, _down, _up)
-					vOut                   := _down
-					kup_save[g_MojiOnHold] := _up
-				}
-			} else
-			if(kLabel[_mode . g_MojiOnHold]=="拗") {
-				_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
-				if(_nextKey!="") {
-					_aStr := "後" . kana2Romaji(_nextKey)
-					GenSendStr2(_mode, _aStr, _down, _up)
-					vOut                   := _down
-					kup_save[g_MojiOnHold] := _up
-				}
-			} else
-			if(kLabel[_mode . g_MojiOnHold]=="修") {
-				_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
-				if(_nextKey!="") {
-					_aStr := "後" . kana2Romaji(_nextKey)
-					GenSendStr2(_mode, _aStr, _down, _up)
-					vOut                   := _down
-					kup_save[g_MojiOnHold] := _up
-				}
-			}
+		_nextKey := nextDakuten(_mode,g_MojiOnHold)
+		if(_nextKey!="") {
+			_aStr := "後" . kana2Romaji(_nextKey)
+			GenSendStr2(_mode, _aStr, _down, _up)
+			vOut                   := _down
+			kup_save[g_MojiOnHold] := _up
 		}
 		g_ZeroDelayOut := vOut
 		SubSend(vOut)
@@ -1182,7 +1083,31 @@ SendZeroDelay(_mode, g_MojiOnHold, g_ZeroDelay) {
 	}
 	return
 }
+;----------------------------------------------------------------------
+; 濁点・半濁点の処理
+;----------------------------------------------------------------------
+nextDakuten(_mode,g_MojiOnHold)
+{
+	global g_LastKey, kLabel
+	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
 
+	_nextKey := ""
+	if(g_LastKey["状態"]=="S") {
+		if(kLabel[_mode . g_MojiOnHold]=="゛" || kLabel[_mode . g_MojiOnHold]=="濁") {
+			_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
+		} else
+		if(kLabel[_mode . g_MojiOnHold]=="゜" || kLabel[_mode . g_MojiOnHold]=="半") {
+			_nextKey := HandakuonSurfaceHash[g_LastKey["表層"]]
+		} else
+		if(kLabel[_mode . g_MojiOnHold]=="拗") {
+			_nextKey := YouonSurfaceHash[g_LastKey["表層"]]
+		} else
+		if(kLabel[_mode . g_MojiOnHold]=="修") {
+			_nextKey := CorrectSurfaceHash[g_LastKey["表層"]]
+		}
+	}
+	return _nextKey
+}
 ;----------------------------------------------------------------------
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------

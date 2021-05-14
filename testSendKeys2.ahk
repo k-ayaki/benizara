@@ -1,4 +1,7 @@
-﻿
+﻿	SetStoreCapsLockMode,Off
+	return
+
+
 	; Autohotkey のsc出力テスト
 *SC027::
 	send, {blind}{\ down}
@@ -8,26 +11,25 @@
 	send, {blind}{\ up}
 	Return
 
-1::
-	send, {blind}{. down}
+*SC002::
+	send, {blind}{vkC0 down}
 	Return
 	
-1 up::
-	send, {blind}{. up}
+*SC002 up::
+	send, {blind}{vkC0 up}
 	Return
 
-2::
-	send, {blind}{sc034 down}
+*SC003::
+	send, {capslock}{blind}{a down}{capslock}
 	Return
 	
-2 up::
-	send, {blind}{sc034 up}
+*SC003 up::
+	send, {blind}{a up}
 	Return
 
 3::
-	send, {blind}{vkBE down}
+	send, {vkF4}。
 	Return
 	
 3 up::
-	send, {blind}{vkBE up}
 	Return
