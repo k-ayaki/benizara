@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.5 .... 2021/4/22
+;	ver.0.1.4.7 .... 2021/4/22
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -31,8 +31,6 @@ Init:
 		IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 		g_ZeroDelay := 1
 		IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-		g_ZeroDelaySS := 0
-		IniWrite,%g_ZeroDelaySS%,%g_IniFile%,Key,ZeroDelaySS
 		g_OverlapOM := 35
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
@@ -59,11 +57,6 @@ Init:
 		g_ZeroDelay := 1
 	if(g_ZeroDelay<0)
 		g_ZeroDelay := 0
-	IniRead,g_ZeroDelaySS,%g_IniFile%,Key,ZeroDelaySS
-	if(g_ZeroDelaySS>1) 
-		g_ZeroDelaySS := 1
-	if(g_ZeroDelaySS<0)
-		g_ZeroDelaySS := 0
 	IniRead,g_Threshold,%g_IniFile%,Key,Threshold
 	if(g_Threshold < 10)
 		g_Threshold := 10
@@ -115,6 +108,7 @@ Settings:
 		return
 	}
 	vLayoutFile := g_LayoutFile
+	g_CurrSimulMode := "…"
 _Settings:
 	Gui,2:Default
 	Gui, 2:New
@@ -135,10 +129,12 @@ _Settings:
 	Gui, Add, Edit,vvFilePath ggDefFile X400 Y40 W220 H20 ReadOnly, %vLayoutFile%
 	Gui, Add, Button,ggFileSelect X630 Y40 W32 H21,…
 
-	if(ShiftMode["R"] = "親指シフト")
+	if(ShiftMode["R"] = "親指シフト" || ShiftMode["R"] = "文字同時打鍵")
 	{
 		Gui, Add, Text,X30 Y70,親指シフトキー：
-		if(g_OyaKey = "無変換－変換")
+		if(ShiftMode["R"] = "文字同時打鍵") {
+			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,…||
+		} else if(g_OyaKey = "無変換－変換")
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換||無変換－空白|空白－変換|
 		else if(g_OyaKey = "無変換－空白")
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白||空白－変換|
@@ -146,18 +142,35 @@ _Settings:
 			Gui, Add, DropDownList,ggOya vvOyaKey X133 Y70 W125,無変換－変換|無変換－空白|空白－変換||
 	
 		Gui, Add, Text,X290 Y70,単独打鍵：
-		if(g_KeySingle = "無効")
+		if(ShiftMode["R"] = "文字同時打鍵") {
+			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,…||
+		}
+		else if(g_KeySingle = "無効")
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効||有効|
 		else
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
+
+		Gui, Add, Text,X490 Y70,同時打鍵：
+		_ddlist := "…"
+		if(v == g_CurrSimulMode) {
+			_ddlist := _ddlist . "||"
+		} else {
+			_ddlist := _ddlist . "|"
+		}
+		enum := g_SimulMode._NewEnum()
+		while enum[k,v]
+		{
+			if(v == g_CurrSimulMode) {
+				_ddlist := _ddlist . v . "||"
+			} else {
+				_ddlist := _ddlist . v . "|"
+			}
+		}
+		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X560 Y70 W95,%_ddlist%
 	}
 	else if(ShiftMode["R"] = "プレフィックスシフト")
 	{
 		Gui, Add, Text,X30 Y70,プレフィックスシフトを用いた配列です
-	}
-	else if(ShiftMode["R"] = "文字同時打鍵")
-	{
-		Gui, Add, Text,X30 Y70,文字同時打鍵を用いた配列です
 	}
 	Gui, Font,s10 c000000,Meiryo UI
 	Gosub,G2DrawKeyFrame
@@ -206,7 +219,7 @@ _Settings:
 	Gui, Tab, 3
 	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
 	Gui, Add, Checkbox,ggZeroDelaySS vvZeroDelaySS X+20 Y65,零遅延モード
-	GuiControl,,vZeroDelaySS,%g_ZeroDelaySS%
+	GuiControl,,vZeroDelaySS,%g_ZeroDelay%
 	
 	Gui, Add, Edit,X20 Y110 W300 H60 ReadOnly -Vscroll,文字キー同志の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
 	Gui, Add, Text,X+20 Y110 W230 H20,文字キー同志の重なりの割合：
@@ -398,7 +411,12 @@ DrawKeyUsage:
 	_xpos0 := _xpos + 4
 	_ypos0 := _ypos + 30
 	Gui, Font,s7 c000000,Meiryo UI
-	_ch := "小指"
+	
+	if(g_CurrSimulMode == "…" || g_Romaji == "A") {
+		_ch := "小指"
+	} else {
+		_ch := g_CurrSimulMode
+	}
 	Gui, Add, Text,vvkeyRKA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 24
 	_ypos0 := _ypos + 30
@@ -581,7 +599,7 @@ RefreshLayoutA1:
 RefreshLayoutUsage:
 	Critical
 	Gui, Submit, NoHide
-	if(ShiftMode["R"] == "親指シフト") {
+	if(ShiftMode["R"] == "親指シフト" || ShiftMode["R"] == "文字同時打鍵") {
 		GuiControl,,vkeyRLA00,左親
 		GuiControl,,vkeyRRA00,右親
 	}
@@ -589,11 +607,6 @@ RefreshLayoutUsage:
 	if(ShiftMode["R"] == "プレフィックスシフト") {
 		GuiControl,,vkeyRLA00,１
 		GuiControl,,vkeyRRA00,２
-	}
-	else
-	if(ShiftMode["R"] == "文字同時打鍵") {
-		GuiControl,,vkeyRLA00,中指
-		GuiControl,,vkeyRRA00,薬指
 	}
 	Critical,off
 	return
@@ -613,11 +626,19 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRL%element%
 		GuiControl,-Redraw,vkeyRR%element%
 		
-		_st := kst[g_Romaji . "NK" . element]
-		Gosub, SetFontColor
-		GuiControl,Font,vkeyRK%element%
-		_ch := kLabel[g_Romaji . "NK" . element]
-		GuiControl,,vkeyRK%element%,%_ch%
+		if(g_CurrSimulMode == "…" || g_Romaji == "A") {
+			_st := kst[g_Romaji . "NK" . element]
+			Gosub, SetFontColor
+			GuiControl,Font,vkeyRK%element%
+			_ch := kLabel[g_Romaji . "NK" . element]
+			GuiControl,,vkeyRK%element%,%_ch%
+		} else {
+			_st := kst[g_CurrSimulMode . element]
+			Gosub, SetFontColor
+			GuiControl,Font,vkeyRK%element%
+			_ch := kLabel[g_CurrSimulMode . element]
+			GuiControl,,vkeyRK%element%,%_ch%
+		}
 
 		_st := kst[g_Romaji . "NN" . element]
 		Gosub, SetFontColor
@@ -632,10 +653,10 @@ G2RefreshLayout:
 			_ch := kLabel[g_Romaji . "1N" . element]
 			_st := kst[g_Romaji . "1N" . element]
 		}
-		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "MN" . element]
-			_st := kst[g_Romaji . "MN" . element]
-		}
+;		if(_ch == "") {
+;			_ch := kLabel[g_Romaji . "MN" . element]
+;			_st := kst[g_Romaji . "MN" . element]
+;		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRL%element%
 		GuiControl,,vkeyRL%element%,%_ch%
@@ -646,10 +667,10 @@ G2RefreshLayout:
 			_ch := kLabel[g_Romaji . "2N" . element]
 			_st := kst[g_Romaji . "2N" . element]
 		}
-		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "IN" . element]
-			_st := kst[g_Romaji . "IN" . element]
-		}
+;		if(_ch == "") {
+;			_ch := kLabel[g_Romaji . "IN" . element]
+;			_st := kst[g_Romaji . "IN" . element]
+;		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRR%element%
 		GuiControl,,vkeyRR%element%,%_ch%
@@ -670,9 +691,10 @@ G2RefreshLayout:
 SetFontColor:
 	if(_st=="e") {
 		Gui, Font,s10 cC00000 Norm,Meiryo UI
-	} else
-	if(_st=="Q") {
+	} else if(_st=="Q") {
 		Gui, Font,s10 c0000FF Norm,Meiryo UI
+	} else if(_st=="V") {
+		Gui, Font,s10 c008000 Norm,Meiryo UI
 	} else {
 		Gui, Font,s10 c000000 Norm,Meiryo UI
 	}
@@ -845,12 +867,13 @@ gZeroDelay:
 	g_ZeroDelay := %A_GuiControl%
 	Return
 
+
 ;-----------------------------------------------------------------------
 ; 機能：零遅延モードチェックボックスの操作
 ;-----------------------------------------------------------------------
 gZeroDelaySS:
 	Gui, Submit, NoHide
-	g_ZeroDelaySS := %A_GuiControl%
+	g_ZeroDelay := %A_GuiControl%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -859,9 +882,11 @@ gZeroDelaySS:
 ;-----------------------------------------------------------------------
 gOya:
 	Gui, Submit, NoHide
-	g_OyaKey := vOyaKey
-	Gosub,RemapOya
-	Gosub,RefreshLayoutA
+	if(vOyaKey != "…") {
+		g_OyaKey := vOyaKey
+		Gosub,RemapOya
+		Gosub,RefreshLayoutA
+	}
 	Return
 
 ;-----------------------------------------------------------------------
@@ -869,14 +894,25 @@ gOya:
 ;-----------------------------------------------------------------------
 gKeySingle:
 	Gui, Submit, NoHide
-	g_KeySingle := vKeySingle
-	if(g_KeySingle = "有効")	; キーリピートON（事後的にOFF可)
-	{
-		g_KeyRepeat := 1
+	if(vKeySingle != "…") {
+		g_KeySingle := vKeySingle
+		if(g_KeySingle = "有効")	; キーリピートON（事後的にOFF可)
+		{
+			g_KeyRepeat := 1
+		}
+		Gosub,RemapOya
+		Gosub,RefreshLayoutA
 	}
-	Gosub,RemapOya
-	Gosub,RefreshLayoutA
 	return
+
+;-----------------------------------------------------------------------
+; 機能：同時打鍵キーの指定
+;-----------------------------------------------------------------------
+gCurrSimulMode:
+	Gui, Submit, NoHide
+	g_CurrSimulMode := vCurrSimulMode
+	Gui,Destroy
+	Goto,_Settings
 
 ;-----------------------------------------------------------------------
 ; 機能：親指シフトモードの変数設定
@@ -936,6 +972,7 @@ gFileSelect:
 		g_LayoutFile := vLayoutFile
 	}
 	Gui,Destroy
+	g_CurrSimulMode := "…"
 	Goto,_Settings
 
 ;-----------------------------------------------------------------------
@@ -974,7 +1011,6 @@ gButtonOk:
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
 	IniWrite,%g_ThresholdSS%,%g_IniFile%,Key,ThresholdSS
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
-	IniWrite,%g_ZeroDelaySS%,%g_IniFile%,Key,ZeroDelaySS
 	IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
 	IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
