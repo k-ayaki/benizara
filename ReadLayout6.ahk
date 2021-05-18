@@ -101,37 +101,37 @@ InitLayout2:
 	g_layoutVersion := ""
 	g_layoutURL := ""
 	LF := Object()
-	LF["ANN"] := 0
-	LF["ALN"] := 0
-	LF["ARN"] := 0
-	LF["A1N"] := 0
-	LF["A2N"] := 0
-	LF["A3N"] := 0
-	LF["A4N"] := 0
+	LF["ANN"] := ""
+	LF["ALN"] := ""
+	LF["ARN"] := ""
+	LF["A1N"] := ""
+	LF["A2N"] := ""
+	LF["A3N"] := ""
+	LF["A4N"] := ""
 
-	LF["ANK"] := 0
-	LF["ALK"] := 0
-	LF["ARK"] := 0
-	LF["A1K"] := 0
-	LF["A2K"] := 0
-	LF["A3K"] := 0
-	LF["A4K"] := 0
+	LF["ANK"] := ""
+	LF["ALK"] := ""
+	LF["ARK"] := ""
+	LF["A1K"] := ""
+	LF["A2K"] := ""
+	LF["A3K"] := ""
+	LF["A4K"] := ""
 
-	LF["RNN"] := 0
-	LF["RLN"] := 0
-	LF["RRN"] := 0
-	LF["R1N"] := 0
-	LF["R2N"] := 0
-	LF["R3N"] := 0
-	LF["R4N"] := 0
+	LF["RNN"] := ""
+	LF["RLN"] := ""
+	LF["RRN"] := ""
+	LF["R1N"] := ""
+	LF["R2N"] := ""
+	LF["R3N"] := ""
+	LF["R4N"] := ""
 
-	LF["RNK"] := 0
-	LF["RLK"] := 0
-	LF["RRK"] := 0
-	LF["R1K"] := 0
-	LF["R2K"] := 0
-	LF["R3K"] := 0
-	LF["R4K"] := 0
+	LF["RNK"] := ""
+	LF["RLK"] := ""
+	LF["RRK"] := ""
+	LF["R1K"] := ""
+	LF["R2K"] := ""
+	LF["R3K"] := ""
+	LF["R4K"] := ""
 	loop,4
 	{
 		LF["ANN" . _colhash[A_Index]] := ""
@@ -269,74 +269,73 @@ ReadLayoutFile:
 			if(layout2Hash[_line2] != "") {
 				_mode := layout2Hash[_line2]
 				_lpos := ""
-				if(_mode <> "")
+				if(_mode != "")
 				{
+					_modeSave := _mode
 					_modeName := _line2
 					_mline := 1
 				}
 				continue
 			}
-			if(code2Pos[_line2] != "") {
-				_lpos := code2Pos[_line2]
-				_simulMode := _line2
-				_mode := ""
-				if(_lpos <> "")
-				{
-					_mline := 1
-				}
-				continue
-			}
-			if(_mode <> "") 
+			if(_mode != "") 
 			{
 				if _mline between 1 and 4
 				{
 					LF[_mode . _colhash[_mline]] := _line2
-				}
-				_mline += 1
-				if(_mline > 4)
-				{
-					GoSub, Mode2Key		; 親指シフトレイアウトの処理
-					if(_error <> "")
-					{
-						_error := vLayoutFile . ":" . _modeName . ":" . _error
+					if(_mline == 4) {
+						GoSub, Mode2Key		; 親指シフトレイアウトの処理
+						if(_error <> "")
+						{
+							_error := vLayoutFile . ":" . _modeName . ":" . _error
 
-						_Section := ""
-						_mode := ""
-						_modeName := ""
-						_lpos := ""
-						_mline := 0
-						return
+							_Section := ""
+							_mode := ""
+							_modeName := ""
+							_lpos := ""
+							_mline := 0
+							return
+						}
+						;_Section := ""
+						;_mode := ""
+						;_lpos := ""
+						;_mline := 0
 					}
-					_Section := ""
-					_mode := ""
-					_lpos := ""
-					_mline := 0
+					_mline += 1
 				}
-				continue
-			}
-			if(_lpos <> "") {
-				if _mline between 1 and 4
-				{
-					LF[_lpos . _colhash[_mline]] := _line2
-				}
-				_mline += 1
-				if(_mline > 4)
-				{
-					GoSub, Mode3Key		; 同時打鍵レイアウトの処理
-					if(_error <> "")
+				if(code2Pos[_line2] != "") {
+					_lpos := code2Pos[_line2]
+					_simulMode := _line2
+					;_mode := ""
+					if(_lpos != "")
 					{
-						_error := vLayoutFile . ":" . _modeName . ":" . _error
-
-						_Section := ""
-						_mode := ""
-						_lpos := ""
-						_mline := 0
-						return
+						_mline2 := 1
 					}
-					_Section := ""
-					_mode := ""
-					_lpos := ""
-					_mline := 0
+					continue
+				}
+				if(_lpos != "") {
+					if _mline2 between 1 and 4
+					{
+						LF[_lpos . _colhash[_mline2]] := _line2
+						if(_mline2 == 4) {
+							GoSub, Mode3Key		; 同時打鍵レイアウトの処理
+							if(_error <> "")
+							{
+								_error := vLayoutFile . ":" . _modeName . ":" . _error
+		
+								_Section := ""
+								_mode := ""
+								_lpos := ""
+								_mline2 := 0
+								return
+							}
+							;_Section := ""
+							;_mode := ""
+							_lpos := ""
+							;_mline2 := 0
+						}
+						_mline2 += 1
+					}
+					continue
 				}
 				continue
 			}
@@ -388,7 +387,7 @@ ReadLayoutFile:
 ;----------------------------------------------------------------------
 Mode2Key:
 	_error := ""
-	LF[_mode] := 1
+	LF[_mode] := _modeName
 	_col := "E"
 	org := SplitColumn(LF[_mode . "E"])
 	if(CountObject(org) < 13 || CountObject(org) > 14)
@@ -548,60 +547,60 @@ Mode3Key:
 SetLayoutProperty:
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
-	if(LF["ANN"]==1 && LF["ALN"]==1 && LF["ARN"]==1)
+	if(LF["ANN"]!="" && LF["ALN"]!="" && LF["ARN"]!="")
 	{
 		ShiftMode["A"] := "親指シフト"
 		RemapOyaKey("A")
 		
-		if(LF["ANK"]==1 && LF["ALK"] == 0) {
+		if(LF["ANK"]!="" && LF["ALK"] == "") {
 			CopyColumns("ANK", "ALK")
 			_mode := "ALK"
 			Gosub, SetE2BKeyTables
 		}
-		if(LF["ANK"]==1 && LF["ARK"] == 0) {
+		if(LF["ANK"]!="" && LF["ARK"] == "") {
 			CopyColumns("ANK", "ARK")
 			_mode := "ARK"
 			Gosub, SetE2BKeyTables
 		}
 	} else 
-	if(LF["ANN"]==1 && LF["A1N"]==1) 
+	if(LF["ANN"]!="" && LF["A1N"]!="") 
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["ANN"]==1 && LF["ALN"]==0 && LF["ARN"]==0 && LF["ANK"]==1 && LF["ALK"]==0 && LF["ARK"]==0)
+	if(LF["ANN"]!="" && LF["ANK"]!="")
 	{
 		ShiftMode["A"] := "小指シフト"
 	}
 	
 	ShiftMode["R"] := ""
-	if(LF["RNN"]==1 && LF["RRN"]==1 && LF["RLN"]==1)
+	if(LF["RNN"]!="" && LF["RRN"]!="" && LF["RLN"]!="")
 	{
 		ShiftMode["R"] := "親指シフト"
 		RemapOyaKey("R")
 
-		if(LF["RNK"]==1 && LF["RLK"] == 0) {
+		if(LF["RNK"]!="" && LF["RLK"] == "") {
 			CopyColumns("RNK", "RLK")
 			_mode := "RLK"
 			Gosub, SetE2BKeyTables
 		}
-		if(LF["RNK"]==1 && LF["RRK"] == 0) {
+		if(LF["RNK"]!="" && LF["RRK"] == "") {
 			CopyColumns("RNK","RRK")
 			_mode := "RRK"
 			Gosub, SetE2BKeyTables
 		}
 	} else
-	if(LF["RNN"]==1 && LF["R1N"]==1)
+	if(LF["RNN"]!="" && LF["R1N"]!="")
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["RNN"]==1 && CountObject(g_SimulMode)!=0)
+	if(LF["RNN"]!="" && CountObject(g_SimulMode)!=0)
 	{
 		ShiftMode["R"] := "文字同時打鍵"
 	}
 	else
-	if(LF["RNN"]==1 && LF["RRN"]==0 && LF["RLN"]==0 && LF["RNK"]==1 && LF["RLK"]==0 && LF["RRK"]==0)
+	if(LF["RNN"]!="" LF["RNK"]!="")
 	{
 		ShiftMode["R"] := "小指シフト"
 	}
@@ -924,11 +923,11 @@ CopyColumns(_mdsrc, _mddst)
 {
 	global LF, _rowhash
 
-	if(LF[_mdsrc] == 0) 
+	if(LF[_mdsrc] == "") 
 	{
 		return
 	}
-	LF[_mddst] := 1
+	LF[_mddst] := LF[_mdsrc]
 	LF[_mddst . "E"] := LF[_mdsrc . "E"]
 	LF[_mddst . "D"] := LF[_mdsrc . "D"]
 	LF[_mddst . "C"] := LF[_mdsrc . "C"]

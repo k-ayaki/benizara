@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.7 .... 2021/05/09
+;	ver.0.1.4.7 .... 2021/05/17
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -237,7 +237,7 @@ keydownL:
 		else if(g_KeyInPtn == "M")	;S2)Mオン状態
 		{
 			g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick
-			if(g_Interval["M" . g_metaKey] < minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)) {
+			if(g_Interval["M" . g_metaKey] > minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)) {
 				Gosub, SendOnHoldM	; タイムアウト・保留キーの打鍵
 			} else {
 				g_OyaOnHold := g_Oya
@@ -288,7 +288,7 @@ keydownL:
 					g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Interval["M" . g_Oya]*g_OverlapMO)/(100-g_OverlapMO)),g_MaxTimeout)
 					g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
 				}
-				Gosub,SendZeroDelayM
+				SendZeroDelay(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
 			}
 		}
 		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; S6)O-M-Oオフ状態
@@ -480,13 +480,13 @@ MnUp(aStr) {
 ;----------------------------------------------------------------------
 SubSend(vOut)
 {
-	global aLog,idxLogs, aLogCnt, g_KeyInPtn
+	global aLog,idxLogs, aLogCnt, g_KeyInPtn, g_trigger
 	
 	if(vOut<>"")
 	{
-		SetKeyDelay -1
-		Send %vOut%
-		RegLogs("       " . substr(g_KeyInPtn . "   ",1,3) . vOut)
+		SetKeyDelay, -1
+		Send, %vOut%
+		RegLogs("       " . substr(g_KeyInPtn . "   ",1,3) . substr(g_trigger . "   ",1,3) . vOut)
 	}
 	return
 }
@@ -733,7 +733,6 @@ keydownM:
 	g_MojiTick := keyState[g_layoutPos]
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		SetKeyDelay -1
 		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
@@ -771,7 +770,6 @@ keydownM:
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
-		SetKeyDelay -1
 		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
@@ -1039,7 +1037,6 @@ keydown2:
 	keyState[g_layoutPos] := Pf_Count()
 	g_trigger := g_metaKey
 
-	SetKeyDelay -1
 	Gosub,ScanModifier
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
@@ -1285,7 +1282,7 @@ keyup2:
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
 Interrupt10:
-	g_trigger := "Timeout"
+	g_trigger := "TO"
 	Gosub,ScanModifier
 	;if(A_IsCompiled <> 1)
 	;{
@@ -1304,7 +1301,7 @@ Interrupt10:
 		Gosub,ChkIME
 
 		; 現在の配列面が定義されていればキーフック
-		if(LF[g_Romaji . "N" . g_Koyubi]==1) {
+		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
 			SetHook("on","on")
 		} else {
 			SetHook("off","on")
@@ -1328,13 +1325,13 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_LastKey["status"] . ":" . g_LastKey["snapshot"] 
-		;Tooltip, %g_debugout%, 0, 0, 2 ; debug
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_LastKey["status"] . ":" . g_LastKey["snapshot"]
+		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		
 		g_S12Interval := g_Interval["S12"]
 		g_S2_1Interval := g_Interval["S2_1"]
 		g_S_1_2Interval := g_Interval["S_1_2"]
-		Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval% %g_debugout2%, 0, 0, 2 ; debug
+		;Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval% %g_debugout2%, 0, 0, 2 ; debug
 		;Tooltip, DBG%g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
 		;if(ShiftMode["R"] == "文字同時打鍵" ) {
 		;	g_S12Interval := g_Interval["S12"]
@@ -1532,7 +1529,7 @@ pauseKeyDown:
 ;              よって、最下位ビットのみを見る
 ;----------------------------------------------------------------------
 ChkIME:
-	if(LF[g_Romaji . "NK"]==0 || g_Koyubi == "N") {		
+	if(LF[g_Romaji . "NK"]=="" || g_Koyubi == "N") {		
 		; 小指シフトオン時に、MS-IMEは英数モードを、Google日本語入力はローマ字モードを返す
 		; 両方とも小指シフト面を反映させるため、変換モードは見ない
 		; 小指シフト面が設定されていなければ変換モードを見る

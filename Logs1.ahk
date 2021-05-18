@@ -15,14 +15,14 @@ Logs:
 	Gui,3:Default	
 	Gui, 3:New
 	Gui, Font,s9 c000000
-	Gui, Add, Button,ggButtonSave  X343 Y766 W77 H22,ログ保存
-	Gui, Add, Button,ggButtonClose X431 Y766 W77 H22,閉じる
-	Gui, Show, W547 H800, 紅皿ログ
-	Gui, Font,s10 c000000,ＭＳ ゴシック
-	Gui, Add, Text,X30 Y10,TIME   INPUT  MD SEND
+	Gui, Add, Button,ggButtonSave  X343 Y666 W77 H22,ログ保存
+	Gui, Add, Button,ggButtonClose X431 Y666 W77 H22,閉じる
+	Gui, Show, W547 H700, 紅皿ログ
+	Gui, Font,s9 c000000,ＭＳ ゴシック
+	Gui, Add, Text,X30 Y10,TIME   INPUT  MD TG SEND
 	loop, 64
 	{
-		_yaxis := A_Index*11 + 16
+		_yaxis := A_Index*10 + 10
 		_disp := "_                                                               "
 		Gui, Add, Text,vdisp%A_Index% X30 Y%_yaxis%, %_disp%
 	}
@@ -50,17 +50,20 @@ gButtonSave:
 	{
 		file := FileOpen(vLogFileAbs, "w")
 		file.WriteLine(g_Ver . "`r`n")
-		file.WriteLine("オーバラップ=" . g_Overlap . "`r`n")
-		file.WriteLine("同時打鍵間隔=" . g_Threshold . "`r`n")
-		file.WriteLine("連続モード=" . g_Continue . "`r`n")
-		file.WriteLine("零遅延モード=" . g_ZeroDelay . "`r`n")
-		file.WriteLine("親指キー単独打鍵=" . g_KeySingle . "`r`n")
-		file.WriteLine("親指キーリピート=" . g_KeyRepeat . "`r`n")
-		file.WriteLine("TIME   INPUT  MD SEND`r`n")
+		file.WriteLine("オーバラップ文字親指=" . g_OverlapMO . "`r")
+		file.WriteLine("オーバラップ親指文字=" . g_OverlapOM . "`r")
+		file.WriteLine("オーバラップ文字同時=" . g_OverlapSS . "`r")
+		file.WriteLine("親指シフト同時打鍵間隔=" . g_Threshold . "`r")
+		file.WriteLine("文字同時打鍵間隔=" . g_ThresholdSS . "`r")
+		file.WriteLine("連続モード=" . g_Continue . "`r")
+		file.WriteLine("零遅延モード=" . g_ZeroDelay . "`r")
+		file.WriteLine("親指キー単独打鍵=" . g_KeySingle . "`r")
+		file.WriteLine("親指キーリピート=" . g_KeyRepeat . "`r")
+		file.WriteLine("TIME   INPUT  MD TG SEND`r")
 		loop, 64
 		{
 			_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
-			file.WriteLine(aLog%_idx% . "`r`n")
+			file.WriteLine(aLog%_idx% . "`r")
 		}
 		file.close()
 	}
