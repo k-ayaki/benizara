@@ -315,7 +315,7 @@ ReadLayoutFile:
 				if(_lpos != "") {
 					if _mline2 between 1 and 4
 					{
-						LF[_lpos . _colhash[_mline2]] := _line2
+						LF[_mode . _lpos . _colhash[_mline2]] := _line2
 						if(_mline2 == 4) {
 							GoSub, Mode3Key		; 同時打鍵レイアウトの処理
 							if(_error <> "")
@@ -489,12 +489,11 @@ SplitColumn(lColumn) {
 ;----------------------------------------------------------------------
 Mode3Key:
 	_error := ""
-
 	_idx := CountObject(g_SimulMode)
-	g_SimulMode[_idx + 1] := _simulMode		; 同時打鍵テーブル
+	g_SimulMode[_idx + 1] := _mode . _simulMode		; 同時打鍵テーブル
 
 	_col := "E"
-	org := SplitColumn(LF[_lpos . "E"])
+	org := SplitColumn(LF[_mode . _lpos . "E"])
 	if(CountObject(org) < 13 || CountObject(org) > 14)
 	{
 		_error := _Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
@@ -508,7 +507,7 @@ Mode3Key:
 		return
 	
 	_col := "D"
-	org := SplitColumn(LF[_lpos . "D"])
+	org := SplitColumn(LF[_mode . _lpos . "D"])
 	if(CountObject(org) <> 12)
 	{
 		_error := _Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
@@ -519,7 +518,7 @@ Mode3Key:
 		return
 	
 	_col := "C"
-	org := SplitColumn(LF[_lpos . "C"])
+	org := SplitColumn(LF[_mode . _lpos . "C"])
 	if(CountObject(org) <> 12)
 	{
 		_error := _Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
@@ -530,7 +529,7 @@ Mode3Key:
 		return
 
 	_col := "B"
-	org := SplitColumn(LF[_lpos . "B"])
+	org := SplitColumn(LF[_mode . _lpos . "B"])
 	if(CountObject(org) <> 11)
 	{
 		_error := _Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
@@ -826,17 +825,17 @@ SetSimulKeyTable:
 		if(_quotation <> "")
 		{
 			_vout := Str2Vout(_qstr)
-			kLabel[_simulMode . _lpos2] := _qstr
-			kst[_simulMode . _lpos2] := "Q"	; 仮想キーコード
+			kLabel[_mode . _simulMode . _lpos2] := _qstr
+			kst[_mode . _simulMode . _lpos2] := "Q"	; 仮想キーコード
 			
-			kLabel[_lpos . _lpos2] := _qstr			
-			kst[_lpos . _lpos2] := "Q"	; 引用符
-			kdn[_lpos . _lpos2] := _vout
-			kup[_lpos . _lpos2] := ""
-			kLabel[_lpos2 . _lpos] := _qstr			
-			kst[_lpos2 . _lpos] := "Q"	; 引用符
-			kdn[_lpos2 . _lpos] := _vout
-			kup[_lpos2 . _lpos] := ""
+			kLabel[_mode . _lpos . _lpos2] := _qstr			
+			kst[_mode . _lpos . _lpos2] := "Q"	; 引用符
+			kdn[_mode . _lpos . _lpos2] := _vout
+			kup[_mode . _lpos . _lpos2] := ""
+			kLabel[_mode . _lpos2 . _lpos] := _qstr			
+			kst[_mode . _lpos2 . _lpos] := "Q"	; 引用符
+			kdn[_mode . _lpos2 . _lpos] := _vout
+			kup[_mode . _lpos2 . _lpos] := ""
 			keyAttribute3["RN" . _lpos2] := "M"
 			keyAttribute3["RN" . _lpos]  := "M"
 			keyAttribute3["RK" . _lpos2] := "M"
@@ -847,18 +846,18 @@ SetSimulKeyTable:
 		_vk := ConvVkey(org[A_Index])
 		if(_vk <> "")
 		{
-			kLabel[_simulMode . _lpos2] := _vk
-			kst[_simulMode . _lpos2] := "V"	; 仮想キーコード
+			kLabel[_mode . _simulMode . _lpos2] := _vk
+			kst[_mode . _simulMode . _lpos2] := "V"	; 仮想キーコード
 
-			kLabel[_lpos . _lpos2] := _vk
-			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			kLabel[_mode . _lpos . _lpos2] := _vk
+			kLabel[_mode . _lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 
-			kst[_lpos . _lpos2] := "V"	; 仮想キーコード
-			kdn[_lpos . _lpos2] := "{" . _vk . "}"
-			kup[_lpos . _lpos2] := ""
-			kst[_lpos2 . _lpos] := "V"	; 仮想キーコード
-			kdn[_lpos2 . _lpos] := "{" . _vk . "}"
-			kup[_lpos2 . _lpos] := ""
+			kst[_mode . _lpos . _lpos2] := "V"	; 仮想キーコード
+			kdn[_mode . _lpos . _lpos2] := "{" . _vk . "}"
+			kup[_mode . _lpos . _lpos2] := ""
+			kst[_mode . _lpos2 . _lpos] := "V"	; 仮想キーコード
+			kdn[_mode . _lpos2 . _lpos] := "{" . _vk . "}"
+			kup[_mode . _lpos2 . _lpos] := ""
 			keyAttribute3["RN" . _lpos2] := "M"
 			keyAttribute3["RN" . _lpos]  := "M"
 			keyAttribute3["RK" . _lpos2] := "M"
@@ -871,32 +870,32 @@ SetSimulKeyTable:
 		GenSendStr2(_mode, _aStr, _down, _up)
 		if( _down <> "")
 		{
-			kLabel[_simulMode . _lpos2] := Romaji2Kana(org[A_Index])
-			kst[_simulMode . _lpos2] := "S"	; 仮想キーコード
+			kLabel[_mode . _simulMode . _lpos2] := Romaji2Kana(org[A_Index])
+			kst[_mode . _simulMode . _lpos2] := "S"	; 仮想キーコード
 			
-			kLabel[_lpos . _lpos2] := Romaji2Kana(org[A_Index])
-			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			kLabel[_mode . _lpos . _lpos2] := Romaji2Kana(org[A_Index])
+			kLabel[_mode . _lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 
-			kst[_lpos . _lpos2] := "S"	;
-			kdn[_lpos . _lpos2] := _down
-			kup[_lpos . _lpos2] := _up
+			kst[_mode . _lpos . _lpos2] := "S"	;
+			kdn[_mode . _lpos . _lpos2] := _down
+			kup[_mode . _lpos . _lpos2] := _up
 			
-			kst[_lpos2 . _lpos] := "S"	; 
-			kdn[_lpos2 . _lpos] := _down
-			kup[_lpos2 . _lpos] := _up
+			kst[_mode . _lpos2 . _lpos] := "S"	; 
+			kdn[_mode . _lpos2 . _lpos] := _down
+			kup[_mode . _lpos2 . _lpos] := _up
 			
 			keyAttribute3["RN" . _lpos2] := "M"
 			keyAttribute3["RN" . _lpos]  := "M"
 			keyAttribute3["RK" . _lpos2] := "M"
 			keyAttribute3["RK" . _lpos]  := "M"
 		} else {
-			kLabel[_simulMode . _lpos2] := org[A_Index]
-			kst[_simulMode . _lpos2] := ""
+			kLabel[_mode . _simulMode . _lpos2] := org[A_Index]
+			kst[_mode . _simulMode . _lpos2] := ""
 
-			kst[_lpos . _lpos2] := ""	
-			kLabel[_lpos . _lpos2] := org[A_Index]
-			kst[_lpos2 . _lpos] := ""	
-			kLabel[_lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			kst[_mode . _lpos . _lpos2] := ""	
+			kLabel[_mode . _lpos . _lpos2] := org[A_Index]
+			kst[_mode . _lpos2 . _lpos] := ""	
+			kLabel[_mode . _lpos2 . _lpos] := kLabel[_lpos . _lpos2]
 		}
 		continue
 	}

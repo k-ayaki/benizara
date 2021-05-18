@@ -160,10 +160,12 @@ _Settings:
 		enum := g_SimulMode._NewEnum()
 		while enum[k,v]
 		{
-			if(v == g_CurrSimulMode) {
-				_ddlist := _ddlist . v . "||"
-			} else {
-				_ddlist := _ddlist . v . "|"
+			if(substr(v,1,1) == g_Romaji) {
+				if(substr(v,4,3) == g_CurrSimulMode) {
+					_ddlist := _ddlist . substr(v,4,3) . "||"
+				} else {
+					_ddlist := _ddlist . substr(v,4,3) . "|"
+				}
 			}
 		}
 		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X560 Y70 W95,%_ddlist%
@@ -524,6 +526,8 @@ G2PollingLayout:
 			_ch := GuiLayoutHash[g_Romaji]
 			GuiControl,,vkeyLayoutName,%_ch%
 			Gosub,G2RefreshLayout
+			
+			Gosub,RefreshSimulKeyMenu
 		}
 		s_KeySingle := g_KeySingle
 		Gosub,RefreshLayoutA
@@ -540,6 +544,30 @@ G2PollingLayout:
 		_layoutPos := "A01"
 		Gosub,SetKeyGui2A
 	}
+	return
+
+;-----------------------------------------------------------------------
+; 機能：同時打鍵キーメニューの更新：英数ローマ字モードに応じて
+;-----------------------------------------------------------------------
+RefreshSimulKeyMenu:
+	_ddlist := "|…"
+	if(v == g_CurrSimulMode) {
+		_ddlist := _ddlist . "||"
+	} else {
+		_ddlist := _ddlist . "|"
+	}
+	enum := g_SimulMode._NewEnum()
+	while enum[k,v]
+	{
+		if(substr(v,1,1) == g_Romaji) {
+			if(substr(v,4,3) == g_CurrSimulMode) {
+				_ddlist := _ddlist . substr(v,4,3) . "||"
+			} else {
+				_ddlist := _ddlist . substr(v,4,3) . "|"
+			}
+		}
+	}
+	GuiControl,,vCurrSimulMode,%_ddlist%
 	return
 
 ;-----------------------------------------------------------------------
@@ -626,17 +654,17 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRL%element%
 		GuiControl,-Redraw,vkeyRR%element%
 		
-		if(g_CurrSimulMode == "…" || g_Romaji == "A") {
+		if(g_CurrSimulMode == "…") {
 			_st := kst[g_Romaji . "NK" . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%
 			_ch := kLabel[g_Romaji . "NK" . element]
 			GuiControl,,vkeyRK%element%,%_ch%
 		} else {
-			_st := kst[g_CurrSimulMode . element]
+			_st := kst[g_Romaji . "NN" . g_CurrSimulMode . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%
-			_ch := kLabel[g_CurrSimulMode . element]
+			_ch := kLabel[g_Romaji . "NN" . g_CurrSimulMode . element]
 			GuiControl,,vkeyRK%element%,%_ch%
 		}
 

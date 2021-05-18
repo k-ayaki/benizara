@@ -622,8 +622,13 @@ SendOnHoldMM:
 	{
 		return
 	}
-	SendOnHold(g_MojiOnHold2, g_MojiOnHold,g_ZeroDelay)	
+	SendOnHold(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold,g_MojiOnHold2 . g_MojiOnHold,g_ZeroDelay)	
 
+	g_RomajiOnHold2 := ""
+	g_RomajiOnHold  := ""
+	g_OyaOnHold2    := ""
+	g_OyaOnHold     := ""
+	
 	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
 	g_KoyubiOnHold := "N"
@@ -642,6 +647,11 @@ SendOnHoldMM2:
 	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelay)
 	SubSend(kup_save[g_MojiOnHold2])
 	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
+
+	g_RomajiOnHold2 := ""
+	g_RomajiOnHold  := ""
+	g_OyaOnHold2    := ""
+	g_OyaOnHold     := ""
 	
 	g_ZeroDelaySurface := ""
 	g_KoyubiOnHold3 := ""
@@ -665,8 +675,10 @@ SendOnHoldM2:
 	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelay)
 	SubSend(kup_save[g_MojiOnHold2])
 
-	g_MojiOnHold2   := ""
+	g_RomajiOnHold2 := ""
+	g_OyaOnHold2    := ""
 	g_KoyubiOnHold2 := ""
+	g_MojiOnHold2   := ""
 	g_keyInPtn := "M"
 	return
 
@@ -799,7 +811,7 @@ keydownM:
 	if(g_KeyInPtn = "M")	; S2)Mオン状態
 	{
 		g_Interval["S12"]  := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間
-		if(kdn[g_layoutPos . g_MojiOnHold] == "") {
+		if(kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_layoutPos . g_MojiOnHold] == "") {
 			; 保留中の１文字を確定（出力）
 			Gosub, SendOnHoldM
 		}
@@ -808,7 +820,7 @@ keydownM:
 		; M3 のキー入力
 		g_Interval["S23"] := g_Interval["S12"]
 		g_Interval["S12"] := g_MojiTick - g_MojiTick2	; 前回の文字キー押しからの期間　３キー判定
-		if(kdn[g_MojiOnHold . g_layoutPos] != "" && g_Interval["S12"] < g_Interval["S23"]) {
+		if(kdn[g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold . g_MojiOnHold . g_layoutPos] != "" && g_Interval["S12"] < g_Interval["S23"]) {
 			Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
 		} else {
 			; 保留中の同時打鍵を確定
@@ -879,9 +891,10 @@ keydownM:
 	{
 		if(g_KeyInPtn = "") {
 			; 当該キーを単独打鍵として保留
-			g_MojiOnHold := g_layoutPos
+			g_MojiOnHold   := g_layoutPos
+
 			g_RomajiOnHold := g_Romaji
-			g_OyaOnHold := g_Oya
+			g_OyaOnHold    := g_Oya
 			g_KoyubiOnHold := g_Koyubi
 			g_KeyInPtn := "M"
 			g_SendTick := g_MojiTick + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
@@ -897,8 +910,13 @@ keydownM:
 
 			g_MojiOnHold2 := g_MojiOnHold
 			g_MojiOnHold  := g_layoutPos
+
+			g_RomajiOnHold2 := g_RomajiOnHold
+			g_RomajiOnHold  := g_Romaji
+
 			g_OyaOnHold2 := g_OyaOnHold
 			g_OyaOnHold := g_Oya
+
 			g_KoyubiOnHold2 := g_KoyubiOnHold
 			g_KoyubiOnHold  := g_Koyubi
 			; 当該キーとその前を同時打鍵として保留
