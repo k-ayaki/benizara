@@ -323,7 +323,8 @@ keydownL:
 				Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
 				Gosub, SendOnHoldMO		; M-Oキー出力
 			} else {
-				Gosub, SendOnHoldMM2	; ２文字の分離出力
+				Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
+				Gosub, SendOnHoldM		; 保留した文字を打鍵
 			}
 			if(g_Continue == 1) {
 				g_OyaOnHold := g_Oya
@@ -584,7 +585,8 @@ SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
-	SendOnHold(g_RomajiOnHold . "N" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
+	_mode := g_RomajiOnHold . "N" . g_KoyubiOnHold
+	SendOnHold(_mode, g_MojiOnHold, g_ZeroDelay)
 
 	g_MojiOnHold := ""
 	g_KoyubiOnHold := "N"
@@ -622,44 +624,20 @@ SendOnHoldMM:
 	{
 		return
 	}
-	SendOnHold(g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold,g_MojiOnHold2 . g_MojiOnHold,g_ZeroDelay)	
+	_mode := g_RomajiOnHold . g_OyaOnHold . g_KoyubiOnHold
+	SendOnHold(_mode, g_MojiOnHold2 . g_MojiOnHold,g_ZeroDelay)	
 
 	g_RomajiOnHold2 := ""
 	g_RomajiOnHold  := ""
 	g_OyaOnHold2    := ""
 	g_OyaOnHold     := ""
 	
-	g_MojiOnHold   := ""
 	g_MojiOnHold2  := ""
-	g_KoyubiOnHold := "N"
-	g_SendTick     := ""
-	g_keyInPtn := ""
-	return
-
-;----------------------------------------------------------------------
-; 保留キーの出力：セットされた文字の分離出力
-;----------------------------------------------------------------------
-SendOnHoldMM2:
-	if(g_MojiOnHold2 == "") 
-	{
-		return
-	}
-	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelay)
-	SubSend(kup_save[g_MojiOnHold2])
-	SendOnHold("RN" . g_KoyubiOnHold, g_MojiOnHold, g_ZeroDelay)
-
-	g_RomajiOnHold2 := ""
-	g_RomajiOnHold  := ""
-	g_OyaOnHold2    := ""
-	g_OyaOnHold     := ""
+	g_MojiOnHold   := ""
 	
-	g_ZeroDelaySurface := ""
-	g_KoyubiOnHold3 := ""
 	g_KoyubiOnHold2 := ""
-	g_KoyubiOnHold  := ""
-	g_MojiOnHold   := ""
-	g_MojiOnHold2  := ""
 	g_KoyubiOnHold := "N"
+
 	g_SendTick     := ""
 	g_keyInPtn := ""
 	return
@@ -672,7 +650,8 @@ SendOnHoldM2:
 	{
 		return
 	}
-	SendOnHold("RN" . g_KoyubiOnHold2, g_MojiOnHold2, g_ZeroDelay)
+	_mode := g_RomajiOnHold2 . g_OyaOnHold2 . g_KoyubiOnHold2
+	SendOnHold(_mode, g_MojiOnHold2, g_ZeroDelay)
 	SubSend(kup_save[g_MojiOnHold2])
 
 	g_RomajiOnHold2 := ""
@@ -1094,24 +1073,29 @@ keydown2:
 ;----------------------------------------------------------------------
 SendZeroDelay(_mode, g_MojiOnHold, g_ZeroDelay) {
 	global g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
-	global g_LastKey
+	global g_LastKey, ctrlKeyHash, kst
 
 	if(g_ZeroDelay == 1)
 	{
 		; 保留キーがあれば先行出力（零遅延モード）
-		vOut                   := kdn[_mode . g_MojiOnHold]
-		kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
-		g_ZeroDelaySurface     := kLabel[_mode . g_MojiOnHold]
-		
-		_nextKey := nextDakuten(_mode,g_MojiOnHold)
-		if(_nextKey!="") {
-			_aStr := "後" . kana2Romaji(_nextKey)
-			GenSendStr2(_mode, _aStr, _down, _up)
-			vOut                   := _down
-			kup_save[g_MojiOnHold] := _up
+		g_ZeroDelaySurface := kLabel[_mode . g_MojiOnHold]
+
+		; １文字通常出力の非制御コードならば先行出力
+		if(kst[_mode . g_MojiOnHold] == "S" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+			vOut                   := kdn[_mode . g_MojiOnHold]
+			kup_save[g_MojiOnHold] := kup[_mode . g_MojiOnHold]
+			_nextKey := nextDakuten(_mode,g_MojiOnHold)
+			if(_nextKey!="") {
+				_aStr := "後" . kana2Romaji(_nextKey)
+				GenSendStr2(_mode, _aStr, _down, _up)
+				vOut                   := _down
+				kup_save[g_MojiOnHold] := _up
+			}
+			g_ZeroDelayOut := vOut
+			SubSend(vOut)
+		} else {
+			g_ZeroDelaySurface := ""
 		}
-		g_ZeroDelayOut := vOut
-		SubSend(vOut)
 	}
 	else
 	{
@@ -1383,7 +1367,8 @@ Polling:
 			}
 			else if g_KeyInPtn in MM2
 			{
-				Gosub, SendOnHoldMM2
+				Gosub, SendOnHoldM2
+				Gosub, SendOnHoldM
 			}
 			else if g_KeyInPtn in L,R	; Oオン状態
 			{
@@ -1480,7 +1465,8 @@ ModeInitialize:
 	}
 	else if(g_KeyInPtn == "MM2")
 	{
-		Gosub, SendOnHoldMM2
+		Gosub, SendOnHoldM2
+		Gosub, SendOnHoldM
 	}
 	else if(g_KeyInPtn="L" || g_KeyInPtn="R")
 	{

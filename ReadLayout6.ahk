@@ -2891,19 +2891,20 @@ MakeChr2vkeyHash()
 ;----------------------------------------------------------------------
 MakeCtrlKeyHash() {
 	hash := Object()
-	hash["後"] := 1
-	hash["逃"] := 1
-	hash["入"] := 1
-	hash["空"] := 1
-	hash["消"] := 1
-	hash["挿"] := 1
-	hash["上"] := 1
-	hash["左"] := 1
-	hash["右"] := 1
-	hash["下"] := 1
-	hash["家"] := 1
-	hash["終"] := 1
-	hash["前"] := 1
-	hash["次"] := 1
+	hash["後"] := "BS"	;"Backspace"
+	hash["逃"] := "Esc"
+	hash["入"] := "Enter"
+	hash["空"] := "Space"
+	hash["消"] := "Delete"
+	hash["挿"] := "Insert"
+	hash["上"] := "Up"
+	hash["左"] := "Left"
+	hash["右"] := "Right"
+	hash["下"] := "Down"
+	hash["家"] := "Home"
+	hash["終"] := "End"
+	hash["前"] := "PgUp"
+	hash["次"] := "PgDn"
+	hash["表"] := "tab"
 	return hash
 }
