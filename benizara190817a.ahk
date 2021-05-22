@@ -537,23 +537,29 @@ SendOnHoldMO:
 SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 {
 	global kdn, kup, kup_save, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel, kst
-	global g_LastKey
+	global g_LastKey, g_Koyubi
 	
 	vOut                  := kdn[_mode . _MojiOnHold]
 	kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
-
+	_kLabel := kLabel[_mode . _MojiOnHold]
+	_kst    := kst[_mode . _MojiOnHold]
+	
 	_nextKey := nextDakuten(_mode,_MojiOnHold)
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
-		GenSendStr2(_mode, _aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up)
 		vOut                   := _down
 		kup_save[_MojiOnHold]  := _up
+		_kLabel := g_LastKey["表層"]
+		_kst    := g_LastKey["状態"]
 	} else {
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-
+	if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+		vOut := "{capslock}" . vOut . "{capslock}"
+	}
 	if(g_ZeroDelay = 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -929,22 +935,30 @@ SendAN(_mode,g_layoutPos)
 ;----------------------------------------------------------------------
 SendKey(_mode, _MojiOnHold){
 	global kdn, kup, kup_save,kLabel
-	global g_LastKey, kst
+	global g_LastKey, kst, g_Koyubi
 	
 	vOut                  := kdn[_mode . _MojiOnHold]
 	kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
-
+	_kLabel := kLabel[_mode . _MojiOnHold]
+	_kst    := kst[_mode . _MojiOnHold]
+	
 	_nextKey := nextDakuten(_mode,_MojiOnHold)
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
-		GenSendStr2(_mode, _aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up)
 		vOut                  := _down
 		kup_save[_MojiOnHold] := _up
+		
+		_kLabel := g_LastKey["表層"]
+		_kst    := g_LastKey["状態"]
 	} else {
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
+	if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+		vOut := "{capslock}" . vOut . "{capslock}"
+	}	
 	SubSend(vOut)
 }
 ;----------------------------------------------------------------------
@@ -1029,7 +1043,7 @@ keydown2:
 ;----------------------------------------------------------------------
 SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 	global g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
-	global g_LastKey, ctrlKeyHash, kst
+	global g_LastKey, ctrlKeyHash, kst, g_Koyubi
 
 	if(g_ZeroDelay == 1)
 	{
@@ -1038,14 +1052,23 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 
 		; １文字通常出力の非制御コードならば先行出力
 		if(kst[_mode . _MojiOnHold] == "S" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
-			vOut                   := kdn[_mode . _MojiOnHold]
+			vOut                  := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
+			_kLabel := kLabel[_mode . _MojiOnHold]
+			_kst    := kst[_mode . _MojiOnHold]			
+			
 			_nextKey := nextDakuten(_mode,_MojiOnHold)
 			if(_nextKey!="") {
 				_aStr := "後" . kana2Romaji(_nextKey)
-				GenSendStr2(_mode, _aStr, _down, _up)
-				vOut                   := _down
+				GenSendStr3(_aStr, _down, _up)
+				vOut                  := _down
 				kup_save[_MojiOnHold] := _up
+				
+				_kLabel := g_LastKey["表層"]
+				_kst    := g_LastKey["状態"]
+			}
+			if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+				vOut := "{capslock}" . vOut . "{capslock}"
 			}
 			g_ZeroDelayOut := vOut
 			SubSend(vOut)

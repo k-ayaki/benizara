@@ -765,7 +765,8 @@ SetKeyTable:
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
 		; 送信形式に変換
-		GenSendStr2(_mode, _aStr, _down, _up)
+		;GenSendStr2(_mode, _aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
 			if(SubStr(_mode,1,1)=="R")
@@ -801,6 +802,20 @@ IsKoyubiError(_mode, _aStr) {
 				st := 1
 				break
 			}
+		}
+	}
+	return st
+}
+;----------------------------------------------------------------------
+;	小指シフトモード時の禁止文字でないか否か
+;----------------------------------------------------------------------
+IsKoyubiError2(_aStr) {
+	st := false
+	loop, Parse, _aStr
+	{
+		if(instr("１２３４５６７８９０－＾￥ｑｗｅｒｔｙｕｉｏｐ＠［ａｓｄｆｇｈｊｋｌ；：］ｚｘｃｖｂｎｍ，．／￥",A_LoopField) != 0) {
+			st := true
+			break
 		}
 	}
 	return st
@@ -867,7 +882,8 @@ SetSimulKeyTable:
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(org[A_Index])
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		GenSendStr2(_mode, _aStr, _down, _up)
+		;GenSendStr2(_mode, _aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
 			kLabel[_mode . _simulMode . _lpos2] := Romaji2Kana(org[A_Index])
@@ -1089,6 +1105,45 @@ GenSendStr2(_mode, aStr,BYREF _dn,BYREF _up)
 	if(IsKoyubiError(_mode, aStr)==1) 
 	{
 		_dn := "{capslock}" . _dn . "{capslock}"
+	}
+	return _dn
+}
+;----------------------------------------------------------------------
+; 通常のキーdown時にSendする引数の文字列を設定する
+; 引数　：aStr：対応するキー入力
+; 戻り値：Sendの引数
+;----------------------------------------------------------------------
+GenSendStr3(aStr,BYREF _dn,BYREF _up)
+{
+	global z2hHash, Chr2vkeyHash
+	_len := strlen(aStr)	; 全角
+	if(_len = 0)
+	{
+		return ""
+	}
+	; 入力文字列をAutohotkeyのSend形式に変換
+	_dn := "{Blind}"
+	_up := ""
+	loop,Parse, aStr
+	{
+		;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
+		;if(_c2 == "") {
+			_c2 := z2hHash[A_LoopField]
+		;}
+		if(_c2 != "")
+		{
+			if(A_Index = _len)
+			{
+				_dn := _dn .  "{" . _c2 . " Down}"
+				_up := "{Blind}{" . _c2 . " up}"
+			} else {
+				_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
+			}
+		}
+	}
+	if(_dn = "{Blind}")
+	{
+		_dn := ""
 	}
 	return _dn
 }
