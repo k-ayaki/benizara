@@ -762,27 +762,32 @@ SetKeyTable:
 			kup[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
 			continue
 		}
+		if(substr(org[A_Index],1,1)=="S") {
+			kst[_mode . _lpos2] := "S"
+			_aStr0 := substr(org[A_Index],2)
+		} else {
+			_aStr0 := org[A_Index]
+			kst[_mode . _lpos2] := "M"
+		}
 		; かな文字はローマ字に変換
-		_aStr := kana2Romaji(org[A_Index])
+		_aStr := kana2Romaji(_aStr0)
 		; 送信形式に変換
-		;GenSendStr2(_mode, _aStr, _down, _up)
 		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
+			_down := SetModifier(substr(org[A_Index],1,1),_down)
 			if(SubStr(_mode,1,1)=="R")
 			{
-				kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
+				kLabel[_mode . _lpos2] := Romaji2Kana(_aStr0)
 			}
 			else
 			{
-				kLabel[_mode . _lpos2] := org[A_Index]
+				kLabel[_mode . _lpos2] := _aStr0
 			}
-			kst[_mode . _lpos2] := "S"
 			kdn[_mode . _lpos2] := _down
 			kup[_mode . _lpos2] := _up
 		} else {
-			kLabel[_mode . _lpos2] := org[A_Index]
-			kst[_mode . _lpos2] := "S"
+			kLabel[_mode . _lpos2] := _aStr0
 			kdn[_mode . _lpos2] := ""
 			kup[_mode . _lpos2] := ""
 		}
@@ -879,24 +884,32 @@ SetSimulKeyTable:
 			keyAttribute3["RK" . _lpos]  := "M"
 			continue
 		}
-		; かな文字はローマ字に変換
-		_aStr := kana2Romaji(org[A_Index])
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		;GenSendStr2(_mode, _aStr, _down, _up)
+		if(substr(org[A_Index],1,1)=="S") {
+			kst[_mode . _simulMode . _lpos2] := "S"
+			kst[_mode . _lpos . _lpos2] := "S"
+			kst[_mode . _lpos2 . _lpos] := "S"
+			_aStr0 := substr(org[A_Index],2)
+		} else {
+			_aStr0 := org[A_Index]
+			kst[_mode . _simulMode . _lpos2] := "M"	; 普通の文字
+			kst[_mode . _lpos . _lpos2] := "M"
+			kst[_mode . _lpos2 . _lpos] := "M"
+		}
+		; かな文字はローマ字に変換
+		_aStr := kana2Romaji(_aStr0)
 		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
-			kLabel[_mode . _simulMode . _lpos2] := Romaji2Kana(org[A_Index])
-			kst[_mode . _simulMode . _lpos2] := "S"	; 仮想キーコード
+			_down := SetModifier(substr(org[A_Index],1,1),_down)
+			kLabel[_mode . _simulMode . _lpos2] := Romaji2Kana(_aStr0)
 			
-			kLabel[_mode . _lpos . _lpos2] := Romaji2Kana(org[A_Index])
-			kLabel[_mode . _lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			kLabel[_mode . _lpos . _lpos2] := Romaji2Kana(_aStr0)
+			kLabel[_mode . _lpos2 . _lpos] := kLabel[_mode . _lpos . _lpos2]
 
-			kst[_mode . _lpos . _lpos2] := "S"	;
 			kdn[_mode . _lpos . _lpos2] := _down
 			kup[_mode . _lpos . _lpos2] := _up
 			
-			kst[_mode . _lpos2 . _lpos] := "S"	; 
 			kdn[_mode . _lpos2 . _lpos] := _down
 			kup[_mode . _lpos2 . _lpos] := _up
 			
@@ -907,15 +920,34 @@ SetSimulKeyTable:
 		} else {
 			kLabel[_mode . _simulMode . _lpos2] := org[A_Index]
 			kst[_mode . _simulMode . _lpos2] := ""
-
 			kst[_mode . _lpos . _lpos2] := ""	
-			kLabel[_mode . _lpos . _lpos2] := org[A_Index]
 			kst[_mode . _lpos2 . _lpos] := ""	
-			kLabel[_mode . _lpos2 . _lpos] := kLabel[_lpos . _lpos2]
+			kLabel[_mode . _lpos . _lpos2] := org[A_Index]
+			kLabel[_mode . _lpos2 . _lpos] := kLabel[_mode . _lpos . _lpos2]
 		}
 		continue
 	}
 	return
+
+;----------------------------------------------------------------------
+;	モディファイア
+;----------------------------------------------------------------------
+SetModifier(_modifier,_down)
+{
+	if(_modifier=="S") {
+		_down := "{Shift down}" . _down . "{Shift up}"
+	}
+	else if(_modifier=="C") {
+		_down := "{Ctrl down}" . _down . "{Ctrl up}"
+	}
+	else if(_modifier=="A") {
+		_down := "{Alt down}" . _down . "{Ctrl up}"
+	}
+	else if(_modifier=="W") {
+		_down := "{LWin down}" . _down . "{LWin up}"
+	}
+	return _down
+}
 
 ;----------------------------------------------------------------------
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
@@ -1064,50 +1096,6 @@ Romaji2Kana(aStr)
 	return aStr
 }
 
-;----------------------------------------------------------------------
-; 通常のキーdown時にSendする引数の文字列を設定する
-; 引数　：aStr：対応するキー入力
-; 戻り値：Sendの引数
-;----------------------------------------------------------------------
-GenSendStr2(_mode, aStr,BYREF _dn,BYREF _up)
-{
-	global z2hHash, Chr2vkeyHash
-	_len := strlen(aStr)	; 全角
-	if(_len = 0)
-	{
-		return ""
-	}
-	; 入力文字列をAutohotkeyのSend形式に変換
-	_dn := "{Blind}"
-	_up := ""
-	loop,Parse, aStr
-	{
-		;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
-		;if(_c2 == "") {
-			_c2 := z2hHash[A_LoopField]
-		;}
-		if(_c2 != "")
-		{
-			if(A_Index = _len)
-			{
-				_dn := _dn .  "{" . _c2 . " Down}"
-				_up := "{Blind}{" . _c2 . " up}"
-			} else {
-				_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
-			}
-		}
-	}
-	if(_dn = "{Blind}")
-	{
-		_dn := ""
-	}
-	else
-	if(IsKoyubiError(_mode, aStr)==1) 
-	{
-		_dn := "{capslock}" . _dn . "{capslock}"
-	}
-	return _dn
-}
 ;----------------------------------------------------------------------
 ; 通常のキーdown時にSendする引数の文字列を設定する
 ; 引数　：aStr：対応するキー入力

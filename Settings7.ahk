@@ -681,10 +681,6 @@ G2RefreshLayout:
 			_ch := kLabel[g_Romaji . "1N" . element]
 			_st := kst[g_Romaji . "1N" . element]
 		}
-;		if(_ch == "") {
-;			_ch := kLabel[g_Romaji . "MN" . element]
-;			_st := kst[g_Romaji . "MN" . element]
-;		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRL%element%
 		GuiControl,,vkeyRL%element%,%_ch%
@@ -695,10 +691,6 @@ G2RefreshLayout:
 			_ch := kLabel[g_Romaji . "2N" . element]
 			_st := kst[g_Romaji . "2N" . element]
 		}
-;		if(_ch == "") {
-;			_ch := kLabel[g_Romaji . "IN" . element]
-;			_st := kst[g_Romaji . "IN" . element]
-;		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRR%element%
 		GuiControl,,vkeyRR%element%,%_ch%
@@ -717,11 +709,11 @@ G2RefreshLayout:
 ; 機能：フォント色の設定
 ;-----------------------------------------------------------------------
 SetFontColor:
-	if(_st=="e") {
+	if(_st=="e") {			; 
 		Gui, Font,s10 cC00000 Norm,Meiryo UI
-	} else if(_st=="Q") {
+	} else if(_st=="Q") {	; 引用符
 		Gui, Font,s10 c0000FF Norm,Meiryo UI
-	} else if(_st=="V") {
+	} else if(_st=="V") {	; 仮想キーコード
 		Gui, Font,s10 c008000 Norm,Meiryo UI
 	} else {
 		Gui, Font,s10 c000000 Norm,Meiryo UI

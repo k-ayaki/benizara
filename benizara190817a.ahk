@@ -557,7 +557,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+	if(g_Koyubi=="K" && _kst == "M") {
 		vOut := "{capslock}" . vOut . "{capslock}"
 	}
 	if(g_ZeroDelay = 1)
@@ -956,7 +956,7 @@ SendKey(_mode, _MojiOnHold){
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+	if(g_Koyubi=="K" && _kst == "M") {
 		vOut := "{capslock}" . vOut . "{capslock}"
 	}	
 	SubSend(vOut)
@@ -1067,7 +1067,7 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 				_kLabel := g_LastKey["表層"]
 				_kst    := g_LastKey["状態"]
 			}
-			if(g_Koyubi=="K" && _kst == "S" && IsKoyubiError2(kana2Romaji(_kLabel))) {
+			if(g_Koyubi=="K" && _kst == "M") {
 				vOut := "{capslock}" . vOut . "{capslock}"
 			}
 			g_ZeroDelayOut := vOut
