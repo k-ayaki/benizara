@@ -103,6 +103,9 @@
 	g_MojiTick := Object()
 	g_MojiUpTick := Object()
 	
+	g_sansTick := INFINITE
+	g_sans := "N"
+	
 	g_debugout := ""
 	
 	g_Pause := 0
@@ -116,7 +119,7 @@
 	g_LayoutFile := vLayoutFile
 	kup_save := Object()
 
-	g_SendTick := ""
+	g_SendTick := INFINITE
 	if(A_IsCompiled == 1)
 	{
 		Menu, Tray, NoStandard
@@ -239,12 +242,22 @@ keydownL:
 			g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick[0]
 			g_Interval["S12"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
 			if(g_Interval["S12"] < g_Interval["M" . g_metaKey]) {
-				Gosub, SendOnHoldMM
+				_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+				if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
+					Gosub, SendOnHoldM2
+					Gosub, SendOnHoldM
+				} else {
+					Gosub, SendOnHoldMM
+				}
 			} else {
 				Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
 			}
 		}
-
+		else if(g_KeyInPtn == "MMM")	; M1M2M3オン状態
+		{
+			Gosub, SendOnHoldMMM
+		}
+		
 		if(g_KeyInPtn == "") 		;S1)初期状態
 		{
 			g_OyaKeyOn[g_Oya] := kName
@@ -470,7 +483,7 @@ SubSend(vOut)
 	{
 		SetKeyDelay, -1
 		Send, %vOut%
-		RegLogs("       " . substr(g_KeyInPtn . "   ",1,3) . substr(g_trigger . "   ",1,3) . vOut)
+		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
 	}
 	return
 }
@@ -521,7 +534,7 @@ SendOnHoldMO:
 	g_KoyubiOnHold[0] := ""
 	g_MojiOnHold[0]   := ""
 	
-	g_SendTick := ""
+	g_SendTick := INFINITE
 	g_KeyInPtn := ""
 	g_OyaKeyOn[g_Oya] := ""
 	if(g_Continue == 0) {
@@ -585,7 +598,7 @@ SendOnHoldM:
 	g_KoyubiOnHold[0] := ""
 	g_MojiOnHold[0]   := ""
 	
-	g_SendTick := ""
+	g_SendTick := INFINITE
 	if(g_KeyInPtn = "MR")
 	{
 		g_keyInPtn := "R"
@@ -617,22 +630,53 @@ SendOnHoldMM:
 		return
 	}
 	_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-	SendOnHold(_mode, g_MojiOnHold[1] . g_MojiOnHold[0],g_ZeroDelay)	
-
+	if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
+		SendOnHold(_mode, g_MojiOnHold[1] . g_MojiOnHold[0], g_ZeroDelay)
+		g_RomajiOnHold[1] := ""
+		g_RomajiOnHold[0] := ""
+		g_OyaOnHold[1]    := ""
+		g_OyaOnHold[0]    := ""
+		g_KoyubiOnHold[1] := ""
+		g_KoyubiOnHold[0] := ""
+		
+		g_MojiOnHold[1]   := ""
+		g_MojiOnHold[0]   := ""
+	
+		g_SendTick := INFINITE
+		g_keyInPtn := ""
+	} else {
+		Gosub, SendOnHoldM2
+		Gosub, SendOnHoldM
+	}
+	return
+	
+;----------------------------------------------------------------------
+; 保留キーの出力：セットされた文字の出力
+;----------------------------------------------------------------------
+SendOnHoldMMM:
+	if(g_MojiOnHold[0] == "") 
+	{
+		return
+	}
+	_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+	SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1] . g_MojiOnHold[0], g_ZeroDelay)	
+	g_RomajiOnHold[2] := ""
 	g_RomajiOnHold[1] := ""
 	g_RomajiOnHold[0] := ""
+	g_OyaOnHold[2]    := ""
 	g_OyaOnHold[1]    := ""
 	g_OyaOnHold[0]    := ""
+	g_KoyubiOnHold[2] := ""
 	g_KoyubiOnHold[1] := ""
 	g_KoyubiOnHold[0] := ""
 	
+	g_MojiOnHold[2]   := ""
 	g_MojiOnHold[1]   := ""
 	g_MojiOnHold[0]   := ""
 
-	g_SendTick     := ""
+	g_SendTick := INFINITE
 	g_keyInPtn := ""
 	return
-
 ;----------------------------------------------------------------------
 ; 保留キーの出力：セットされた２文字前の出力
 ;----------------------------------------------------------------------
@@ -713,20 +757,20 @@ keydownM:
 	keyState[g_layoutPos] := Pf_Count()
 	g_MojiTick[1] := g_MojiTick[0]
 	g_MojiTick[0] := keyState[g_layoutPos]
-	
+	g_sansTick := INFINITE
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			SendAN("AN" . g_Koyubi, g_layoutPos)
+			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 
 			g_MojiOnHold[0]   := ""
 
 			g_RomajiOnHold[0] := ""
 			g_OyaOnHold[0]    := ""
 			g_KoyubiOnHold[0] := ""
-			g_SendTick := ""
+			g_SendTick := INFINTE
 			g_KeyInPtn := ""
 
 			g_prefixshift := ""
@@ -737,7 +781,7 @@ keydownM:
 		{
 			g_MojiOnHold[0]   := g_layoutPos
 			g_RomajiOnHold[0] := g_Romaji
-			g_KoyubiOnHold[0] := g_Koyubi
+			g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 			g_OyaOnHold[0]    := g_prefixshift
 			SendKey(g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0], g_MojiOnHold[0])
 			
@@ -748,7 +792,7 @@ keydownM:
 		g_MojiOnHold[0]   := g_layoutPos
 		g_RomajiOnHold[0] := g_Romaji
 		g_OyaOnHold[0]    := "N"
-		g_KoyubiOnHold[0] := g_Koyubi
+		g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 		SendKey(g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0], g_MojiOnHold[0])
 		critical,off
 		return
@@ -758,14 +802,14 @@ keydownM:
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			SendAN("AN" . g_Koyubi, g_layoutPos)
+			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 			
 			g_MojiOnHold[0]   := ""
 			
 			g_RomajiOnHold[0] := ""
 			g_OyaOnHold[0]    := ""
 			g_KoyubiOnHold[0] := ""
-			g_SendTick := ""
+			g_SendTick := INFINITE
 			g_KeyInPtn := ""
 
 			g_prefixshift := ""
@@ -775,7 +819,7 @@ keydownM:
 		g_MojiOnHold[0]   := g_layoutPos
 		g_RomajiOnHold[0] := g_Romaji
 		g_OyaOnHold[0]    := "N"
-		g_KoyubiOnHold[0] := g_Koyubi
+		g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 		SendKey(g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0], g_MojiOnHold[0])
 		critical,off
 		return
@@ -785,20 +829,24 @@ keydownM:
 	if(g_KeyInPtn = "M")	; S2)Mオン状態
 	{
 		g_Interval["S12"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
-		if(kdn[g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0] . g_layoutPos . g_MojiOnHold[0]] == "") {
+		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[0] . g_layoutPos]=="")) {
 			; 保留中の１文字を確定（出力）
 			Gosub, SendOnHoldM
 		}
 	}
 	else if(g_KeyInPtn == "MM") {
 		; M3 のキー入力
-		g_Interval["S23"] := g_Interval["S12"]
-		g_Interval["S12"] := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間　３キー判定
-		if(kdn[g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0] . g_MojiOnHold[0] . g_layoutPos] != "" && g_Interval["S12"] < g_Interval["S23"]) {
-			Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
-		} else {
-			; 保留中の同時打鍵を確定
-			Gosub, SendOnHoldMM		; ２文字を同時打鍵として出力して初期状態に
+		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+		if(ksc[_mode . g_layoutPos]<=2 || (ksc[_mode . g_layoutPos]==3 && kdn[_mode . g_MojiOnHold[0] . g_MojiOnHold[1] . g_layoutPos] == "")) {
+			g_Interval["S23"] := g_Interval["S12"]
+			g_Interval["S12"] := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間　３キー判定
+			if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="" || g_Interval["S12"] < g_Interval["S23"]) {
+				Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
+			} else {
+				; 保留中の同時打鍵を確定
+				Gosub, SendOnHoldMM		; ２文字を同時打鍵として出力して初期状態に
+			}
 		}
 	}
 	else if(g_KeyInPtn == "MMm") {
@@ -849,13 +897,13 @@ keydownM:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . g_Koyubi, g_layoutPos)
+		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		g_MojiOnHold[0]   := ""
 
 		g_RomajiOnHold[0] := ""
 		g_OyaOnHold[0]    := ""
 		g_KoyubiOnHold[0] := ""
-		g_SendTick := ""
+		g_SendTick := INFINITE
 		g_KeyInPtn := ""
 		critical,off
 		return
@@ -871,7 +919,7 @@ keydownM:
 
 			g_RomajiOnHold[0] := g_Romaji
 			g_OyaOnHold[0]    := g_Oya
-			g_KoyubiOnHold[0] := g_Koyubi
+			g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 			g_KeyInPtn := "M"
 			g_SendTick := g_MojiTick[0] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
 			if(CountObject(g_SimulMode)!=0) {
@@ -894,10 +942,33 @@ keydownM:
 			g_OyaOnHold[0] := g_Oya
 
 			g_KoyubiOnHold[1] := g_KoyubiOnHold[0]
-			g_KoyubiOnHold[0] := g_Koyubi
+			g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_MojiTick[0] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+		}
+		else if(g_KeyInPtn = "MM")	; MMオン状態
+		{
+			g_Interval["S12"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
+
+			g_MojiOnHold[2] := g_MojiOnHold[1]
+			g_MojiOnHold[1] := g_MojiOnHold[0]
+			g_MojiOnHold[0] := g_layoutPos
+
+			g_RomajiOnHold[2] := g_RomajiOnHold[1]
+			g_RomajiOnHold[1] := g_RomajiOnHold[0]
+			g_RomajiOnHold[0] := g_Romaji
+
+			g_OyaOnHold[2] := g_OyaOnHold[1]
+			g_OyaOnHold[1] := g_OyaOnHold[0]
+			g_OyaOnHold[0] := g_Oya
+
+			g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
+			g_KoyubiOnHold[1] := g_KoyubiOnHold[0]
+			g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
+			; 当該キーとその前を同時打鍵として保留
+			g_SendTick := g_MojiTick[0] + maximum(g_ThresholdSS,g_Threshold)
+			g_KeyInPtn := "MMM"
 		}
 	}
 	else
@@ -906,7 +977,7 @@ keydownM:
 		g_MojiOnHold[0]   := g_layoutPos
 		g_RomajiOnHold[0] := g_Romaji
 		g_OyaOnHold[0]    := g_Oya
-		g_KoyubiOnHold[0] := g_Koyubi
+		g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 
 		g_MojiCount[g_Oya] := g_MojiCount[g_Oya] + 1
 		
@@ -916,6 +987,19 @@ keydownM:
 	}
 	critical,off
 	return
+
+
+;----------------------------------------------------------------------
+; 小指シフトとSanSの論理和
+;----------------------------------------------------------------------
+KoyubiOrSans(_Koyubi, _sans)
+{
+	if(_Koyubi=="K" || _sans=="K") 
+	{
+		return "K"
+	}
+	return "N"
+}
 
 ;----------------------------------------------------------------------
 ; 元の109レイアウトで出力
@@ -992,6 +1076,33 @@ keydownX:
 	return
 
 ;----------------------------------------------------------------------
+; スペース＆シフトキー押下
+;----------------------------------------------------------------------
+keydownS:
+	Critical
+	GuiControl,2:,vkeyDN%g_layoutPos%,□
+	g_trigger := g_metaKey
+
+	RegLogs(kName . " down")
+	gosub,Polling
+	keyState[g_layoutPos] := Pf_Count()
+
+	g_ModifierTick := keyState[g_layoutPos]
+	Gosub,ModeInitialize
+	if(g_sans == "K") {
+		SubSend(MnDown(kName))
+	}
+	g_sans := "K"
+	g_sansTick := keyState[g_layoutPos] + g_MaxTimeout
+	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
+		g_prefixshift := ""
+	} else {
+		g_KeyInPtn := ""
+	}
+	critical,off
+	return
+
+;----------------------------------------------------------------------
 ; 月配列等のプレフィックスシフトキー押下
 ;----------------------------------------------------------------------
 keydown1:
@@ -1006,14 +1117,14 @@ keydown2:
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . g_Koyubi, g_layoutPos)
+		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		
 		g_MojiOnHold[0]   := ""
 
 		g_RomajiOnHold[0] := ""
 		g_OyaOnHold[0]    := ""
 		g_KoyubiOnHold[0] := ""
-		g_SendTick := ""
+		g_SendTick := INFINITE
 		g_KeyInPtn := ""
 
 		g_prefixshift := ""
@@ -1029,7 +1140,7 @@ keydown2:
 	g_MojiOnHold[0]   := g_layoutPos
 	g_RomajiOnHold[0] := g_Romaji
 	g_OyaOnHold[0]    := g_prefixshift
-	g_KoyubiOnHold[0] := g_Koyubi
+	g_KoyubiOnHold[0] := KoyubiOrSans(g_Koyubi,g_sans)
 
 	SendKey(g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0], g_MojiOnHold[0])
 
@@ -1051,7 +1162,7 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
 
 		; １文字通常出力の非制御コードならば先行出力
-		if(kst[_mode . _MojiOnHold] == "S" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+		if(kst[_mode . _MojiOnHold] == "M" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
 			vOut                  := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
 			_kLabel := kLabel[_mode . _MojiOnHold]
@@ -1092,7 +1203,7 @@ nextDakuten(_mode,_MojiOnHold)
 	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
 
 	_nextKey := ""
-	if(g_LastKey["状態"]=="S") {
+	if(g_LastKey["状態"]=="M") {
 		if(kLabel[_mode . _MojiOnHold]=="゛" || kLabel[_mode . _MojiOnHold]=="濁") {
 			_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
 		} else
@@ -1133,7 +1244,7 @@ keyupM:
 	; 親指シフトの動作
 	if(g_KeyInPtn = "M")	; Mオン状態
 	{
-		if(g_layoutPos = g_MojiOnHold[0]) {	; 保留キーがアップされた
+		if(g_layoutPos == g_MojiOnHold[0]) {	; 保留キーがアップされた
 			g_Interval["S1_1"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
 			Gosub, SendOnHoldM
 		}
@@ -1158,7 +1269,7 @@ keyupM:
 		} else
 		if(g_layoutPos == g_MojiOnHold[0]) {
 			g_Interval["S2_2"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
-			Gosub, SendOnHoldMM	; 同時打鍵して確定
+			Gosub, SendOnHoldMM
 		}
 	}
 	else if(g_KeyInPtn == "MMm")
@@ -1166,7 +1277,17 @@ keyupM:
 		g_Interval["S_1_2"] := g_MojiUpTick[0] - g_MojiUpTick[1]	; 前回の文字キーオフからの期間
 		vOverlap := floor((100*g_Interval["S2_1"])/(g_Interval["S2_1"]+g_Interval["S_1_2"]))	; 重なり厚み計算
 		; 同時打鍵を確定
-		Gosub, SendOnHoldMM
+		if(g_OverlapSS <= vOverlap) {
+			Gosub, SendOnHoldMM
+		} else {
+			Gosub, SendOnHoldM2
+			Gosub, SendOnHoldM
+		}
+	}
+	else if(g_KeyInPtn == "MMM")
+	{
+		; 同時打鍵を確定
+		Gosub, SendOnHoldMMM
 	}
 	else if(g_KeyInPtn="MR")	; M-Oオン状態
 	{
@@ -1242,6 +1363,27 @@ keyupX:
 	return
 
 ;----------------------------------------------------------------------
+; スペース＆シフトキー（押下終了）
+;----------------------------------------------------------------------
+keyupS:
+	Critical
+	GuiControl,2:,vkeyDN%g_layoutPos%,　
+	g_trigger := g_metaKeyUp[g_metaKey]
+
+	RegLogs(kName . " up")
+	gosub,Polling
+	keyState[g_layoutPos] := 0
+	g_MojiUpTick[0] := Pf_Count()	;A_TickCount
+	if(g_sansTick != INFINITE) {
+		SubSend(MnDown(kName))
+	}
+	g_sans := "N"
+	vOut := MnUp(kName)
+	SubSend(vOut)
+	critical,off
+	return
+
+;----------------------------------------------------------------------
 ; 月配列等のプレフィックスシフトキー押下終了
 ;----------------------------------------------------------------------
 keyup1:
@@ -1305,7 +1447,8 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_LastKey["status"] . ":" . g_LastKey["snapshot"]
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":"
+		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		
 		g_S12Interval := g_Interval["S12"]
@@ -1341,12 +1484,22 @@ Polling:
 			}
 			else if g_KeyInPtn in MM
 			{
-				Gosub, SendOnHoldMM
+				_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+				if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
+					Gosub, SendOnHoldM2
+					Gosub, SendOnHoldM
+				} else {
+					Gosub, SendOnHoldMM
+				}
 			}
 			else if g_KeyInPtn in MMm
 			{
 				Gosub, SendOnHoldM2
 				Gosub, SendOnHoldM
+			}
+			else if g_KeyInPtn in MMM
+			{
+				Gosub, SendOnHoldMMM
 			}
 			else if g_KeyInPtn in L,R	; Oオン状態
 			{
@@ -1377,6 +1530,11 @@ Polling:
 				}
 				Gosub, SendOnHoldM		; 保留文字キーの単独打鍵
 			}
+		}
+		if(_TickCount > g_sansTick) 	; タイムアウト
+		{
+			SubSend(MnDown(kName))
+			g_sansTick := INFINITE
 		}
 	}
 	return
@@ -1439,12 +1597,22 @@ ModeInitialize:
 	}
 	else if(g_KeyInPtn == "MM")
 	{
-		Gosub, SendOnHoldMM
+		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+		if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
+			Gosub, SendOnHoldM2
+			Gosub, SendOnHoldM
+		} else {
+			Gosub, SendOnHoldMM
+		}
 	}
 	else if(g_KeyInPtn == "MMm")
 	{
 		Gosub, SendOnHoldM2
 		Gosub, SendOnHoldM
+	}
+	else if(g_KeyInPtn == "MMM")
+	{
+		Gosub, SendOnHoldMMM
 	}
 	else if(g_KeyInPtn="L" || g_KeyInPtn="R")
 	{
@@ -1911,7 +2079,7 @@ gSC079:				; 変換キー（右）
 gLCTRL:
 gRCTRL:
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
+	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keydown%g_metaKey%
 
@@ -1977,7 +2145,7 @@ gSC039up:
 gSC07Bup:
 gSC079up:
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
+	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	goto, keyup%g_metaKey%
 
