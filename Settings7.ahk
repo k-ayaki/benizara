@@ -161,10 +161,10 @@ _Settings:
 		while enum[k,v]
 		{
 			if(substr(v,1,1) == g_Romaji) {
-				if(substr(v,4,3) == g_CurrSimulMode) {
-					_ddlist := _ddlist . substr(v,4,3) . "||"
+				if(v == g_CurrSimulMode) {
+					_ddlist := _ddlist . v . "||"
 				} else {
-					_ddlist := _ddlist . substr(v,4,3) . "|"
+					_ddlist := _ddlist . v . "|"
 				}
 			}
 		}
@@ -417,7 +417,7 @@ DrawKeyUsage:
 	if(g_CurrSimulMode == "…" || g_Romaji == "A") {
 		_ch := "小指"
 	} else {
-		_ch := g_CurrSimulMode
+		_ch := "同打"
 	}
 	Gui, Add, Text,vvkeyRKA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 24
@@ -560,10 +560,10 @@ RefreshSimulKeyMenu:
 	while enum[k,v]
 	{
 		if(substr(v,1,1) == g_Romaji) {
-			if(substr(v,4,3) == g_CurrSimulMode) {
-				_ddlist := _ddlist . substr(v,4,3) . "||"
+			if(v == g_CurrSimulMode) {
+				_ddlist := _ddlist . v . "||"
 			} else {
-				_ddlist := _ddlist . substr(v,4,3) . "|"
+				_ddlist := _ddlist . v . "|"
 			}
 		}
 	}
@@ -661,10 +661,10 @@ G2RefreshLayout:
 			_ch := kLabel[g_Romaji . "NK" . element]
 			GuiControl,,vkeyRK%element%,%_ch%
 		} else {
-			_st := kst[g_Romaji . "NN" . g_CurrSimulMode . element]
+			_st := kst[g_CurrSimulMode . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%
-			_ch := kLabel[g_Romaji . "NN" . g_CurrSimulMode . element]
+			_ch := kLabel[g_CurrSimulMode . element]
 			GuiControl,,vkeyRK%element%,%_ch%
 		}
 
