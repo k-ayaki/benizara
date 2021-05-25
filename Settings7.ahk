@@ -725,13 +725,13 @@ SetFontColor:
 ;-----------------------------------------------------------------------
 ReadKeyboardState:
 	Critical
-	VarSetCapacity(stKtbl, cbSize:=512, 0)
-	NumPut(cbSize, stKtbl,  0, "UChar")   ;	
-	stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
-	if(stCurr==0) 
-	{
-		return
-	}
+	;VarSetCapacity(stKtbl, cbSize:=512, 0)
+	;NumPut(cbSize, stKtbl,  0, "UChar")   ;	
+	;stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
+	;if(stCurr==0) 
+	;{
+	;	return
+	;}
 	loop, 14
 	{
 		_layoutPos := "E" . _rowhash[A_Index]
@@ -766,15 +766,14 @@ ReadKeyboardState:
 	return
 
 SetKeyGui2:
+	_keyState := DllCall("GetAsyncKeyState", "UInt", _vkey)
 	GuiControlGet,_val,,vkeyDN%_layoutPos%
-	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)!= 0
-	&&   _val != "□")
+	if( _keyState!= 0 && _val != "□")
 	{
 		GuiControl,2:,vkeyDN%_layoutPos%,□
 	}
 	else
-	if( (NumGet(stKtbl,_vkey,"UChar") & 0x80)== 0
-	&&  _val != "　")
+	if( _keyState == 0	&&  _val != "　")
 	{
 		GuiControl,2:,vkeyDN%_layoutPos%,　
 	}

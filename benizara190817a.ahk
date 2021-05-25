@@ -659,23 +659,44 @@ SendOnHoldMMM:
 		return
 	}
 	_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-	SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1] . g_MojiOnHold[0], g_ZeroDelay)	
-	g_RomajiOnHold[2] := ""
-	g_RomajiOnHold[1] := ""
-	g_RomajiOnHold[0] := ""
-	g_OyaOnHold[2]    := ""
-	g_OyaOnHold[1]    := ""
-	g_OyaOnHold[0]    := ""
-	g_KoyubiOnHold[2] := ""
-	g_KoyubiOnHold[1] := ""
-	g_KoyubiOnHold[0] := ""
+	if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
+		SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1] . g_MojiOnHold[0], g_ZeroDelay)	
+		g_RomajiOnHold[2] := ""
+		g_RomajiOnHold[1] := ""
+		g_RomajiOnHold[0] := ""
+		g_OyaOnHold[2]    := ""
+		g_OyaOnHold[1]    := ""
+		g_OyaOnHold[0]    := ""
+		g_KoyubiOnHold[2] := ""
+		g_KoyubiOnHold[1] := ""
+		g_KoyubiOnHold[0] := ""
+		
+		g_MojiOnHold[2]   := ""
+		g_MojiOnHold[1]   := ""
+		g_MojiOnHold[0]   := ""
 	
-	g_MojiOnHold[2]   := ""
-	g_MojiOnHold[1]   := ""
-	g_MojiOnHold[0]   := ""
-
-	g_SendTick := INFINITE
-	g_keyInPtn := ""
+		g_SendTick := INFINITE
+		g_keyInPtn := ""
+	} else if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
+		SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
+		g_RomajiOnHold[2] := ""
+		g_RomajiOnHold[1] := ""
+		g_OyaOnHold[2]    := ""
+		g_OyaOnHold[1]    := ""
+		g_KoyubiOnHold[2] := ""
+		g_KoyubiOnHold[1] := ""
+		
+		g_MojiOnHold[2]   := ""
+		g_MojiOnHold[1]   := ""
+		Gosub,SendOnHoldM
+	} else {
+		SendOnHold(_mode, g_MojiOnHold[2], g_ZeroDelay)
+		g_RomajiOnHold[2] := ""
+		g_OyaOnHold[2]    := ""
+		g_KoyubiOnHold[2] := ""
+		g_MojiOnHold[2]   := ""
+		Gosub,SendOnHoldMM
+	}
 	return
 ;----------------------------------------------------------------------
 ; 保留キーの出力：セットされた２文字前の出力
@@ -828,7 +849,7 @@ keydownM:
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
 	if(g_KeyInPtn = "M")	; S2)Mオン状態
 	{
-		g_Interval["S12"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
+		g_Interval["S12"] := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
 		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
 		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[0] . g_layoutPos]=="")) {
 			; 保留中の１文字を確定（出力）
@@ -851,8 +872,13 @@ keydownM:
 	}
 	else if(g_KeyInPtn == "MMm") {
 		g_Interval["S_13"] := g_MojiTick[0] - g_MojiUpTick[0]	; 前回の文字キーオフからの期間
-		; 同時打鍵を確定
-		Gosub, SendOnHoldMM		;２文字を同時打鍵として出力して初期状態に
+		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+		if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
+			; 同時打鍵を確定
+			Gosub, SendOnHoldMM		;２文字を同時打鍵として出力して初期状態に
+		} else {
+			Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
+		}
 	}
 	else if(g_KeyInPtn="MR")	; S4)M-Oオン状態
 	{
@@ -1447,7 +1473,8 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":"
+		g_debugout2 := DllCall("GetAsyncKeyState", "UInt", 0x31)
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":" . g_debugout2
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		
@@ -1543,7 +1570,7 @@ ScanModifier:
 	if(g_hookShift == "off") {
 		stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
 		stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
-		if((stLShift & 0x80)!=0 || (stRShift & 0x80)!=0)
+		if(stLShift!=0 || stRShift!=0)
 		{
 			g_Koyubi := "K"
 		} else {
@@ -1636,12 +1663,13 @@ ModeInitialize:
 ;	仮想キーの状態取得とログ
 ;-----------------------------------------------------------------------
 GetKeyStateWithLog(stLast, vkey0, kName) {
-	stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
-	if(stCurr = 128 && stLast = 0)	; keydown
+	;stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
+	stCurr := DllCall("GetAsyncKeyState", "UInt", vkey0)
+	if(stCurr !=0 && stLast = 0)	; keydown
 	{
 		RegLogs(kName . " down")
 	}
-	else if(stCurr = 0 && stLast = 128)	; keyup
+	else if(stCurr = 0 && stLast !=0)	; keyup
 	{
 		RegLogs(kName . " up")
 	}
@@ -1652,13 +1680,14 @@ GetKeyStateWithLog(stLast, vkey0, kName) {
 ;-----------------------------------------------------------------------
 GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
 	kDown := 0
-	stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
-	if(stCurr = 128 && stLast = 0)	; keydown
+	;stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
+	stCurr := DllCall("GetAsyncKeyState", "UInt", vkey0)
+	if(stCurr != 0 && stLast == 0)	; keydown
 	{
 		kDown := 1
 		RegLogs(kName . " down")
 	}
-	else if(stCurr = 0 && stLast = 128)	; keyup
+	else if(stCurr == 0 && stLast != 0)	; keyup
 	{
 		RegLogs(kName . " up")
 	}
