@@ -1295,7 +1295,13 @@ keyupM:
 		} else
 		if(g_layoutPos == g_MojiOnHold[0]) {
 			g_Interval["S2_2"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
-			Gosub, SendOnHoldMM
+
+			_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
+			if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
+				Gosub, SendOnHoldMM
+			} else {
+				Gosub, SendOnHoldM2
+			}
 		}
 	}
 	else if(g_KeyInPtn == "MMm")
