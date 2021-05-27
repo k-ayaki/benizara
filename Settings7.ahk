@@ -1046,7 +1046,6 @@ gButtonOk:
 ;-----------------------------------------------------------------------
 gButtonCancel:
 GuiClose:
-	Gosub, Init
 	SetTimer,G2PollingLayout,off
 	Gui,Destroy
 	return

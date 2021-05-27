@@ -4,12 +4,6 @@
 ;	ver.0.1.4.6 .... 2021/5/2
 ;-----------------------------------------------------------------------
 ReadLayout:
-	kst := Object()	; キーの状態
-	ksc := Object()	; 最大同時打鍵個数
-	kup := Object()	; keyup したときの Send形式
-	kdn := Object()	; keydown したときの Send形式
-	mup := Object()	; キーボードそのものを keyup したときの Send形式
-	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
 	_colhash := Object()
 	_colhash[1] := "E"
@@ -48,29 +42,7 @@ ReadLayout:
 	layoutAry := layoutAry . ",C01,C02,C03,C04,C05,C06,C07,C08,C09,C10,C11,C12"
 	layoutAry := layoutAry . ",B01,B02,B03,B04,B05,B06,B07,B08,B09,B10,B11"
 	layoutArys := StrSplit(layoutAry,",")
-	roma3hash := MakeRoma3Hash()
-	layout2Hash := MakeLayout2Hash()
-	z2hHash := MakeZ2hHash()
-	vkeyHash := MakeVkeyHash()
-	layoutPosHash := MakeLayoutPosHash()
-	fkeyPosHash := MakefkeyPosHash()
-	fkeyCodeHash := MakefkeyCodeHash()
-	CodeNameHash := MakeCodeNameHash()
-	kanaHash := MakeKanaHash()
-	GuiLayoutHash := MakeGuiLayoutHash()
-	code2Pos := MakeCode2Pos()
-	name2vkey := MakeName2vkeyHash()
-	ScanCodeHash := MakeScanCodeHash()
-	Chr2vkeyHash := MakeChr2vkeyHash()
-	ctrlKeyHash := MakeCtrlKeyHash()
 	
-	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
-	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
-	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
-	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
-	
-	g_Oya2Layout := Object()
-
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
 	if(vLayoutFile = "")
@@ -92,6 +64,36 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
+	kst := Object()	; キーの状態
+	ksc := Object()	; 最大同時打鍵個数
+	kup := Object()	; keyup したときの Send形式
+	kdn := Object()	; keydown したときの Send形式
+	mup := Object()	; キーボードそのものを keyup したときの Send形式
+	mdn := Object()	; キーボードそのものを keydown したときの Send形式
+
+	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
+	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
+	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
+	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
+	
+	g_Oya2Layout := Object()
+
+	roma3hash := MakeRoma3Hash()
+	layout2Hash := MakeLayout2Hash()
+	z2hHash := MakeZ2hHash()
+	vkeyHash := MakeVkeyHash()
+	layoutPosHash := MakeLayoutPosHash()
+	fkeyPosHash := MakefkeyPosHash()
+	fkeyCodeHash := MakefkeyCodeHash()
+	CodeNameHash := MakeCodeNameHash()
+	kanaHash := MakeKanaHash()
+	GuiLayoutHash := MakeGuiLayoutHash()
+	code2Pos := MakeCode2Pos()
+	name2vkey := MakeName2vkeyHash()
+	ScanCodeHash := MakeScanCodeHash()
+	Chr2vkeyHash := MakeChr2vkeyHash()
+	ctrlKeyHash := MakeCtrlKeyHash()
+
 	keyAttribute3 := MakeKeyAttribute3Hash()
 	keyState := MakeKeyState()
 	keyNameHash := MakeKeyNameHash()

@@ -242,13 +242,7 @@ keydownL:
 			g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_MojiTick[0]
 			g_Interval["S12"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
 			if(g_Interval["S12"] < g_Interval["M" . g_metaKey]) {
-				_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-				if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
-					Gosub, SendOnHoldM2
-					Gosub, SendOnHoldM
-				} else {
-					Gosub, SendOnHoldMM
-				}
+				Gosub, SendOnHoldMM
 			} else {
 				Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
 			}
@@ -646,7 +640,7 @@ SendOnHoldMM:
 		g_keyInPtn := ""
 	} else {
 		Gosub, SendOnHoldM2
-		Gosub, SendOnHoldM
+		;Gosub, SendOnHoldM
 	}
 	return
 	
@@ -696,6 +690,7 @@ SendOnHoldMMM:
 		g_KoyubiOnHold[2] := ""
 		g_MojiOnHold[2]   := ""
 		Gosub,SendOnHoldMM
+		Gosub,SendOnHoldM
 	}
 	return
 ;----------------------------------------------------------------------
@@ -872,13 +867,8 @@ keydownM:
 	}
 	else if(g_KeyInPtn == "MMm") {
 		g_Interval["S_13"] := g_MojiTick[0] - g_MojiUpTick[0]	; 前回の文字キーオフからの期間
-		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-		if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
-			; 同時打鍵を確定
-			Gosub, SendOnHoldMM		;２文字を同時打鍵として出力して初期状態に
-		} else {
-			Gosub, SendOnHoldM2		; 保留した２文字前だけを打鍵してMオン状態に遷移
-		}
+		; 同時打鍵を確定
+		Gosub, SendOnHoldMM		;２文字を同時打鍵として出力して初期状態に
 	}
 	else if(g_KeyInPtn="MR")	; S4)M-Oオン状態
 	{
@@ -1295,13 +1285,7 @@ keyupM:
 		} else
 		if(g_layoutPos == g_MojiOnHold[0]) {
 			g_Interval["S2_2"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
-
-			_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-			if(kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]] != "") {
-				Gosub, SendOnHoldMM
-			} else {
-				Gosub, SendOnHoldM2
-			}
+			Gosub, SendOnHoldMM
 		}
 	}
 	else if(g_KeyInPtn == "MMm")
@@ -1517,13 +1501,8 @@ Polling:
 			}
 			else if g_KeyInPtn in MM
 			{
-				_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-				if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
-					Gosub, SendOnHoldM2
-					Gosub, SendOnHoldM
-				} else {
-					Gosub, SendOnHoldMM
-				}
+				Gosub, SendOnHoldMM
+				Gosub, SendOnHoldM
 			}
 			else if g_KeyInPtn in MMm
 			{
@@ -1603,7 +1582,7 @@ ScanModifier:
 	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
 	g_Modifier := g_Modifier | stRWin
 	g_Modifier := g_Modifier >> 1			; 0x40
-	stAppsKey  := GetKeyStateWithLog(stApp,93,"AppsKey")
+	stAppsKey  := GetKeyStateWithLog(stAppsKey,93,"AppsKey")
 	g_Modifier := g_Modifier | stAppsKey	; 0x80
 	
 	stPause := GetKeyStateWithLog3(stPause,0x13,"Pause", _kDown)
@@ -1630,13 +1609,8 @@ ModeInitialize:
 	}
 	else if(g_KeyInPtn == "MM")
 	{
-		_mode := g_RomajiOnHold[0] . g_OyaOnHold[0] . g_KoyubiOnHold[0]
-		if(ksc[_mode . g_MojiOnHold[0]]<=1 || (ksc[_mode . g_MojiOnHold[0]]<=2 && kdn[_mode . g_MojiOnHold[1] . g_MojiOnHold[0]]=="")) {
-			Gosub, SendOnHoldM2
-			Gosub, SendOnHoldM
-		} else {
-			Gosub, SendOnHoldMM
-		}
+		Gosub, SendOnHoldMM
+		Gosub, SendOnHoldM
 	}
 	else if(g_KeyInPtn == "MMm")
 	{
