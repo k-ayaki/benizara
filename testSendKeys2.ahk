@@ -12,19 +12,19 @@
 	Return
 
 *SC002::
-	send, {blind}{vkC0 down}
+	send,{blind}^{c down}
 	Return
 	
 *SC002 up::
-	send, {blind}{vkC0 up}
+	;send, {blind}{vkC0 up}
 	Return
 
 *SC003::
-	send, {capslock}{blind}{a down}{capslock}
+	send, +{Right down}
 	Return
 	
 *SC003 up::
-	send, {blind}{a up}
+	send, {Right up}
 	Return
 
 3::

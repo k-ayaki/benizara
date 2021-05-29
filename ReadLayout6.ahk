@@ -93,6 +93,7 @@ InitLayout2:
 	ScanCodeHash := MakeScanCodeHash()
 	Chr2vkeyHash := MakeChr2vkeyHash()
 	ctrlKeyHash := MakeCtrlKeyHash()
+	modifierHash := MakeModifierHash()
 
 	keyAttribute3 := MakeKeyAttribute3Hash()
 	keyState := MakeKeyState()
@@ -812,20 +813,14 @@ SetKeyTable:
 			kup[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
 			continue
 		}
-		if(substr(org[A_Index],1,1)=="S") {
-			kst[_mode . _lpos2] := "S"
-			_aStr0 := substr(org[A_Index],2)
-		} else {
-			_aStr0 := org[A_Index]
-			kst[_mode . _lpos2] := "M"
-		}
+		_aStr0 := org[A_Index]
+		kst[_mode . _lpos2] := "M"
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(_aStr0)
 		; 送信形式に変換
 		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
-			_down := SetModifier(substr(org[A_Index],1,1),_down)
 			if(SubStr(_mode,1,1)=="R")
 			{
 				kLabel[_mode . _lpos2] := Romaji2Kana(_aStr0)
@@ -931,23 +926,15 @@ SetSimulKeyTable:
 			continue
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		if(substr(org[A_Index],1,1)=="S") {
-			kst[_mode . _simulMode . _lpos[0]] := "S"
-			kst[_mode . _lpos[1] . _lpos[0]] := "S"
-			kst[_mode . _lpos[0] . _lpos[1]] := "S"
-			_aStr0 := substr(org[A_Index],2)
-		} else {
-			_aStr0 := org[A_Index]
-			kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
-			kst[_mode . _lpos[1] . _lpos[0]] := "M"
-			kst[_mode . _lpos[0] . _lpos[1]] := "M"
-		}
+		_aStr0 := org[A_Index]
+		kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
+		kst[_mode . _lpos[1] . _lpos[0]] := "M"
+		kst[_mode . _lpos[0] . _lpos[1]] := "M"
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(_aStr0)
 		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
-			_down := SetModifier(substr(org[A_Index],1,1),_down)
 			kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
 			
 			kLabel[_mode . _lpos[1] . _lpos[0]] := Romaji2Kana(_aStr0)
@@ -1061,31 +1048,19 @@ SetSimulKeyTable3:
 			continue
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		if(substr(org[A_Index],1,1)=="S") {
-			kst[_mode . _simulMode . _lpos[0]] := "S"
-			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "S"
-			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "S"
-			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "S"
-			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "S"
-			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "S"
-			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "S"
-			_aStr0 := substr(org[A_Index],2)
-		} else {
-			_aStr0 := org[A_Index]
-			kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
-			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "M"
-			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "M"
-			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "M"
-			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "M"
-			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "M"
-			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "M"
-		}
+		_aStr0 := org[A_Index]
+		kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
+		kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "M"
+		kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "M"
+		kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "M"
+		kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "M"
+		kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "M"
+		kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "M"
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(_aStr0)
 		GenSendStr3(_aStr, _down, _up)
 		if( _down <> "")
 		{
-			_down := SetModifier(substr(org[A_Index],1,1),_down)
 			kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
 
 			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := Romaji2Kana(_aStr0)
@@ -1130,25 +1105,6 @@ SetSimulKeyTable3:
 	}
 	return
 
-;----------------------------------------------------------------------
-;	モディファイア
-;----------------------------------------------------------------------
-SetModifier(_modifier,_down)
-{
-	if(_modifier=="S") {
-		_down := "{Shift down}" . _down . "{Shift up}"
-	}
-	else if(_modifier=="C") {
-		_down := "{Ctrl down}" . _down . "{Ctrl up}"
-	}
-	else if(_modifier=="A") {
-		_down := "{Alt down}" . _down . "{Ctrl up}"
-	}
-	else if(_modifier=="W") {
-		_down := "{LWin down}" . _down . "{LWin up}"
-	}
-	return _down
-}
 
 ;----------------------------------------------------------------------
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
@@ -1304,7 +1260,7 @@ Romaji2Kana(aStr)
 ;----------------------------------------------------------------------
 GenSendStr3(aStr,BYREF _dn,BYREF _up)
 {
-	global z2hHash, Chr2vkeyHash
+	global z2hHash, Chr2vkeyHash, modifierHash
 	_len := strlen(aStr)	; 全角
 	if(_len = 0)
 	{
@@ -1315,18 +1271,25 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up)
 	_up := ""
 	loop,Parse, aStr
 	{
-		;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
-		;if(_c2 == "") {
-			_c2 := z2hHash[A_LoopField]
-		;}
-		if(_c2 != "")
-		{
-			if(A_Index = _len)
+		_c2 := modifierHash[A_LoopField]
+		if(_c2 != "") {
+			if(A_Index != _len) {
+				_dn := _dn .  _c2
+			}
+		} else {
+			;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
+			;if(_c2 == "") {
+				_c2 := z2hHash[A_LoopField]
+			;}
+			if(_c2 != "")
 			{
-				_dn := _dn .  "{" . _c2 . " Down}"
-				_up := "{Blind}{" . _c2 . " up}"
-			} else {
-				_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
+				if(A_Index = _len)
+				{
+					_dn := _dn .  "{" . _c2 . " Down}"
+					_up := "{Blind}{" . _c2 . " up}"
+				} else {
+					_dn := _dn .  "{" . _c2 . " Down}{" . _c2 . " up}"
+				}
 			}
 		}
 	}
@@ -3153,5 +3116,21 @@ MakeCtrlKeyHash() {
 	hash["前"] := "PgUp"
 	hash["次"] := "PgDn"
 	hash["表"] := "tab"
+	return hash
+}
+
+;----------------------------------------------------------------------
+;	修飾キー
+;----------------------------------------------------------------------
+MakeModifierHash() {
+	hash := Object()
+	hash["c"] := "^"	;Ctrl
+	hash["C"] := "^"	;Ctrl
+	hash["a"] := "!"	;Alt
+	hash["A"] := "!"	;Alt
+	hash["s"] := "+"	;Shift
+	hash["S"] := "+"	;Shift
+	hash["w"] := "#"	;Win
+	hash["W"] := "#"	;Win
 	return hash
 }
