@@ -12,11 +12,10 @@
 	Return
 
 *SC002::
-	send,{blind}^{c down}
+	send,{b down}{b up}{y down}{y up}{o down}{o up}
 	Return
 	
 *SC002 up::
-	;send, {blind}{vkC0 up}
 	Return
 
 *SC003::

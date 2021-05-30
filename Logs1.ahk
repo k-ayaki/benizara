@@ -23,7 +23,7 @@ Logs:
 	loop, 64
 	{
 		_yaxis := A_Index*10 + 10
-		_disp := "_                                                               "
+		_disp := "_                                                               _                                                               "
 		Gui, Add, Text,vdisp%A_Index% X30 Y%_yaxis%, %_disp%
 	}
 	SetTimer,LogRedraw,100
@@ -34,7 +34,7 @@ LogRedraw:
 	loop, 64
 	{
 		_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
-		_disp := aLog%_idx% . "                                                                "
+		_disp := aLog%_idx% . "                                                                _                                                               "
 		GuiControl,3:,disp%A_Index%, %_disp%
 	}
 	return

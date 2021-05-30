@@ -1,0 +1,84 @@
+ver.0.1.4.7
+
+オーバラップ文字親指=50
+オーバラップ親指文字=42
+オーバラップ文字同時=35
+親指シフト同時打鍵間隔=200
+文字同時打鍵間隔=203
+連続モード=1
+零遅延モード=1
+親指キー単独打鍵=無効
+親指キーリピート=1
+TIME   INPUT  MD TG SEND
+     1        MMm m   {g Down}{g up}{i Down}
+     0            m   {Blind}{i up}
+   314 j down
+    99 w down
+    87 w up
+   117        MMm TO  {a Down}
+     2        M   TO  {k Down}{k up}{i Down}
+   761 w down
+     2        M   M   {k Down}{k up}{i Down}
+     1        M   M   {Blind}{BS down}{Blind}{BS up}
+     1        M   M   {g Down}{g up}{i Down}
+   114 w up
+     0            m   {Blind}{i up}
+   499 w down
+     2        M   M   {k Down}{k up}{i Down}
+     1        M   M   {Blind}{BS down}{Blind}{BS up}
+     0        M   M   {g Down}{g up}{i Down}
+    92 w up
+     0            m   {Blind}{i up}
+   505 w down
+     2        M   M   {k Down}{k up}{i Down}
+     0        M   M   {Blind}{BS down}{Blind}{BS up}
+     1        M   M   {g Down}{g up}{i Down}
+    97 w up
+     1            m   {Blind}{i up}
+   566 j up
+     0            m   {Blind}{a up}
+   867 j down
+    51 w down
+    99 w up
+   135        MMm TO  {a Down}
+     2        M   TO  {k Down}{k up}{i Down}
+   147 j up
+     0            m   {Blind}{a up}
+   415 j down
+    51 w down
+   133 w up
+     0        MMm m   {Blind}{i up}
+   219        MMm TO  {a Down}
+     2        M   TO  {k Down}{k up}{i Down}
+   499 j up
+     0            m   {Blind}{a up}
+  1065 Enter down
+     1            X   {Blind}{Enter down}
+   102 Enter up
+     0            x   {Blind}{Enter up}
+   320 Enter down
+     0            X   {Blind}{Enter down}
+   136 Enter up
+     0            x   {Blind}{Enter up}
+
+あ
+   896 j down
+   
+き
+    56 w down
+   137 w up
+     0        MMm m   {Blind}{i up}
+
+   205        MMm TO  {a Down}
+     1        M   TO  {k Down}{k up}{i Down}
+あき
+  1033 w down
+     3        M   M   {k Down}{k up}{i Down}
+き
+     0        M   M   {Blind}{BS down}{Blind}{BS up}
+     1        M   M   {g Down}{g up}{i Down}
+ぎ
+   159 w up
+     1            m   {Blind}{i up}
+   699 j up
+     1            m   {Blind}{a up}

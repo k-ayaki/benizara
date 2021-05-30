@@ -88,7 +88,8 @@ InitLayout2:
 	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
-	code2Pos := MakeCode2Pos()
+	code2SimulPos := MakeCode2SimulPos()
+	code2ContPos := MakeCode2ContPos()
 	name2vkey := MakeName2vkeyHash()
 	ScanCodeHash := MakeScanCodeHash()
 	Chr2vkeyHash := MakeChr2vkeyHash()
@@ -267,7 +268,8 @@ ReadLayoutFile:
 			if(SubStr(_line2,1,1)=="[" && SubStr(_line2,StrLen(_line2),1)=="]") {
 				_Section := _line2
 			}
-			if(SubStr(_line2,1,1)=="<" && SubStr(_line2,StrLen(_line2),1)==">") {
+			if((SubStr(_line2,1,1)=="<" || SubStr(_line2,1,1)=="{")
+			&& (SubStr(_line2,StrLen(_line2),1)==">" || SubStr(_line2,StrLen(_line2),1)=="}")) {
 				_Section := _line2
 			}
 			if(layout2Hash[_line2] != "") {
@@ -303,8 +305,8 @@ ReadLayoutFile:
 					_mline += 1
 				}
 				if(ParseSimulPos(_line2) != "") {
-					;_lpos := code2Pos[_line2]
-					_spos := ParseSimulPos(_line2)
+					_spos := ParseSimulPos(_line2)		; 同時打鍵パターンがあるか
+					_cpos := ParseContPos(_line2)	; 連続打鍵パターンがあるか
 					_simulMode := _line2
 					if(_spos != "")
 					{
@@ -389,18 +391,36 @@ ReadLayoutFile:
 ;----------------------------------------------------------------------
 ParseSimulPos(_line)
 {
-	global code2Pos
+	global code2SimulPos
 
 	_spos := ""
 	if(strlen(_line) >= 3)
 	{
-		_spos := code2Pos[substr(_line,1,3)]
+		_spos := code2SimulPos[substr(_line,1,3)]
 	}
 	if(strlen(_line) >= 6)
 	{
-		_spos := _spos . code2Pos[substr(_line,4,3)]
+		_spos := _spos . code2SimulPos[substr(_line,4,3)]
 	}
 	return _spos
+}
+;----------------------------------------------------------------------
+;	文字同時打鍵の指定を解釈
+;----------------------------------------------------------------------
+ParseContPos(_line)
+{
+	global code2ContPos
+
+	_cpos := ""
+	if(strlen(_line) >= 3)
+	{
+		_cpos := code2ContPos[substr(_line,1,3)]
+	}
+	if(strlen(_line) >= 6)
+	{
+		_cpos := _cpos . code2ContPos[substr(_line,4,3)]
+	}
+	return _cpos
 }
 ;----------------------------------------------------------------------
 ;	各モードのレイアウトを処理
@@ -522,6 +542,14 @@ Mode3Key:
 	if(CountObject(org) == 13) {
 		org[14] := "後"
 	}
+	if(_cpos != _spos) {
+		_lpos2 := substr(_spos,1,3)
+		kst[_mode . _lpos2] := kst[_mode . _lpos2] . "S"		;零遅延モード禁止 
+		if(strlen(_spos)>=6) {
+			_lpos2 := substr(_spos,4,3)
+			kst[_mode . _lpos2] := kst[_mode . _lpos2] . "S"	;零遅延モード禁止
+		}
+	}
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -529,6 +557,16 @@ Mode3Key:
 		Gosub, SetSimulKeyTable3
 	} else {
 		Gosub, SetSimulKeyTable
+	}
+	if(_cpos != _spos) {
+		_lpos := Object()
+		_lpos[1] := substr(_cpos,1,3)
+		if(strlen(_cpos)>=6) {
+			_lpos[2] := substr(_cpos,4,3)
+			Gosub, SetSimulKeyTable3
+		} else {
+			Gosub, SetSimulKeyTable
+		}
 	}
 	if(_error <> "")
 		return
@@ -548,6 +586,16 @@ Mode3Key:
 	} else {
 		Gosub, SetSimulKeyTable
 	}
+	if(_cpos != _spos) {
+		_lpos := Object()
+		_lpos[1] := substr(_cpos,1,3)
+		if(strlen(_cpos)>=6) {
+			_lpos[2] := substr(_cpos,4,3)
+			Gosub, SetSimulKeyTable3
+		} else {
+			Gosub, SetSimulKeyTable
+		}
+	}
 	if(_error <> "")
 		return
 	
@@ -566,6 +614,16 @@ Mode3Key:
 	} else {
 		Gosub, SetSimulKeyTable
 	}
+	if(_cpos != _spos) {
+		_lpos := Object()
+		_lpos[1] := substr(_cpos,1,3)
+		if(strlen(_cpos)>=6) {
+			_lpos[2] := substr(_cpos,4,3)
+			Gosub, SetSimulKeyTable3
+		} else {
+			Gosub, SetSimulKeyTable
+		}
+	}	
 	if(_error <> "")
 		return
 
@@ -583,6 +641,16 @@ Mode3Key:
 		Gosub, SetSimulKeyTable3
 	} else {
 		Gosub, SetSimulKeyTable
+	}
+	if(_cpos != _spos) {
+		_lpos := Object()
+		_lpos[1] := substr(_cpos,1,3)
+		if(strlen(_cpos)>=6) {
+			_lpos[2] := substr(_cpos,4,3)
+			Gosub, SetSimulKeyTable3
+		} else {
+			Gosub, SetSimulKeyTable
+		}
 	}
 	if(_error <> "")
 		return
@@ -781,30 +849,30 @@ SetKeyTable:
 			continue
 		}
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
-		_qstr := GetQuotedStr(org[A_Index], _quotation)
-		if(_error <> "")
-		{
-			_error := _lpos2 . ":" . _error
-			break
-		}
-		if(_quotation!="")
-		{
-			kLabel[_mode . _lpos2] := _qstr
-			kst[_mode . _lpos2] := "Q"
-			kdn[_mode . _lpos2] := Str2Vout(_qstr)
-			kup[_mode . _lpos2] := ""
-			continue
-		}
+		;_qstr := GetQuotedStr(org[A_Index], _quotation)
+		;if(_error <> "")
+		;{
+		;	_error := _lpos2 . ":" . _error
+		;	break
+		;}
+		;if(_quotation!="")
+		;{
+		;	kLabel[_mode . _lpos2] := _qstr
+		;	kst[_mode . _lpos2] := "Q"
+		;	kdn[_mode . _lpos2] := Str2Vout(_qstr)
+		;	kup[_mode . _lpos2] := ""
+		;	continue
+		;}
 		; vkeyならば vkeyとして登録
-		_vk := ConvVkey(org[A_Index])
-		if(_vk <> "")
-		{
-			kLabel[_mode . _lpos2] := _vk
-			kst[_mode . _lpos2] := "V"	; VKEY
-			kdn[_mode . _lpos2] := "{" . _vk . "}"
-			kup[_mode . _lpos2] := ""
-			continue
-		}
+	;	_vk := ConvVkey(org[A_Index])
+	;	if(_vk <> "")
+	;	{
+	;		kLabel[_mode . _lpos2] := _vk
+	;		kst[_mode . _lpos2] := "V"	; VKEY
+	;		kdn[_mode . _lpos2] := "{" . _vk . "}"
+	;		kup[_mode . _lpos2] := ""
+	;		continue
+	;	}
 		; 無の指定ならば，元のキーそのもののスキャンコードとする
 		if(org[A_Index] == "無") {
 			kLabel[_mode . _lpos2] := org[A_Index]
@@ -814,11 +882,15 @@ SetKeyTable:
 			continue
 		}
 		_aStr0 := org[A_Index]
-		kst[_mode . _lpos2] := "M"
 		; かな文字はローマ字に変換
 		_aStr := kana2Romaji(_aStr0)
 		; 送信形式に変換
-		GenSendStr3(_aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up, _status)
+		if(_error <> "") {
+			_error := _lpos2 . ":" . _error
+			break
+		}
+		kst[_mode . _lpos2] := _status
 		if( _down <> "")
 		{
 			if(SubStr(_mode,1,1)=="R")
@@ -884,62 +956,72 @@ SetSimulKeyTable:
 			ksc[_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
 		}
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
-		_qstr := GetQuotedStr(org[A_Index], _quotation)
-		if(_error <> "")
-		{
+		;_qstr := GetQuotedStr(org[A_Index], _quotation)
+		;if(_error <> "")
+		;{
+		;	_error := _lpos[0] . ":" . _error
+		;	break
+		;}
+		;if(_quotation <> "")
+		;{
+		;	_vout := Str2Vout(_qstr)
+		;	kLabel[_mode . _simulMode . _lpos[0]] := _qstr
+		;	kst[_mode . _simulMode . _lpos[0]] := "Q"	; 仮想キーコード
+		;	
+		;	kLabel[_mode . _lpos[1] . _lpos[0]] := _qstr
+		;	kLabel[_mode . _lpos[0] . _lpos[1]] := _qstr
+		;	
+		;	kst[_mode . _lpos[1] . _lpos[0]] := "Q"	; 引用符
+		;	kdn[_mode . _lpos[1] . _lpos[0]] := _vout
+		;	kup[_mode . _lpos[1] . _lpos[0]] := ""
+		;	kst[_mode . _lpos[0] . _lpos[1]] := "Q"	; 引用符
+		;	kdn[_mode . _lpos[0] . _lpos[1]] := _vout
+		;	kup[_mode . _lpos[0] . _lpos[1]] := ""
+		;	continue
+		;}
+		; vkeyならば vkeyとして登録
+	;	_vk := ConvVkey(org[A_Index])
+	;	if(_vk <> "")
+	;	{
+	;		kLabel[_mode . _simulMode . _lpos[0]] := _vk
+	;		kst[_mode . _simulMode . _lpos[0]] := "V"	; 仮想キーコード
+;
+;			kLabel[_mode . _lpos[1] . _lpos[0]] := _vk
+;			kLabel[_mode . _lpos[0] . _lpos[1]] := _vk
+;
+;			kst[_mode . _lpos[1] . _lpos[0]] := "V"	; 仮想キーコード
+;			kdn[_mode . _lpos[1] . _lpos[0]] := "{" . _vk . "}"
+;			kup[_mode . _lpos[1] . _lpos[0]] := ""
+;			kst[_mode . _lpos[0] . _lpos[1]] := "V"	; 仮想キーコード
+;			kdn[_mode . _lpos[0] . _lpos[1]] := "{" . _vk . "}"
+;			kup[_mode . _lpos[0] . _lpos[1]] := ""
+;			continue
+;		}
+		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
+		_aStr0 := org[A_Index]
+		; かな文字はローマ字に変換
+		_aStr := kana2Romaji(_aStr0)
+		GenSendStr3(_aStr, _down, _up, _status)
+		if(_error <> "") {
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		if(_quotation <> "")
-		{
-			_vout := Str2Vout(_qstr)
-			kLabel[_mode . _simulMode . _lpos[0]] := _qstr
-			kst[_mode . _simulMode . _lpos[0]] := "Q"	; 仮想キーコード
-			
-			kLabel[_mode . _lpos[1] . _lpos[0]] := _qstr
-			kLabel[_mode . _lpos[0] . _lpos[1]] := _qstr
-
-			kst[_mode . _lpos[1] . _lpos[0]] := "Q"	; 引用符
-			kdn[_mode . _lpos[1] . _lpos[0]] := _vout
-			kup[_mode . _lpos[1] . _lpos[0]] := ""
-			kst[_mode . _lpos[0] . _lpos[1]] := "Q"	; 引用符
-			kdn[_mode . _lpos[0] . _lpos[1]] := _vout
-			kup[_mode . _lpos[0] . _lpos[1]] := ""
-			continue
-		}
-		; vkeyならば vkeyとして登録
-		_vk := ConvVkey(org[A_Index])
-		if(_vk <> "")
-		{
-			kLabel[_mode . _simulMode . _lpos[0]] := _vk
-			kst[_mode . _simulMode . _lpos[0]] := "V"	; 仮想キーコード
-
-			kLabel[_mode . _lpos[1] . _lpos[0]] := _vk
-			kLabel[_mode . _lpos[0] . _lpos[1]] := _vk
-
-			kst[_mode . _lpos[1] . _lpos[0]] := "V"	; 仮想キーコード
-			kdn[_mode . _lpos[1] . _lpos[0]] := "{" . _vk . "}"
-			kup[_mode . _lpos[1] . _lpos[0]] := ""
-			kst[_mode . _lpos[0] . _lpos[1]] := "V"	; 仮想キーコード
-			kdn[_mode . _lpos[0] . _lpos[1]] := "{" . _vk . "}"
-			kup[_mode . _lpos[0] . _lpos[1]] := ""
-			continue
-		}
-		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		_aStr0 := org[A_Index]
-		kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
-		kst[_mode . _lpos[1] . _lpos[0]] := "M"
-		kst[_mode . _lpos[0] . _lpos[1]] := "M"
-		; かな文字はローマ字に変換
-		_aStr := kana2Romaji(_aStr0)
-		GenSendStr3(_aStr, _down, _up)
+		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status	; 普通の文字
+		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status	; 普通の文字
+		kst[_mode . _simulMode . _lpos[0]] := _status	; 普通の文字
+		kst[_mode . _lpos[1] . _lpos[0]] := _status
+		kst[_mode . _lpos[0] . _lpos[1]] := _status
 		if( _down <> "")
 		{
-			kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
-			
-			kLabel[_mode . _lpos[1] . _lpos[0]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[0] . _lpos[1]] := Romaji2Kana(_aStr0)
-
+			if(SubStr(_mode,1,1)=="R") {
+				kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[1] . _lpos[0]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[0] . _lpos[1]] := Romaji2Kana(_aStr0)
+			} else {
+				kLabel[_mode . _simulMode . _lpos[0]] := _aStr0			
+				kLabel[_mode . _lpos[1] . _lpos[0]] := _aStr0
+				kLabel[_mode . _lpos[0] . _lpos[1]] := _aStr0
+			}
 			kdn[_mode . _lpos[1] . _lpos[0]] := _down
 			kdn[_mode . _lpos[0] . _lpos[1]] := _down
 
@@ -970,106 +1052,122 @@ SetSimulKeyTable3:
 			ksc[_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
 		}
 		; 引用符つき文字列を登録・・・2020年10月以降のWindows10+MS-IMEではローマ字モードダメになった
-		_qstr := GetQuotedStr(org[A_Index], _quotation)
-		if(_error <> "")
-		{
+		;_qstr := GetQuotedStr(org[A_Index], _quotation)
+		;if(_error <> "")
+		;{
+		;	_error := _lpos[0] . ":" . _error
+		;	break
+		;}
+		;if(_quotation <> "")
+		;{
+		;	_vout := Str2Vout(_qstr)
+		;	kLabel[_mode . _simulMode . _lpos[0]] := _qstr
+		;	kst[_mode . _simulMode . _lpos[0]] := "Q"	; 仮想キーコード
+		;	
+		;	kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _qstr
+		;	kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _qstr
+		;	kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _qstr
+		;	kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _qstr
+		;	kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _qstr
+		;	kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _qstr
+		;	
+		;	kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "Q"	; 引用符
+		;	kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "Q"
+		;	kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "Q"
+		;	kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "Q"
+		;	kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "Q"
+		;	kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "Q"
+		;	
+		;	kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _vout
+		;	kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _vout
+		;	kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _vout
+		;	kdn[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _vout
+		;	kdn[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _vout
+		;	kdn[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _vout
+		;	
+		;	kup[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
+		;	kup[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
+		;	kup[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
+		;	kup[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
+		;	kup[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
+		;	kup[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
+		;	continue
+		;}
+		; vkeyならば vkeyとして登録
+;		_vk := ConvVkey(org[A_Index])
+;		if(_vk <> "")
+;		{
+;			kLabel[_mode . _simulMode . _lpos[0]] := _vk
+;			kst[_mode . _simulMode . _lpos[0]] := "V"	; 仮想キーコード
+;
+;			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _vk
+;			kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _vk
+;			kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _vk
+;			kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _vk
+;			kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _vk
+;			kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _vk
+;
+;			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "V"	; 仮想キーコード
+;			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "V"
+;			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "V"
+;			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "V"
+;			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "V"
+;			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "V"
+;
+;			kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "{" . _vk . "}"
+;			kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "{" . _vk . "}"
+;			kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "{" . _vk . "}"
+;			kdn[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "{" . _vk . "}"
+;			kdn[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "{" . _vk . "}"
+;			kdn[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "{" . _vk . "}"
+;
+;			kup[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
+;			kup[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
+;			kup[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
+;			kup[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
+;			kup[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
+;			kup[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
+;			continue
+;		}
+		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
+		_aStr0 := org[A_Index]
+		; かな文字はローマ字に変換
+		_aStr := kana2Romaji(_aStr0)
+		GenSendStr3(_aStr, _down, _up, _status)
+		if(_error <> "") {
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		if(_quotation <> "")
-		{
-			_vout := Str2Vout(_qstr)
-			kLabel[_mode . _simulMode . _lpos[0]] := _qstr
-			kst[_mode . _simulMode . _lpos[0]] := "Q"	; 仮想キーコード
-
-			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _qstr
-			kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _qstr
-			kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _qstr
-			kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _qstr
-			kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _qstr
-			kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _qstr
-
-			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "Q"	; 引用符
-			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "Q"
-			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "Q"
-			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "Q"
-			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "Q"
-			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "Q"
-
-			kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _vout
-			kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _vout
-			kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _vout
-			kdn[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _vout
-			kdn[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _vout
-			kdn[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _vout
-
-			kup[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
-			kup[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
-			kup[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
-			kup[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
-			kup[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
-			kup[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
-			continue
-		}
-		; vkeyならば vkeyとして登録
-		_vk := ConvVkey(org[A_Index])
-		if(_vk <> "")
-		{
-			kLabel[_mode . _simulMode . _lpos[0]] := _vk
-			kst[_mode . _simulMode . _lpos[0]] := "V"	; 仮想キーコード
-
-			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _vk
-			kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _vk
-			kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _vk
-			kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _vk
-			kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _vk
-			kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _vk
-
-			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "V"	; 仮想キーコード
-			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "V"
-			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "V"
-			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "V"
-			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "V"
-			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "V"
-
-			kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "{" . _vk . "}"
-			kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "{" . _vk . "}"
-			kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "{" . _vk . "}"
-			kdn[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "{" . _vk . "}"
-			kdn[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "{" . _vk . "}"
-			kdn[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "{" . _vk . "}"
-
-			kup[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
-			kup[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
-			kup[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
-			kup[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
-			kup[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
-			kup[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
-			continue
-		}
-		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		_aStr0 := org[A_Index]
-		kst[_mode . _simulMode . _lpos[0]] := "M"	; 普通の文字
-		kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := "M"
-		kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := "M"
-		kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := "M"
-		kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := "M"
-		kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := "M"
-		kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := "M"
-		; かな文字はローマ字に変換
-		_aStr := kana2Romaji(_aStr0)
-		GenSendStr3(_aStr, _down, _up)
+		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status
+		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status
+		kst[_mode . _lpos[2]] := kst[_mode . _lpos[2]] . _status
+		
+		kst[_mode . _simulMode . _lpos[0]] := _status	; 普通の文字"M" 修飾キーm
+		kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _status
+		kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _status
+		kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _status
+		kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _status
+		kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _status
+		kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _status
 		if( _down <> "")
 		{
-			kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
-
-			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := Romaji2Kana(_aStr0)
-			kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := Romaji2Kana(_aStr0)
-
+			if(SubStr(_mode,1,1)=="R") {
+				kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := Romaji2Kana(_aStr0)
+				kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := Romaji2Kana(_aStr0)
+			} else {
+				kLabel[_mode . _simulMode . _lpos[0]] := _aStr0
+				kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _aStr0
+				kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _aStr0
+				kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _aStr0
+				kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _aStr0
+				kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _aStr0
+				kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _aStr0
+			}
 			kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _down
 			kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _down
 			kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _down
@@ -1258,25 +1356,63 @@ Romaji2Kana(aStr)
 ; 引数　：aStr：対応するキー入力
 ; 戻り値：Sendの引数
 ;----------------------------------------------------------------------
-GenSendStr3(aStr,BYREF _dn,BYREF _up)
+GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 {
 	global z2hHash, Chr2vkeyHash, modifierHash
+	global _error
+	
+	_error := ""
+	_status := ""
 	_len := strlen(aStr)	; 全角
 	if(_len = 0)
 	{
 		return ""
 	}
 	; 入力文字列をAutohotkeyのSend形式に変換
-	_dn := "{Blind}"
+	_dn := ""	;"{Blind}"
 	_up := ""
+	_quotation := ""
+	_qstr := ""
+	_vkey := ""
+	_vcnt := 0
 	loop,Parse, aStr
 	{
-		_c2 := modifierHash[A_LoopField]
-		if(_c2 != "") {
-			if(A_Index != _len) {
-				_dn := _dn .  _c2
+		if(A_LoopField == "v") {	; 仮想キーコードのマーク
+			_vkey := "vk"
+			_vcnt := 1
+		} else if(_vcnt == 1 || _vcnt == 2) {
+			if(instr("0123456789ABCDEFabcdef",A_LoopField) == 0) {
+				_error := "仮想キーコードの記載が誤っています"
 			}
+			_vkey := _vkey . A_LoopField
+			_vcnt := _vcnt + 1
+			if(_vcnt >= 3) {
+				_dn := _dn . "{" . _vkey . "}"
+				_vkey := ""
+				_vcnt := 0
+				_status := _status . "v"		; 仮想キーコード
+			}
+		} else if(A_LoopField = "'" || A_LoopField = """") {	; 引用符のマーク
+			if(_quotation == "") {
+				_quotation := A_LoopField
+				_qstr := ""
+			} else {
+				_dn := _dn . _qstr
+				_quotation := ""
+				_qstr := ""
+				_status := _status . "Q"		; 引用があった
+			}
+		} else if(_quotation != "") {
+			_qstr := _qstr . A_LoopField
+		} else if(modifierHash[A_LoopField] != "") {
+			if(A_Index != _len) {
+				_dn := _dn .  modifierHash[A_LoopField]
+			}
+			_status := _status . "m"			; 修飾キーがあった
 		} else {
+			if(ctrlKeyHash[A_LoopField] != "") {
+				_status := _status . "m"		; 制御キーがあった
+			}
 			;_c2 := Chr2vkeyHash[A_LoopField]	; vkey優先 IME不具合対策
 			;if(_c2 == "") {
 				_c2 := z2hHash[A_LoopField]
@@ -1293,9 +1429,8 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up)
 			}
 		}
 	}
-	if(_dn = "{Blind}")
-	{
-		_dn := ""
+	if(_quotation != "") {
+		_error := "引用符が閉じられていません"
 	}
 	return _dn
 }
@@ -2542,10 +2677,10 @@ MakeVkeyHash()
 ;----------------------------------------------------------------------
 ;	キー名を配列位置に変換
 ;----------------------------------------------------------------------
-MakeCode2Pos()
+MakeCode2SimulPos()
 {
 	hash := Object()
-	hash["<1>"] := "E01"		;1
+	hash["<1>"] := "E01"		;1	キーオン（出力されたら解除）
 	hash["<2>"] := "E02"		;2
 	hash["<3>"] := "E03"		;3
 	hash["<4>"] := "E04"		;4
@@ -2596,6 +2731,170 @@ MakeCode2Pos()
 	hash["<.>"] := "B09"		;.
 	hash["</>"] := "B10"		;/
 	hash["<\>"] := "B11"		;\
+
+	hash["{1}"] := "E01"		;1  キーが押されている
+	hash["{2}"] := "E02"		;2
+	hash["{3}"] := "E03"		;3
+	hash["{4}"] := "E04"		;4
+	hash["{5}"] := "E05"		;5
+	hash["{6}"] := "E06"		;6
+	hash["{7}"] := "E07"		;7
+	hash["{8}"] := "E08"		;8
+	hash["{9}"] := "E09"		;9
+	hash["{0}"] := "E10"		;0
+	hash["{-}"] := "E11"		;-
+	hash["{^}"] := "E12"		;^
+	hash["{\}"] := "E13"		;\
+
+	hash["{q}"] := "D01"		;q
+	hash["{w}"] := "D02"		;w
+	hash["{e}"] := "D03"		;e
+	hash["{r}"] := "D04"		;r
+	hash["{t}"] := "D05"		;t
+	hash["{y}"] := "D06"		;y
+	hash["{u}"] := "D07"		;u
+	hash["{i}"] := "D08"		;i
+	hash["{o}"] := "D09"		;o
+	hash["{p}"] := "D10"		;p
+	hash["{@}"] := "D11"		;@
+	hash["{[}"] := "D12"		;[
+
+	hash["{a}"] := "C01"		;a
+	hash["{s}"] := "C02"		;s
+	hash["{d}"] := "C03"		;d
+	hash["{f}"] := "C04"		;f
+	hash["{g}"] := "C05"		;g
+	hash["{h}"] := "C06"		;h
+	hash["{j}"] := "C07"		;j
+	hash["{k}"] := "C08"		;k
+	hash["{l}"] := "C09"		;l
+	hash["{;}"] := "C10"		;;
+	hash["{:}"] := "C11"		;:
+	hash["{]}"] := "C12"		;]
+
+	hash["{z}"] := "B01"		;z
+	hash["{x}"] := "B02"		;x
+	hash["{c}"] := "B03"		;c
+	hash["{v}"] := "B04"		;v
+	hash["{b}"] := "B05"		;b
+	hash["{n}"] := "B06"		;n
+	hash["{m}"] := "B07"		;m
+	hash["{,}"] := "B08"		;,
+	hash["{.}"] := "B09"		;.
+	hash["{/}"] := "B10"		;/
+	hash["{\}"] := "B11"		;\
+	return hash
+}
+
+;----------------------------------------------------------------------
+;	キー名を連続シフトの配列位置に変換
+;----------------------------------------------------------------------
+MakeCode2ContPos()
+{
+	hash := Object()
+	hash["<1>"] := "E01"		;1	キーオン（出力されたら解除）
+	hash["<2>"] := "E02"		;2
+	hash["<3>"] := "E03"		;3
+	hash["<4>"] := "E04"		;4
+	hash["<5>"] := "E05"		;5
+	hash["<6>"] := "E06"		;6
+	hash["<7>"] := "E07"		;7
+	hash["<8>"] := "E08"		;8
+	hash["<9>"] := "E09"		;9
+	hash["<0>"] := "E10"		;0
+	hash["<->"] := "E11"		;-
+	hash["<^>"] := "E12"		;^
+	hash["<\>"] := "E13"		;\
+
+	hash["<q>"] := "D01"		;q
+	hash["<w>"] := "D02"		;w
+	hash["<e>"] := "D03"		;e
+	hash["<r>"] := "D04"		;r
+	hash["<t>"] := "D05"		;t
+	hash["<y>"] := "D06"		;y
+	hash["<u>"] := "D07"		;u
+	hash["<i>"] := "D08"		;i
+	hash["<o>"] := "D09"		;o
+	hash["<p>"] := "D10"		;p
+	hash["<@>"] := "D11"		;@
+	hash["<[>"] := "D12"		;[
+
+	hash["<a>"] := "C01"		;a
+	hash["<s>"] := "C02"		;s
+	hash["<d>"] := "C03"		;d
+	hash["<f>"] := "C04"		;f
+	hash["<g>"] := "C05"		;g
+	hash["<h>"] := "C06"		;h
+	hash["<j>"] := "C07"		;j
+	hash["<k>"] := "C08"		;k
+	hash["<l>"] := "C09"		;l
+	hash["<;>"] := "C10"		;;
+	hash["<:>"] := "C11"		;:
+	hash["<]>"] := "C12"		;]
+
+	hash["<z>"] := "B01"		;z
+	hash["<x>"] := "B02"		;x
+	hash["<c>"] := "B03"		;c
+	hash["<v>"] := "B04"		;v
+	hash["<b>"] := "B05"		;b
+	hash["<n>"] := "B06"		;n
+	hash["<m>"] := "B07"		;m
+	hash["<,>"] := "B08"		;,
+	hash["<.>"] := "B09"		;.
+	hash["</>"] := "B10"		;/
+	hash["<\>"] := "B11"		;\
+
+	hash["{1}"] := "501"		;1  キーが押されている
+	hash["{2}"] := "502"		;2
+	hash["{3}"] := "503"		;3
+	hash["{4}"] := "504"		;4
+	hash["{5}"] := "505"		;5
+	hash["{6}"] := "506"		;6
+	hash["{7}"] := "507"		;7
+	hash["{8}"] := "508"		;8
+	hash["{9}"] := "509"		;9
+	hash["{0}"] := "510"		;0
+	hash["{-}"] := "511"		;-
+	hash["{^}"] := "512"		;^
+	hash["{\}"] := "513"		;\
+
+	hash["{q}"] := "401"		;q
+	hash["{w}"] := "402"		;w
+	hash["{e}"] := "403"		;e
+	hash["{r}"] := "404"		;r
+	hash["{t}"] := "405"		;t
+	hash["{y}"] := "406"		;y
+	hash["{u}"] := "407"		;u
+	hash["{i}"] := "408"		;i
+	hash["{o}"] := "409"		;o
+	hash["{p}"] := "410"		;p
+	hash["{@}"] := "411"		;@
+	hash["{[}"] := "412"		;[
+
+	hash["{a}"] := "301"		;a
+	hash["{s}"] := "302"		;s
+	hash["{d}"] := "303"		;d
+	hash["{f}"] := "304"		;f
+	hash["{g}"] := "305"		;g
+	hash["{h}"] := "306"		;h
+	hash["{j}"] := "307"		;j
+	hash["{k}"] := "308"		;k
+	hash["{l}"] := "309"		;l
+	hash["{;}"] := "310"		;;
+	hash["{:}"] := "311"		;:
+	hash["{]}"] := "312"		;]
+
+	hash["{z}"] := "201"		;z
+	hash["{x}"] := "202"		;x
+	hash["{c}"] := "203"		;c
+	hash["{v}"] := "204"		;v
+	hash["{b}"] := "205"		;b
+	hash["{n}"] := "206"		;n
+	hash["{m}"] := "207"		;m
+	hash["{,}"] := "208"		;,
+	hash["{.}"] := "209"		;.
+	hash["{/}"] := "210"		;/
+	hash["{\}"] := "211"		;\
 	return hash
 }
 

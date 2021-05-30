@@ -1,6 +1,19 @@
 #include IME.ahk
+StringCaseSense, On
+	tmp := Object()
+	tmp["A"] := "hello"
+	tmp["a"] := "goodbye"
+	tmp2 := tmp[0]
+	
+	msgbox, % "tmp0 is " . tmp["A"]
+
 obj := Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00)
 
+	if(obj["purple"] =="") {
+	msgbox, % "Null string"
+	} else {
+	msgbox, % "Not a Null string"
+	}
 	idx := 10
 	msgbox, % "tmp is " . idx
 

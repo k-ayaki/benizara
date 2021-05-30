@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.7 .... 2021/05/17
+;	ver.0.1.4.7 .... 2021/05/30
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,7 +12,7 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,On
 	g_Ver := "ver.0.1.4.7"
-	g_Date := "2021/5/22"
+	g_Date := "2021/5/30"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -565,7 +565,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
-		GenSendStr3(_aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up, _status)
 		vOut                   := _down
 		kup_save[_MojiOnHold]  := _up
 		_kLabel := g_LastKey["表層"]
@@ -574,7 +574,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K" && _kst == "M") {
+	if(g_Koyubi=="K") {
 		vOut := "{capslock}" . vOut . "{capslock}"
 	}
 	if(g_ZeroDelay = 1)
@@ -973,14 +973,27 @@ keydownM:
 		if(g_KeyInPtn = "") {
 			; 当該キーを単独打鍵として保留
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-
 			g_KeyInPtn := "M"
 			g_SendTick := g_MojiTick[0] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
 			if(CountObject(g_SimulMode)!=0) {
 				; 文字同時打鍵があればタイムアウトの大きい方に合わせる
 				g_SendTick := maximum(g_SendTick, g_MojiTick[0] + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout))
 			}
-			SendZeroDelay(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1], g_ZeroDelay)
+			; 連続打鍵の判定 
+			_pushedKey := GetPushedKeys(g_MojiOnHold[1])
+			if(_pushedKey != "") {
+				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+				if(kdn[_mode . _pushedKey . g_MojiOnHold[1]] != "") {
+					SendOnHold(_mode, _pushedKey . g_MojiOnHold[1], g_ZeroDelay)
+					dequeueKey()
+					clearQueue()
+					g_SendTick := INFINITE
+					g_keyInPtn := ""
+				}
+			}
+			if(g_keyInPtn == "M") {
+				SendZeroDelay(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1], g_ZeroDelay)
+			}
 		}
 		else if(g_KeyInPtn = "M")	; S2)Mオン状態
 		{
@@ -995,10 +1008,11 @@ keydownM:
 		{
 			g_Interval["S23"]  := g_MojiTick[0] - g_MojiTick[1]	; 前回の文字キー押しからの期間
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-
+			
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_MojiTick[0] + maximum(g_ThresholdSS,g_Threshold)
+			g_SendTick := g_MojiTick[0]	; + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MMM"
+			GoSub, SendOnHoldMMM
 		}
 	}
 	else
@@ -1056,7 +1070,7 @@ SendKey(_mode, _MojiOnHold){
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . kana2Romaji(g_LastKey["表層"])
-		GenSendStr3(_aStr, _down, _up)
+		GenSendStr3(_aStr, _down, _up, _status)
 		vOut                  := _down
 		kup_save[_MojiOnHold] := _up
 		
@@ -1066,7 +1080,7 @@ SendKey(_mode, _MojiOnHold){
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K" && _kst == "M") {
+	if(g_Koyubi=="K") {
 		vOut := "{capslock}" . vOut . "{capslock}"
 	}	
 	SubSend(vOut)
@@ -1179,7 +1193,7 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
 
 		; １文字通常出力の非制御コードならば先行出力
-		if(kst[_mode . _MojiOnHold] == "M" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+		if(kst[_mode . _MojiOnHold] == "" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
 			vOut                  := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
 			_kLabel := kLabel[_mode . _MojiOnHold]
@@ -1188,14 +1202,14 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 			_nextKey := nextDakuten(_mode,_MojiOnHold)
 			if(_nextKey!="") {
 				_aStr := "後" . kana2Romaji(_nextKey)
-				GenSendStr3(_aStr, _down, _up)
+				GenSendStr3(_aStr, _down, _up, _status)
 				vOut                  := _down
 				kup_save[_MojiOnHold] := _up
 				
 				_kLabel := g_LastKey["表層"]
 				_kst    := g_LastKey["状態"]
 			}
-			if(g_Koyubi=="K" && _kst == "M") {
+			if(g_Koyubi=="K" && _kst == "") {
 				vOut := "{capslock}" . vOut . "{capslock}"
 			}
 			g_ZeroDelayOut := vOut
@@ -1220,7 +1234,7 @@ nextDakuten(_mode,_MojiOnHold)
 	global DakuonSurfaceHash, HandakuonSurfaceHash, YouonSurfaceHash, CorrectSurfaceHash
 
 	_nextKey := ""
-	if(g_LastKey["状態"]=="M") {
+	if(g_LastKey["状態"]=="") {
 		if(kLabel[_mode . _MojiOnHold]=="゛" || kLabel[_mode . _MojiOnHold]=="濁") {
 			_nextKey := DakuonSurfaceHash[g_LastKey["表層"]]
 		} else
@@ -1268,7 +1282,7 @@ keyupM:
 	}
 	else if(g_KeyInPtn == "MM")
 	{
-		if(g_layoutPos == g_MojiOnHold[2]) {
+		if(g_layoutPos == g_MojiOnHold[1]) {
 			g_Interval["S2_1"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
 			vOverlap := floor((100*g_Interval["S2_1"])/(g_Interval["S12"]+g_Interval["S2_1"]))	; 重なり厚み計算
 			if(g_OverlapSS <= vOverlap) {
@@ -1284,7 +1298,7 @@ keyupM:
 				g_KeyInPtn := "M"
 			}
 		} else
-		if(g_layoutPos == g_MojiOnHold[1]) {
+		if(g_layoutPos == g_MojiOnHold[2]) {
 			g_Interval["S2_2"] := g_MojiUpTick[0] - g_MojiTick[0]	; 前回の文字キー押しからの期間
 			Gosub, SendOnHoldMM
 		}
@@ -1462,8 +1476,9 @@ Interrupt10:
 		vImeMode := IME_GET() & 32767
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
-
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":" . g_OnHoldIdx . ":" . g_KeyInPtn
+		
+		g_debugout2 := GetPushedKeys("")
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":" . g_debugout2
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		
@@ -1673,6 +1688,27 @@ GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
 	return stCurr
 }
 
+;-----------------------------------------------------------------------
+;	押下キー取得
+;-----------------------------------------------------------------------
+GetPushedKeys(_this)
+{
+	global layoutArys, keyState
+
+	_pushedKeys := ""
+	for index, element in layoutArys
+	{
+		if(keyState[element] != 0 && element != _this) {
+			_cont := chr(asc(element)-asc("A")+asc("1")) . substr(element,2)
+			_pushedKeys := _pushedKeys . _cont
+		}
+	}
+	return _pushedKeys
+}
+
+;-----------------------------------------------------------------------
+;	ボーズキーが押された
+;-----------------------------------------------------------------------
 pauseKeyDown:
 	if(g_Pause == 1) {
 		Gosub, DoResume
