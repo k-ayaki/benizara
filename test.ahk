@@ -5,7 +5,15 @@ StringCaseSense, On
 	tmp["a"] := "goodbye"
 	tmp2 := tmp[0]
 	
-	msgbox, % "tmp0 is " . tmp["A"]
+	;msgbox, % "tmp0 is " . tmp["A"]
+	m := "MMm"
+	if(m=="MMM") {
+		msgbox, % "3m"
+	} else if(m=="MMm") {
+		msgbox, % "MMm"
+	} else {
+	}
+	return
 
 obj := Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00)
 
