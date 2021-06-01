@@ -1390,6 +1390,7 @@ MakeZ2hHash() {
 	hash["表"] := "tab"
 	hash["日"] := "vkF2sc070"
 	hash["英"] := "vkF0sc03A"
+	hash["変"] := "vk1Csc079"
 	hash["無"] := ""
 	hash["濁"] := ""
 	hash["半"] := ""
@@ -3274,6 +3275,9 @@ MakeCtrlKeyHash() {
 	hash["前"] := "PgUp"
 	hash["次"] := "PgDn"
 	hash["表"] := "tab"
+	hash["日"] := "vkF2sc070"
+	hash["英"] := "vkF0sc03A"
+	hash["変"] := "vk1Csc079"
 	return hash
 }
 
