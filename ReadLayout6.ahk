@@ -544,10 +544,8 @@ Mode3Key:
 	}
 	if(_cpos != _spos) {
 		_lpos2 := substr(_spos,1,3)
-		kst[_mode . _lpos2] := kst[_mode . _lpos2] . "S"		;零遅延モード禁止 
 		if(strlen(_spos)>=6) {
 			_lpos2 := substr(_spos,4,3)
-			kst[_mode . _lpos2] := kst[_mode . _lpos2] . "S"	;零遅延モード禁止
 		}
 	}
 	_lpos := Object()
@@ -932,9 +930,9 @@ SetSimulKeyTable:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status	; 普通の文字
-		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status	; 普通の文字
-		kst[_mode . _simulMode . _lpos[0]] := _status	; 普通の文字
+		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status
+		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status
+		kst[_mode . _simulMode . _lpos[0]] := _status
 		kst[_mode . _lpos[1] . _lpos[0]] := _status
 		kst[_mode . _lpos[0] . _lpos[1]] := _status
 		if( _down <> "")
@@ -1228,7 +1226,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 			_c2 := ""
 		}
 		
-		if(A_LoopField == "v") {	; 仮想キーコードのマーク
+		if(A_LoopField == "v" || A_LoopField == "V") {	; 仮想キーコードのマーク
 			_vkey := "vk"
 			_vcnt := 1
 		} else if(_vcnt == 1 || _vcnt == 2) {
@@ -1262,7 +1260,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 			_status := _status . "m"			; 修飾キーがあった
 		} else {
 			if(ctrlKeyHash[A_LoopField] != "") {
-				_status := _status . "m"		; 制御キーがあった
+				_status := _status . "c"		; 制御キーがあった
 			}
 			if(roma3Hash[A_LoopField] != "") {
 				_c1 := roma3Hash[A_LoopField]
@@ -1287,7 +1285,6 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 		_up := _up .  "{blind}{" . _c2 . " up}"
 		_c2 := ""
 	}
-;msgbox, % "aStr is " . aStr . ":" . _c1 . ":" . _dn
 	if(_quotation != "") {
 		_error := "引用符が閉じられていません"
 	}
