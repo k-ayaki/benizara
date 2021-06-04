@@ -407,15 +407,15 @@ keyupL:
 			g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
 			g_Interval[g_Oya . "_" . g_Oya] := g_OyaUpTick[g_Oya] - g_OyaTick[g_Oya]	; 右親指キー押しから右親指キー解除までの期間
 
-			if(g_KeyInPtn = g_Oya)		;S3)Oオン状態
+			if(g_KeyInPtn == g_Oya)		;S3)Oオン状態
 			{
 				Gosub, SendOnHoldO	;保留親指キーの打鍵
 			}
-			else if(g_KeyInPtn = "M" . g_Oya)	;S4)M-Oオン状態
+			else if(g_KeyInPtn == "M" . g_Oya)	;S4)M-Oオン状態
 			{
 				Gosub, SendOnHoldMO	; 保留キーの同時打鍵
 			}
-			else if(g_KeyInPtn = g_Oya . "M")	;S5)O-Mオン状態
+			else if(g_KeyInPtn == g_Oya . "M")	;S5)O-Mオン状態
 			{
 				if(g_Interval["M_" . g_Oya] > g_Threshold || g_MojiCount[g_Oya] == 1)
 				{
@@ -511,7 +511,7 @@ MnDown(aStr) {
 	vOut := ""
 	if(aStr<>"")
 	{
-		vOut = {Blind}{%aStr% down}
+		vOut := "{Blind}{" . aStr . " down}"
 	}
 	return vOut
 }
@@ -524,7 +524,7 @@ MnUp(aStr) {
 	vOut := ""
 	if(aStr<>"")
 	{
-		vOut = {Blind}{%aStr% up}
+		vOut := "{Blind}{" . aStr . " up}"
 	}
 	return vOut
 }
@@ -631,7 +631,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 	if(g_Koyubi=="K") {
 		vOut := "{capslock}" . vOut . "{capslock}"
 	}
-	if(g_ZeroDelay = 1)
+	if(g_ZeroDelay == 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
 		{
@@ -687,37 +687,27 @@ SendOnHoldM:
 	dequeueKey()
 
 	g_SendTick := INFINITE
-	if(g_KeyInPtn = "MR")
+	if(g_KeyInPtn=="MR")
 	{
-		;g_keyInPtn := "R"
-		g_keyInPtn := ""
-		g_OyaKeyOn[g_Oya] := ""		
-		if(g_Continue == 0) {
-			g_Oya := "N"
-		}
+		g_keyInPtn := "R"
 	}
-	else if(g_KeyInPtn = "ML")
+	else if(g_KeyInPtn=="ML")
 	{
-		;g_keyInPtn := "L"
-		g_keyInPtn := ""
-		g_OyaKeyOn[g_Oya] := ""		
-		if(g_Continue == 0) {
-			g_Oya := "N"
-		}
+		g_keyInPtn := "L"
 	}
-	else if(g_KeyInPtn = "M")
+	else if(g_KeyInPtn=="M")
 	{
 		g_keyInPtn := ""
 	}
-	else if(g_KeyInPtn = "RMr" || g_KeyInPtn = "LMl")
+	else if(g_KeyInPtn=="RMr" || g_KeyInPtn=="LMl")
 	{
 		g_keyInPtn := ""
 	}
-	else if(g_KeyInPtn = "MM" || g_KeyInPtn = "MMm")
+	else if(g_KeyInPtn=="MM" || g_KeyInPtn=="MMm")
 	{
 		g_keyInPtn := "M"
 	}
-	else if(g_KeyInPtn = "MMM")
+	else if(g_KeyInPtn=="MMM")
 	{
 		g_keyInPtn := "MM"
 	}
@@ -1021,7 +1011,7 @@ keydownM:
 	}
 	
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
-	if(g_KeyInPtn = "M")	; S2)Mオン状態
+	if(g_KeyInPtn=="M")	; S2)Mオン状態
 	{
 		; M2キー押下
 		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
@@ -1117,9 +1107,9 @@ keydownM:
 	Critical,5
 	Gosub,ChkIME
 
-	if(g_Oya = "N")
+	if(g_Oya=="N")
 	{
-		if(g_KeyInPtn = "") {
+		if(g_KeyInPtn=="") {
 			; 当該キーを単独打鍵として保留
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, keyTick[g_layoutPos])
 			g_KeyInPtn := "M"
@@ -1140,14 +1130,14 @@ keydownM:
 				SendZeroDelay(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1], g_ZeroDelay)
 			}
 		}
-		else if(g_KeyInPtn = "M")	; S2)Mオン状態
+		else if(g_KeyInPtn=="M")	; S2)Mオン状態
 		{
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
 		}
-		else if(g_KeyInPtn = "MM")	; MMオン状態
+		else if(g_KeyInPtn=="MM")	; MMオン状態
 		{
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, keyTick[g_layoutPos])
 			
@@ -1422,7 +1412,7 @@ keyupM:
 		g_TUpOnHold[3] := g_MojiUpTick[0]
 	}
 	; 親指シフトの動作
-	if(g_KeyInPtn = "M")	; Mオン状態
+	if(g_KeyInPtn=="M")	; Mオン状態
 	{
 		if(g_layoutPos == g_MojiOnHold[1]) {	; 保留キーがアップされた
 			Gosub, SendOnHoldM
@@ -1482,7 +1472,7 @@ keyupM:
 	}
 	else if(g_KeyInPtn="MR")	; M-Oオン状態
 	{
-		if(g_layoutPos = g_MojiOnHold[1])	; 保留キーがアップされた
+		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
 		{
 			; 処理C
 			g_Interval["M_M"] := g_TUpOnHold[1] - g_TDownOnHold[1]
@@ -1500,7 +1490,7 @@ keyupM:
 	}
 	else if(g_KeyInPtn="ML")	; M-Oオン状態
 	{
-		if(g_layoutPos = g_MojiOnHold[1])	; 保留キーがアップされた
+		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
 		{
 			; 処理C
 			g_Interval["M_M"] := g_TUpOnHold[1] - g_TDownOnHold[1]
@@ -1518,7 +1508,7 @@ keyupM:
 	}
 	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")	; O-Mオン状態
 	{
-		if(g_layoutPos = g_MojiOnHold[1])	; 保留キーがアップされた
+		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
 		{
 			; 処理E
 			Gosub, SendOnHoldMO
@@ -1526,7 +1516,7 @@ keyupM:
 	}
 	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;O-M-Oオフ状態
 	{
-		if(g_layoutPos = g_MojiOnHold[1])	; 保留キーがアップされた
+		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
 		{
 			Gosub, SendOnHoldMO
 		}
@@ -1783,7 +1773,7 @@ ScanModifier:
 	return
 
 ModeInitialize:
-	if(g_KeyInPtn = "M")
+	if(g_KeyInPtn=="M")
 	{
 		Gosub, SendOnHoldM
 	}
@@ -1829,11 +1819,11 @@ ModeInitialize:
 GetKeyStateWithLog(stLast, vkey0, kName) {
 	;stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
 	stCurr := DllCall("GetAsyncKeyState", "UInt", vkey0)
-	if(stCurr !=0 && stLast = 0)	; keydown
+	if(stCurr !=0 && stLast==0)	; keydown
 	{
 		RegLogs(kName . " down")
 	}
-	else if(stCurr = 0 && stLast !=0)	; keyup
+	else if(stCurr==0 && stLast !=0)	; keyup
 	{
 		RegLogs(kName . " up")
 	}
@@ -1898,13 +1888,13 @@ ChkIME:
 		; 両方とも小指シフト面を反映させるため、変換モードは見ない
 		; 小指シフト面が設定されていなければ変換モードを見る
 		vImeMode := IME_GET() & 32767
-		if(vImeMode = 0)
+		if(vImeMode==0)
 		{
 			vImeConvMode :=IME_GetConvMode()
 			g_Romaji := "A"
 		} else {
 			vImeConvMode :=IME_GetConvMode()
-			if( vImeConvMode & 0x01 == 1) ;半角カナ・全角平仮名・全角カタカナ
+			if( vImeConvMode & 0x01==1) ;半角カナ・全角平仮名・全角カタカナ
 			{
 				g_Romaji := "R"
 			}
