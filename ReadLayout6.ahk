@@ -482,6 +482,13 @@ Mode2Key:
 		return
 	if(_mode = "ANN")
 		Gosub, SetAlphabet
+	_col := "A"
+	org := SplitColumn("換,空,変,日")
+	Gosub, SetKeyTable
+	if(_error <> "")
+		return
+	if(_mode = "ANN")
+		Gosub, SetAlphabet
 	return
 
 ;----------------------------------------------------------------------
@@ -1388,6 +1395,7 @@ MakeZ2hHash() {
 	hash["日"] := "vkF2sc070"
 	hash["英"] := "vkF0sc03A"
 	hash["変"] := "vk1Csc079"
+	hash["換"] := "vk1Dsc07B"
 	hash["無"] := ""
 	hash["濁"] := ""
 	hash["半"] := ""
