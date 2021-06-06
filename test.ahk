@@ -2,10 +2,14 @@
 StringCaseSense, On
 	tmp := Object()
 	tmp["A"] := "hello"
-	tmp["a"] := "goodbye"
-	tmp2 := tmp[0]
+	tmp["B"] := "goodbye"
+	tmp["C"] := "Chao"
+	tmp["D"] := "nie-hao"
+	RemoveObject(tmp)
+	cnt := CountObject(tmp)
+	msgbox, % "tmp0 is " . tmp["A"] . ":" . cnt
+	return
 	
-	;msgbox, % "tmp0 is " . tmp["A"]
 	m := "MMm"
 	if(m=="MMM") {
 		msgbox, % "3m"
@@ -28,6 +32,24 @@ obj := Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00)
 	idx := CountObject(obj)
 	msgbox, % "tmp2 is [" . idx . "]" . obj["red"]
 	return
+
+RemoveObject(_obj)
+{
+	if(isObject(_obj)) {
+		loop
+		{
+			_cnt := 0
+			enum := _obj._NewEnum()
+			While enum[k, v]
+			{
+				_obj.Remove(k,k)
+				_cnt := _cnt + 1
+			}
+			if(_cnt == 0)
+				break
+		}
+	}
+}
 
 CountObject(_obj)
 {

@@ -116,6 +116,8 @@
 	g_MojiUpTick := Object()
 	g_OnHoldIdx := 0
 	keyTick := Object()
+	g_SendQueue := Object()
+	g_SendQueueIdx := 0
 	
 	g_sansTick := INFINITE
 	g_sans := "N"
@@ -500,7 +502,7 @@ MnDown(aStr) {
 	vOut := ""
 	if(aStr<>"")
 	{
-		vOut := "{Blind}{" . aStr . " down}"
+		vOut := "{" . aStr . " down}"
 	}
 	return vOut
 }
@@ -513,14 +515,14 @@ MnUp(aStr) {
 	vOut := ""
 	if(aStr<>"")
 	{
-		vOut := "{Blind}{" . aStr . " up}"
+		vOut := "{" . aStr . " up}"
 	}
 	return vOut
 }
-;--------------------------------------------------------------------y-
+;----------------------------------------------------------------------
 ; 送信文字列の出力
 ;----------------------------------------------------------------------
-SubSend(vOut)
+bup_SubSend(vOut)
 {
 	global aLog,idxLogs, aLogCnt, g_KeyInPtn, g_trigger
 	
@@ -532,17 +534,55 @@ SubSend(vOut)
 	}
 	return
 }
-;--------------------------------------------------------------------y-
+
+;----------------------------------------------------------------------
+; 送信文字列の出力
+;----------------------------------------------------------------------
+SubSend(vOut)
+{
+	global g_SendQueue, g_SendQueueIdx
+	global g_KeyInPtn, g_trigger
+	
+	critical
+	_stroke := ""
+	_scnt := 0
+	_len := strlen(vOut)
+	_cnt := 0
+	loop, Parse, vOut
+	{
+		_cnt := _cnt + 1
+		_stroke := _stroke . A_LoopField
+		StringLeft, _left2c, _stroke, 2
+		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
+			_scnt := _scnt + 1
+			SetKeyDelay, -1
+			Send, %_stroke%
+			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
+			_stroke := ""
+			if(_cnt != _len && mod(_scnt,2)==0) {
+				Sleep,10
+			}
+		}
+	}
+	if(_stroke != "") {
+		SetKeyDelay, -1
+		Send, %_stroke%
+		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
+	}
+	critical,off
+}
+
+;----------------------------------------------------------------------
 ; キーから送信文字列に変換
 ;----------------------------------------------------------------------
 MnDownUp(key)
 {
 	if(key <> "")
-		return "{Blind}{" . key . " down}{" . key . " up}"
+		return "{" . key . " down}{" . key . " up}"
 	else
 		return ""
 }
-;--------------------------------------------------------------------y-
+;----------------------------------------------------------------------
 ; ログ保存
 ;----------------------------------------------------------------------
 RegLogs(thisLog)
@@ -577,13 +617,6 @@ SendOnHoldMO:
 		return
 	}
 	if(cntM >= 1) {
-		if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
-		|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M")) {
-			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			SendOnHold(_mode, g_MojiOnHold[2], g_ZeroDelay)
-			dequeueKey()
-			dequeueKey()
-		} else
 		if((g_MetaOnHold[1]=="M" && g_MetaOnHold[2]=="L")
 		|| (g_MetaOnHold[1]=="M" && g_MetaOnHold[2]=="R")) {
 			_mode := g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2]
@@ -591,6 +624,13 @@ SendOnHoldMO:
 			dequeueKey()
 			dequeueKey()
 		} else 
+		if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
+		|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M")) {
+			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+			SendOnHold(_mode, g_MojiOnHold[2], g_ZeroDelay)
+			dequeueKey()
+			dequeueKey()
+		} else
 		if(g_MetaOnHold[1]=="M") {
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 			SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
@@ -860,31 +900,25 @@ SendOnHoldMM:
 		if(g_OnHoldIdx >= 3
 		&& ((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M")
 		||  (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M"))) {
-			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if(kdn[_mode . g_MojiOnHold[3] . g_MojiOnHold[2]] != "") {
-				SendOnHold(_mode, g_MojiOnHold[3] . g_MojiOnHold[2], g_ZeroDelay)
-				dequeueKey()
-				dequeueKey()
-				dequeueKey()
-				g_SendTick := INFINITE
-				g_keyInPtn := ""
-			} else {
-				Gosub, SendOnHoldM
-				g_keyInPtn := "M"
-			}
-		} else {
-			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
-				SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
-				dequeueKey()
-				dequeueKey()
-				g_SendTick := INFINITE
-				g_keyInPtn := ""
-			} else {
-				Gosub, SendOnHoldM
-				g_keyInPtn := "M"
-			}
+			g_RomajiOnHold[2] := g_RomajiOnHold[1]
+			g_OyaOnHold[2]    := g_OyaOnHold[1]
+			g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
+			dequeueKey()
 		}
+		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+		if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
+			SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
+			dequeueKey()
+			dequeueKey()
+			g_SendTick := INFINITE
+			g_keyInPtn := ""
+		} else {
+			Gosub, SendOnHoldM
+			g_keyInPtn := "M"
+		}
+	} else {
+		Gosub, SendOnHoldM
+		g_keyInPtn := "M"
 	}
 	return
 
@@ -913,58 +947,35 @@ SendOnHoldMMM:
 	}
 	if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M" && g_MetaOnHold[4]=="M")
 	|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M" && g_MetaOnHold[4]=="M")) {
-		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-		if(kdn[_mode . g_MojiOnHold[4] . g_MojiOnHold[3] . g_MojiOnHold[2]] != "") {
-			SendOnHold(_mode, g_MojiOnHold[4] . g_MojiOnHold[3] . g_MojiOnHold[2], g_ZeroDelay)	
-			clearQueue()
-			g_SendTick := INFINITE
-			g_keyInPtn := ""
-		} else if(kdn[_mode . g_MojiOnHold[3] . g_MojiOnHold[2]] != "") {
-			SendOnHold(_mode, g_MojiOnHold[3] . g_MojiOnHold[2], g_ZeroDelay)
-			dequeueKey()
-			dequeueKey()
-			dequeueKey()
-			SendKeyUp()
-			Gosub,SendOnHoldM
-			clearQueue()
-			g_keyInPtn := ""
-		} else {
-			SendOnHold(_mode, g_MojiOnHold[2], g_ZeroDelay)
-			dequeueKey()
-			dequeueKey()
-			SendKeyUp()
-			Gosub,SendOnHoldMM
-			if(g_KeyInPtn == "M") {
-				SendKeyUp()
-				Gosub,SendOnHoldM
-			}
-			clearQueue()
-			g_keyInPtn := ""
-		}
+		g_RomajiOnHold[2] := g_RomajiOnHold[1]
+		g_OyaOnHold[2]    := g_OyaOnHold[1]
+		g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
+		dequeueKey()
+	}
+	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+	if(kdn[_mode . g_MojiOnHold[3] . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
+		SendOnHold(_mode, g_MojiOnHold[3] . g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)	
+		clearQueue()
+		g_SendTick := INFINITE
+		g_keyInPtn := ""
+	} else
+	if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
+		SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
+		dequeueKey()
+		dequeueKey()
+		SendKeyUp()
+		Gosub,SendOnHoldM
+		clearQueue()
+		g_keyInPtn := ""
+		return
 	} else {
-		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-		if(kdn[_mode . g_MojiOnHold[3] . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
-			SendOnHold(_mode, g_MojiOnHold[3] . g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)	
-			clearQueue()
-			g_SendTick := INFINITE
-			g_keyInPtn := ""
-		} else if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] != "") {
-			SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
-			dequeueKey()
-			dequeueKey()
+		SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
+		dequeueKey()
+		SendKeyUp()
+		Gosub,SendOnHoldMM
+		if(g_KeyInPtn == "M") {
 			SendKeyUp()
 			Gosub,SendOnHoldM
-			clearQueue()
-			g_keyInPtn := ""
-		} else {
-			SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
-			dequeueKey()
-			SendKeyUp()
-			Gosub,SendOnHoldMM
-			if(g_KeyInPtn == "M") {
-				SendKeyUp()
-				Gosub,SendOnHoldM
-			}
 			clearQueue()
 			g_keyInPtn := ""
 		}
@@ -1111,7 +1122,7 @@ keydownM:
 			g_Interval["RM"] := keyTick[g_layoutPos] - g_OyaTick["R"]
 			if(g_Interval["RM"] <= g_Interval["MR"])	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
 			{
-				;g_OyaOnHold[1] := "N"
+				g_OyaOnHold[1] := "N"
 				Gosub, SendOnHoldM		; 保留キーの単独打鍵
 			} else {
 				Gosub, SendOnHoldMO		; 保留キーの同時打鍵
@@ -1125,7 +1136,7 @@ keydownM:
 			g_Interval["LM"] := keyTick[g_layoutPos] - g_OyaTick["L"]
 			if(g_Interval["LM"] <= g_Interval["ML"])	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
 			{
-				;g_OyaOnHold[1] := "N"
+				g_OyaOnHold[1] := "N"
 				Gosub, SendOnHoldM		; 保留キーの単独打鍵
 			} else {
 				Gosub, SendOnHoldMO		; 保留キーの同時打鍵
@@ -1134,9 +1145,15 @@ keydownM:
 	}
 	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")		;S5)O-Mオン状態
 	{
-		if(g_MojiOnHold[g_OnHoldIdx]<>"") {
-			Gosub, SendOnHoldMO
+		; M2キー押下
+		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
+			; 保留中の１文字を確定（出力）
+			Gosub, SendOnHoldM
 		}
+		;if(g_MojiOnHold[g_OnHoldIdx]<>"") {
+		;	Gosub, SendOnHoldMO
+		;}
 	}
 	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S6)O-M-Oオフ状態
 	{
@@ -1204,7 +1221,8 @@ keydownM:
 		if(g_KeyInPtn==g_Oya || g_KeyInPtn=="") {
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			g_MojiCount[g_Oya] := g_MojiCount[g_Oya] + 1
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Interval[g_Oya . "M"]*g_OverlapOM)/(100-g_OverlapOM)),g_Threshold)
+			SetTimeout()
+			;g_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Interval[g_Oya . "M"]*g_OverlapOM)/(100-g_OverlapOM)),g_Threshold)
 			g_KeyInPtn := g_Oya . "M"
 			; 連続打鍵の判定 
 			_pushedKey := GetPushedKeys()
@@ -1529,13 +1547,6 @@ keyupM:
 			g_TUpOnHold[A_Index] := g_MojiUpTick[0]
 		}
 	}
-;	if(g_layoutPos == g_MojiOnHold[1]) {
-;		g_TUpOnHold[1] := g_MojiUpTick[0]
-;	} else if(g_layoutPos == g_MojiOnHold[2]) {
-;		g_TUpOnHold[2] := g_MojiUpTick[0]
-;	} else if(g_layoutPos == g_MojiOnHold[3]) {
-;		g_TUpOnHold[3] := g_MojiUpTick[0]
-;	}
 	; 親指シフトの動作
 	if(g_KeyInPtn=="M")	; Mオン状態
 	{
@@ -1754,8 +1765,10 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		;g_debugout2 := GetPushedKeys()
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi g_layoutPos . ":" . g_KeyInPtn . ":" . g_OnHoldIdx
+		_keyName := keyNameHash["C06"]
+		g_debugout2 := GetKeyState(_keyName,"P")
+		_mode := g_Romaji . g_Oya . g_Koyubi
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 		
@@ -1984,6 +1997,10 @@ GetPushedKeys()
 	for index, element in layoutArys
 	{
 		if(keyState[element] == 1) {
+			_keyName := keyNameHash["C06"]
+			if(GetKeyState(_keyName,"P")==0) {
+				keyState[element] := 0
+			}
 			_cont := chr(asc(element)-asc("A")+asc("1")) . substr(element,2)
 			_pushedKeys := _pushedKeys . _cont
 		}

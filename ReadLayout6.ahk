@@ -45,7 +45,7 @@ ReadLayout:
 	
 	Gosub, InitLayout2
 	vLayoutFile := g_LayoutFile
-	if(vLayoutFile = "")
+	if(vLayoutFile == "")
 		return
 
 	_error := ""
@@ -64,18 +64,25 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
+	RemoveObject(kst)
 	kst := Object()	; キーの状態
+	RemoveObject(ksc)
 	ksc := Object()	; 最大同時打鍵個数
+	RemoveObject(kup)
 	kup := Object()	; keyup したときの Send形式
+	RemoveObject(kdn)
 	kdn := Object()	; keydown したときの Send形式
+	RemoveObject(mup)
 	mup := Object()	; キーボードそのものを keyup したときの Send形式
+	RemoveObject(mdn)
 	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
 	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
 	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
 	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
 	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
-	
+
+	RemoveObject(g_Oya2Layout)
 	g_Oya2Layout := Object()
 
 	roma3hash := MakeRoma3Hash()
@@ -96,15 +103,26 @@ InitLayout2:
 	ctrlKeyHash := MakeCtrlKeyHash()
 	modifierHash := MakeModifierHash()
 
+	RemoveObject(keyAttribute3)
 	keyAttribute3 := MakeKeyAttribute3Hash()
+
+	RemoveObject(keyState)
 	keyState := MakeKeyState()
+
+	RemoveObject(keyNameHash)
 	keyNameHash := MakeKeyNameHash()
+
+	RemoveObject(kLabel)
 	kLabel := MakeKeyLabelHash()
+
+	RemoveObject(g_SimulMode)
 	g_SimulMode := Object()
 
 	g_layoutName := ""
 	g_layoutVersion := ""
 	g_layoutURL := ""
+
+	RemoveObject(LF)
 	LF := Object()
 	LF["ANN"] := ""
 	LF["ALN"] := ""
@@ -234,111 +252,145 @@ SetkLabel(_modeDst, _modeSrc)
 ReadLayoutFile:
 	SetWorkingDir, %A_ScriptDir%
 	vAllTheLayout := ""
-	if(Path_FileExists(vLayoutFile) = 0)
+	if(Path_FileExists(vLayoutFile) == 0)
 	{
 		_error := "ファイルが存在しません " . vLayoutFile
 		return
 	}
 	Gosub,InitLayout2
-	_mode := ""
-	_modeName := ""
-	_Section := ""
+	g_mode := ""
+	g_modeName := ""
+	g_Section := ""
 	_spos := ""
 	_mline := 0
+	_mline2 := 0
 	_error := ""
 	_lineCtr := 0
+	g_layoutName := ""
+	g_layoutVersion := ""
+	g_layoutURL := ""
+	_fileObj := fileOpen(vLayoutFile,"r")
+	if(isObject(_fileObj)==false) {
+		_error := "ファイルが開けません " . vLayoutFile
+		return
+	}
 	Loop
 	{
 		_lineCtr := _lineCtr + 1
-		FileReadLine, _line, %vLayoutFile%, %A_Index%
-		If(ErrorLevel <> 0)
-		{
-			Break
+		if(_fileObj.AtEOF) {
+			break
 		}
+		_line := _fileObj.ReadLine()
 		; コメント部分の除去
 	    cpos := InStr(_line,";")
     	if(cpos == 1)
     	{
-			_line2 := SubStr(_line,1,%cpos%-1)
+			_line2 := ""
 		} else {
-	    	_line2 := Trim(_line, OmitChars = " `t`n`r")
+	    	_line2 := Trim(_line)
+		    cpos := InStr(_line2,chr(10))
+		    if(cpos > 0) {
+		    	_line2 := substr(_line2,1,cpos-1)
+		    }
+		    cpos := InStr(_line2,chr(13))
+		    if(cpos > 0) {
+		    	_line2 := substr(_line2,1,cpos-1)
+		    }
 	    }
-	    if(StrLen(_line2) > 0)
+	    if(_line2 != "")
 		{
 			if(SubStr(_line2,1,1)=="[" && SubStr(_line2,StrLen(_line2),1)=="]") {
-				_Section := _line2
+				g_Section := _line2
 			}
 			if((SubStr(_line2,1,1)=="<" || SubStr(_line2,1,1)=="{")
 			&& (SubStr(_line2,StrLen(_line2),1)==">" || SubStr(_line2,StrLen(_line2),1)=="}")) {
-				_Section := _line2
+				g_Section := _line2
 			}
 			if(layout2Hash[_line2] != "") {
-				_mode := layout2Hash[_line2]
+				g_mode := layout2Hash[_line2]
 				_spos := ""
-				if(_mode != "")
+				if(g_mode != "")
 				{
-					_modeSave := _mode
-					_modeName := _line2
+					g_modeSave := g_mode
+					g_modeName := _line2
 					_mline := 1
+					_mline2 := 0
+					LF[g_mode . _colhash[1]] := ""
+					LF[g_mode . _colhash[2]] := ""
+					LF[g_mode . _colhash[3]] := ""
+					LF[g_mode . _colhash[4]] := ""
+					LF[g_mode . _colhash[5]] := "換,空,変,日"
 				}
 				continue
 			}
-			if(_mode != "") 
+			if(g_mode != "") 
 			{
-				if _mline between 1 and 4
+				if(1<=_mline && _mline <= 4)
 				{
-					LF[_mode . _colhash[_mline]] := _line2
+					LF[g_mode . _colhash[_mline]] := _line2
 					if(_mline == 4) {
 						GoSub, Mode2Key		; 親指シフトレイアウトの処理
 						if(_error <> "")
 						{
-							_error := vLayoutFile . ":" . _modeName . ":" . _error
+							_error := vLayoutFile . ":" . g_modeName . ":" . _error
 
-							_Section := ""
-							_mode := ""
-							_modeName := ""
+							g_Section := ""
+							g_mode := ""
+							g_modeName := ""
 							_spos := ""
+							_mline2 := 0
 							_mline := 0
+							_fileObj.Close()
 							return
 						}
 					}
-					_mline += 1
+					_spos := ""
+					_mline2 := 0
+					_mline := _mline + 1
 				}
-				if(ParseSimulPos(_line2) != "") {
-					_spos := ParseSimulPos(_line2)		; 同時打鍵パターンがあるか
-					_cpos := ParseContPos(_line2)	; 連続打鍵パターンがあるか
-					_simulMode := _line2
-					if(_spos != "")
-					{
-						_mline2 := 1
-					}
-					continue
-				}
-				if(_spos != "") {
-					if _mline2 between 1 and 4
-					{
-						LF[_mode . _spos . _colhash[_mline2]] := _line2
-						if(_mline2 == 4) {
-							GoSub, Mode3Key		; 同時打鍵レイアウトの処理
-							if(_error <> "")
-							{
-								_error := vLayoutFile . ":" . _modeName . ":" . _error
-		
-								_Section := ""
-								_mode := ""
-								_spos := ""
-								_mline2 := 0
-								return
-							}
+				else if(_mline == 5) {
+					if(ParseSimulPos(_line2) != "") {
+						_spos := ParseSimulPos(_line2)		; 同時打鍵パターンがあるか
+						_cpos := ParseContPos(_line2)	; 連続打鍵パターンがあるか
+						_simulMode := _line2
+						if(_spos != "")
+						{
+							_mline2 := 1
+							LF[g_mode . _spos . _colhash[1]] := ""
+							LF[g_mode . _spos . _colhash[2]] := ""
+							LF[g_mode . _spos . _colhash[3]] := ""
+							LF[g_mode . _spos . _colhash[4]] := ""
 						}
-						_mline2 += 1
+						continue
+					}
+					if(_spos != "") {
+						if(1<=_mline2 && _mline2 <= 4)
+						{
+							LF[g_mode . _spos . _colhash[_mline2]] := _line2
+							if(_mline2 == 4) {
+								GoSub, Mode3Key		; 同時打鍵レイアウトの処理
+								if(_error <> "")
+								{
+									_error := vLayoutFile . ":" . g_modeName . ":" . _error
+
+									g_Section := ""
+									g_mode := ""
+									_spos := ""
+									_mline2 := 0
+									_fileObj.Close()
+									return
+								}
+								_spos := ""
+							}
+							_mline2 := _mline2 + 1
+						}
+						continue
 					}
 					continue
 				}
-				continue
 			}
 
-			if(_Section == "[配列]")
+			if(g_Section == "[配列]")
 			{
 				cpos2 := Instr(_line2,"=")
 				org := StrSplit(_line2,"=")
@@ -362,7 +414,7 @@ ReadLayoutFile:
 				continue
 			}
 			else
-			if(_Section == "[機能キー]")
+			if(g_Section == "[機能キー]")
 			{
 				cpos2 := Instr(_line2,",")
 				org := StrSplit(_line2,",")
@@ -384,6 +436,7 @@ ReadLayoutFile:
 			}
 		}
 	}
+	_fileObj.Close()
 	Return
 
 ;----------------------------------------------------------------------
@@ -427,12 +480,12 @@ ParseContPos(_line)
 ;----------------------------------------------------------------------
 Mode2Key:
 	_error := ""
-	LF[_mode] := _modeName
+	LF[g_mode] := g_modeName
 	_col := "E"
-	org := SplitColumn(LF[_mode . "E"])
+	org := SplitColumn(LF[g_mode . "E"])
 	if(CountObject(org) < 13 || CountObject(org) > 14)
 	{
-		_error := _Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	if(CountObject(org) == 13) {
@@ -441,53 +494,54 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_error <> "") 
 		return
-	if(_mode = "ANN")
+	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 	
 	_col := "D"
-	org := SplitColumn(LF[_mode . "D"])
+	org := SplitColumn(LF[g_mode . "D"])
 	if(CountObject(org) <> 12)
 	{
-		_error := _Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(_mode = "ANN")
+	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 	
 	_col := "C"
-	org := SplitColumn(LF[_mode . "C"])
+	org := SplitColumn(LF[g_mode . "C"])
 	if(CountObject(org) <> 12)
 	{
-		_error := _Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(_mode = "ANN")
+	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 
 	_col := "B"
-	org := SplitColumn(LF[_mode . "B"])
+	org := SplitColumn(LF[g_mode . "B"])
 	if(CountObject(org) <> 11)
 	{
-		_error := _Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(_mode = "ANN")
+	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 	_col := "A"
-	org := SplitColumn("換,空,変,日")
+	;org := SplitColumn("換,空,変,日")
+	org := SplitColumn(LF[g_mode . "A"])	
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(_mode = "ANN")
+	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 	return
 
@@ -501,7 +555,7 @@ SplitColumn(lColumn) {
 	while(lColumn <> "") {
 		idx := idx + 1
 		StringLeft, _cl, lColumn, 1
-		if(_cl = "'" || _cl = """") {
+		if(_cl == "'" || _cl == """") {
 			cpos := 2
 			cpos := Instr(lColumn, _cl, false, cpos)
 			if(cpos!=0) {	; 対応する引用符があった
@@ -537,13 +591,13 @@ SplitColumn(lColumn) {
 Mode3Key:
 	_error := ""
 	_idx := CountObject(g_SimulMode)
-	g_SimulMode[_idx + 1] := _mode . _simulMode		; 同時打鍵テーブル
+	g_SimulMode[_idx + 1] := g_mode . _simulMode		; 同時打鍵テーブル
 
 	_col := "E"
-	org := SplitColumn(LF[_mode . _spos . "E"])
+	org := SplitColumn(LF[g_mode . _spos . "E"])
 	if(CountObject(org) < 13 || CountObject(org) > 14)
 	{
-		_error := _Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	if(CountObject(org) == 13) {
@@ -555,6 +609,7 @@ Mode3Key:
 			_lpos2 := substr(_spos,4,3)
 		}
 	}
+	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -564,6 +619,7 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
+		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -577,12 +633,13 @@ Mode3Key:
 		return
 	
 	_col := "D"
-	org := SplitColumn(LF[_mode . _spos . "D"])
+	org := SplitColumn(LF[g_mode . _spos . "D"])
 	if(CountObject(org) <> 12)
 	{
-		_error := _Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
+	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -592,6 +649,7 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
+		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -605,12 +663,13 @@ Mode3Key:
 		return
 	
 	_col := "C"
-	org := SplitColumn(LF[_mode . _spos . "C"])
+	org := SplitColumn(LF[g_mode . _spos . "C"])
 	if(CountObject(org) <> 12)
 	{
-		_error := _Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
+	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -620,6 +679,7 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
+		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -633,12 +693,13 @@ Mode3Key:
 		return
 
 	_col := "B"
-	org := SplitColumn(LF[_mode . _spos . "B"])
+	org := SplitColumn(LF[g_mode . _spos . "B"])
 	if(CountObject(org) <> 11)
 	{
-		_error := _Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := g_Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
+	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -648,6 +709,7 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
+		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -665,6 +727,7 @@ Mode3Key:
 ;	レイアウトファイルの設定
 ;----------------------------------------------------------------------
 SetLayoutProperty:
+	RemoveObject(ShiftMode)
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
 	if(LF["ANN"]!="" && LF["ALN"]!="" && LF["ARN"]!="")
@@ -674,18 +737,23 @@ SetLayoutProperty:
 		
 		if(LF["ANK"]!="" && LF["ALK"] == "") {
 			CopyColumns("ANK", "ALK")
-			_mode := "ALK"
-			Gosub, SetE2BKeyTables
+			g_mode := "ALK"
+			Gosub, SetE2AKeyTables
 		}
 		if(LF["ANK"]!="" && LF["ARK"] == "") {
 			CopyColumns("ANK", "ARK")
-			_mode := "ARK"
-			Gosub, SetE2BKeyTables
+			g_mode := "ARK"
+			Gosub, SetE2AKeyTables
 		}
 	} else 
 	if(LF["ANN"]!="" && LF["A1N"]!="") 
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
+	}
+	else
+	if(LF["ANN"]!="" && listSimulMode("A")!="")
+	{
+		ShiftMode["A"] := "文字同時打鍵"
 	}
 	else
 	if(LF["ANN"]!="" && LF["ANK"]!="")
@@ -701,13 +769,13 @@ SetLayoutProperty:
 
 		if(LF["RNK"]!="" && LF["RLK"] == "") {
 			CopyColumns("RNK", "RLK")
-			_mode := "RLK"
-			Gosub, SetE2BKeyTables
+			g_mode := "RLK"
+			Gosub, SetE2AKeyTables
 		}
 		if(LF["RNK"]!="" && LF["RRK"] == "") {
 			CopyColumns("RNK","RRK")
-			_mode := "RRK"
-			Gosub, SetE2BKeyTables
+			g_mode := "RRK"
+			Gosub, SetE2AKeyTables
 		}
 	} else
 	if(LF["RNN"]!="" && LF["R1N"]!="")
@@ -715,7 +783,7 @@ SetLayoutProperty:
 		ShiftMode["R"] := "プレフィックスシフト"
 	}
 	else
-	if(LF["RNN"]!="" && CountObject(g_SimulMode)!=0)
+	if(LF["RNN"]!="" && listSimulMode("R")!="")
 	{
 		ShiftMode["R"] := "文字同時打鍵"
 	}
@@ -727,26 +795,32 @@ SetLayoutProperty:
 	return
 
 ;----------------------------------------------------------------------
-;	E段からB段までカラム列からキー配列表を設定
+;	E段からA段までカラム列からキー配列表を設定
 ;----------------------------------------------------------------------
-SetE2BKeyTables:
+SetE2AKeyTables:
 	_col := "E"
-	org := StrSplit(LF[_mode . "E"],",")
+	org := StrSplit(LF[g_mode . "E"],",")
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
 	_col := "D"
-	org := StrSplit(LF[_mode . "D"],",")
+	org := StrSplit(LF[g_mode . "D"],",")
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
 	_col := "C"
-	org := StrSplit(LF[_mode . "C"],",")
+	org := StrSplit(LF[g_mode . "C"],",")
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
 	_col := "B"
-	org := StrSplit(LF[_mode . "B"],",")
+	org := StrSplit(LF[g_mode . "B"],",")
+	Gosub, SetKeyTable
+	if(_error <> "") 
+		return
+	_col := "A"
+	;org := StrSplit("換,空,変,日",",")
+	org := StrSplit(LF[g_mode . "A"],",")
 	Gosub, SetKeyTable
 	if(_error <> "") 
 		return
@@ -831,34 +905,34 @@ RemapOyaKey(_Romaji) {
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetKeyTable:
-	kdn[_mode . "0"] := CountObject(org)
-	kup[_mode . "0"] := CountObject(org)
+	kdn[g_mode . "0"] := CountObject(org)
+	kup[g_mode . "0"] := CountObject(org)
 	loop, % CountObject(org)
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos2 := _col . _row2
-		if(ksc[_mode . _lpos2] < 1) {
-			ksc[_mode . _lpos2] := 1	; 最大同時打鍵数を１に初期化
+		if(ksc[g_mode . _lpos2] < 1) {
+			ksc[g_mode . _lpos2] := 1	; 最大同時打鍵数を１に初期化
 		}
 
 		; 月配列などのプレフィックスシフトキー
 		if(org[A_Index] == " 1" || org[A_Index] == " 2" || org[A_Index] == " 3" || org[A_Index] == " 4")
 		{
-			kdn[_mode . _lpos2] := ""
-			kup[_mode . _lpos2] := ""
+			kdn[g_mode . _lpos2] := ""
+			kup[g_mode . _lpos2] := ""
 
-			kLabel[_mode . _lpos2] := SubStr(org[A_Index],2,1)
+			kLabel[g_mode . _lpos2] := SubStr(org[A_Index],2,1)
 
-			_mode2 := substr(_mode,1,1) . substr(_mode,3,1)
-			keyAttribute3[_mode2 . _lpos2] := SubStr(org[A_Index],2,1)
+			g_mode2 := substr(g_mode,1,1) . substr(g_mode,3,1)
+			keyAttribute3[g_mode2 . _lpos2] := SubStr(org[A_Index],2,1)
 			continue
 		}
 		; 無の指定ならば，元のキーそのもののスキャンコードとする
 		if(org[A_Index] == "無") {
-			kLabel[_mode . _lpos2] := org[A_Index]
-			kst[_mode . _lpos2] := "S"	; scan code
-			kdn[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " down}"
-			kup[_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
+			kLabel[g_mode . _lpos2] := org[A_Index]
+			kst[g_mode . _lpos2] := "S"	; scan code
+			kdn[g_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " down}"
+			kup[g_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
 			continue
 		}
 		GenSendStr3(org[A_Index], _down, _up, _status)
@@ -866,58 +940,27 @@ SetKeyTable:
 			_error := _lpos2 . ":" . _error
 			break
 		}
-		kst[_mode . _lpos2] := _status
+		kst[g_mode . _lpos2] := _status
 		if( _down <> "")
 		{
-			if(SubStr(_mode,1,1)=="R")
+			if(SubStr(g_mode,1,1)=="R")
 			{
-				kLabel[_mode . _lpos2] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos2] := Romaji2Kana(org[A_Index])
 			}
 			else
 			{
-				kLabel[_mode . _lpos2] := org[A_Index]
+				kLabel[g_mode . _lpos2] := org[A_Index]
 			}
-			kdn[_mode . _lpos2] := _down
-			kup[_mode . _lpos2] := _up
+			kdn[g_mode . _lpos2] := _down
+			kup[g_mode . _lpos2] := _up
 		} else {
-			kLabel[_mode . _lpos2] := org[A_Index]
-			kdn[_mode . _lpos2] := ""
-			kup[_mode . _lpos2] := ""
+			kLabel[g_mode . _lpos2] := org[A_Index]
+			kdn[g_mode . _lpos2] := ""
+			kup[g_mode . _lpos2] := ""
 		}
 		continue
 	}
 	return
-
-;----------------------------------------------------------------------
-;	小指シフトモード時の禁止文字でないか否か
-;----------------------------------------------------------------------
-IsKoyubiError(_mode, _aStr) {
-	st := 0
-	if(SubStr(_mode,3,1)=="K") {
-		loop, Parse, _aStr
-		{
-			if(instr("１２３４５６７８９０－＾￥ｑｗｅｒｔｙｕｉｏｐ＠［ａｓｄｆｇｈｊｋｌ；：］ｚｘｃｖｂｎｍ，．／￥",A_LoopField) != 0) {
-				st := 1
-				break
-			}
-		}
-	}
-	return st
-}
-;----------------------------------------------------------------------
-;	小指シフトモード時の禁止文字でないか否か
-;----------------------------------------------------------------------
-IsKoyubiError2(_aStr) {
-	st := false
-	loop, Parse, _aStr
-	{
-		if(instr("１２３４５６７８９０－＾￥ｑｗｅｒｔｙｕｉｏｐ＠［ａｓｄｆｇｈｊｋｌ；：］ｚｘｃｖｂｎｍ，．／￥",A_LoopField) != 0) {
-			st := true
-			break
-		}
-	}
-	return st
-}
 
 ;----------------------------------------------------------------------
 ;	ローマ字＋文字同時打鍵のときのキーダウン・キーアップの際に送信する内容を作成
@@ -928,8 +971,8 @@ SetSimulKeyTable:
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
 
-		if(ksc[_mode . _lpos[0]] < 2) {
-			ksc[_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
+		if(ksc[g_mode . _lpos[0]] < 2) {
+			ksc[g_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
@@ -937,35 +980,35 @@ SetSimulKeyTable:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status
-		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status
-		kst[_mode . _simulMode . _lpos[0]] := _status
-		kst[_mode . _lpos[1] . _lpos[0]] := _status
-		kst[_mode . _lpos[0] . _lpos[1]] := _status
+		kst[g_mode . _lpos[0]] := kst[g_mode . _lpos[0]] . _status
+		kst[g_mode . _lpos[1]] := kst[g_mode . _lpos[1]] . _status
+		kst[g_mode . _simulMode . _lpos[0]] := _status
+		kst[g_mode . _lpos[1] . _lpos[0]] := _status
+		kst[g_mode . _lpos[0] . _lpos[1]] := _status
 		if( _down <> "")
 		{
-			if(SubStr(_mode,1,1)=="R") {
-				kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[1] . _lpos[0]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[0] . _lpos[1]] := Romaji2Kana(org[A_Index])
+			if(SubStr(g_mode,1,1)=="R") {
+				kLabel[g_mode . _simulMode . _lpos[0]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[1] . _lpos[0]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[0] . _lpos[1]] := Romaji2Kana(org[A_Index])
 			} else {
-				kLabel[_mode . _simulMode . _lpos[0]] := org[A_Index]			
-				kLabel[_mode . _lpos[1] . _lpos[0]] := org[A_Index]
-				kLabel[_mode . _lpos[0] . _lpos[1]] := org[A_Index]
+				kLabel[g_mode . _simulMode . _lpos[0]] := org[A_Index]			
+				kLabel[g_mode . _lpos[1] . _lpos[0]] := org[A_Index]
+				kLabel[g_mode . _lpos[0] . _lpos[1]] := org[A_Index]
 			}
-			kdn[_mode . _lpos[1] . _lpos[0]] := _down
-			kdn[_mode . _lpos[0] . _lpos[1]] := _down
+			kdn[g_mode . _lpos[1] . _lpos[0]] := _down
+			kdn[g_mode . _lpos[0] . _lpos[1]] := _down
 
-			kup[_mode . _lpos[1] . _lpos[0]] := _up
-			kup[_mode . _lpos[0] . _lpos[1]] := _up
+			kup[g_mode . _lpos[1] . _lpos[0]] := _up
+			kup[g_mode . _lpos[0] . _lpos[1]] := _up
 		} else {
-			kLabel[_mode . _simulMode . _lpos[0]] := org[A_Index]
-			kst[_mode . _simulMode . _lpos[0]] := ""
+			kLabel[g_mode . _simulMode . _lpos[0]] := org[A_Index]
+			kst[g_mode . _simulMode . _lpos[0]] := ""
 
-			kLabel[_mode . _lpos[1] . _lpos[0]] := org[A_Index]
-			kLabel[_mode . _lpos[0] . _lpos[1]] := org[A_Index]
-			kst[_mode . _lpos[1] . _lpos[0]] := ""	
-			kst[_mode . _lpos[0] . _lpos[1]] := ""	
+			kLabel[g_mode . _lpos[1] . _lpos[0]] := org[A_Index]
+			kLabel[g_mode . _lpos[0] . _lpos[1]] := org[A_Index]
+			kst[g_mode . _lpos[1] . _lpos[0]] := ""	
+			kst[g_mode . _lpos[0] . _lpos[1]] := ""	
 		}
 		continue
 	}
@@ -979,8 +1022,8 @@ SetSimulKeyTable3:
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
-		if(ksc[_mode . _lpos[0]]<3) {
-			ksc[_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		if(ksc[g_mode . _lpos[0]]<3) {
+			ksc[g_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
@@ -988,66 +1031,66 @@ SetSimulKeyTable3:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[_mode . _lpos[0]] := kst[_mode . _lpos[0]] . _status
-		kst[_mode . _lpos[1]] := kst[_mode . _lpos[1]] . _status
-		kst[_mode . _lpos[2]] := kst[_mode . _lpos[2]] . _status
+		kst[g_mode . _lpos[0]] := kst[g_mode . _lpos[0]] . _status
+		kst[g_mode . _lpos[1]] := kst[g_mode . _lpos[1]] . _status
+		kst[g_mode . _lpos[2]] := kst[g_mode . _lpos[2]] . _status
 		
-		kst[_mode . _simulMode . _lpos[0]] := _status	; 普通の文字"M" 修飾キーm
-		kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _status
-		kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _status
-		kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _status
-		kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _status
-		kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _status
-		kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _status
+		kst[g_mode . _simulMode . _lpos[0]] := _status	; 普通の文字"M" 修飾キーm
+		kst[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _status
+		kst[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _status
+		kst[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _status
+		kst[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _status
+		kst[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _status
+		kst[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _status
 		if( _down <> "")
 		{
-			if(SubStr(_mode,1,1)=="R") {
-				kLabel[_mode . _simulMode . _lpos[0]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := Romaji2Kana(org[A_Index])
-				kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := Romaji2Kana(org[A_Index])
+			if(SubStr(g_mode,1,1)=="R") {
+				kLabel[g_mode . _simulMode . _lpos[0]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := Romaji2Kana(org[A_Index])
+				kLabel[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := Romaji2Kana(org[A_Index])
 			} else {
-				kLabel[_mode . _simulMode . _lpos[0]] := _aStr0
-				kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := org[A_Index]
-				kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := org[A_Index]
-				kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := org[A_Index]
-				kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := org[A_Index]
-				kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := org[A_Index]
-				kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := org[A_Index]
+				kLabel[g_mode . _simulMode . _lpos[0]] := _aStr0
+				kLabel[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := org[A_Index]
+				kLabel[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := org[A_Index]
+				kLabel[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := org[A_Index]
+				kLabel[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := org[A_Index]
+				kLabel[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := org[A_Index]
+				kLabel[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := org[A_Index]
 			}
-			kdn[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _down
-			kdn[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _down
-			kdn[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _down
-			kdn[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _down
-			kdn[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _down
-			kdn[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _down
+			kdn[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _down
+			kdn[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _down
+			kdn[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _down
+			kdn[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _down
+			kdn[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _down
+			kdn[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _down
 
-			kup[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _up
-			kup[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _up
-			kup[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _up
-			kup[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _up
-			kup[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _up
-			kup[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _up
+			kup[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _up
+			kup[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _up
+			kup[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _up
+			kup[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _up
+			kup[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _up
+			kup[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _up
 		} else {
-			kLabel[_mode . _simulMode . _lpos[0]] := org[A_Index]
-			kst[_mode . _simulMode . _lpos[0]] := ""
+			kLabel[g_mode . _simulMode . _lpos[0]] := org[A_Index]
+			kst[g_mode . _simulMode . _lpos[0]] := ""
 
-			kLabel[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := org[A_Index]
-			kLabel[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := org[A_Index]
-			kLabel[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := org[A_Index]
-			kLabel[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := org[A_Index]
-			kLabel[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := org[A_Index]
-			kLabel[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := org[A_Index]
+			kLabel[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := org[A_Index]
+			kLabel[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := org[A_Index]
+			kLabel[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := org[A_Index]
+			kLabel[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := org[A_Index]
+			kLabel[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := org[A_Index]
+			kLabel[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := org[A_Index]
 
-			kst[_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
-			kst[_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
-			kst[_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
-			kst[_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
-			kst[_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
-			kst[_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
+			kst[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := ""
+			kst[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := ""
+			kst[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := ""
+			kst[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := ""
+			kst[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := ""
+			kst[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := ""
 		}
 		continue
 	}
@@ -1058,13 +1101,13 @@ SetSimulKeyTable3:
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
 ;----------------------------------------------------------------------
 SetAlphabet:
-	mdn[_mode . "0"] := CountObject(org)
-	mup[_mode . "0"] := mdn[_mode . "0"] 
+	mdn[g_mode . "0"] := CountObject(org)
+	mup[g_mode . "0"] := mdn[g_mode . "0"] 
 	loop, % CountObject(org)
 	{
 		_row2 := _rowhash[A_Index]
-		mdn[_mode . _col . _row2] := kdn[_mode . _col . _row2]
-		mup[_mode . _col . _row2] := kup[_mode . _col . _row2]
+		mdn[g_mode . _col . _row2] := kdn[g_mode . _col . _row2]
+		mup[g_mode . _col . _row2] := kup[g_mode . _col . _row2]
 	}
 	return
 	
@@ -1086,103 +1129,6 @@ CopyColumns(_mdsrc, _mddst)
 	LF[_mddst . "B"] := LF[_mdsrc . "B"]
 	LF[_mddst . "A"] := LF[_mdsrc . "A"]
 	return
-}
-
-;----------------------------------------------------------------------
-;	引用文字
-;----------------------------------------------------------------------
-GetQuotedStr(aStr,BYREF quotation) {
-	global _error
-
-	aQuo := ""
-	StringLeft, quotation, aStr, 1
-	if(quotation = "'" || quotation = """") {
-		StringRight, _cr, aStr, 1
-		if(_cr = quotation)
-		{
-			aQuo := SubStr(aStr, 2, StrLen(aStr) - 2)
-		} else {
-			_error := "引用符が閉じられていません"
-		}
-	} else {
-		quotation := ""
-	}
-	return aQuo
-}
-
-;----------------------------------------------------------------------
-;	文字列をAutohotkeyの出力形式に変換
-;----------------------------------------------------------------------
-Str2Vout(aStr) {
-	global z2hHash
-	
-	vOut := ""
-	loop,Parse, aStr
-	{
-		if(A_LoopField=="{" || A_LoopField=="}") {
-			vOut := vOut . "{ASC " . Asc(A_LoopField) . "}"
-		} else {
-			vOut := vOut . "{" . A_LoopField . "}"
-		}
-	}
-	return vOut
-}
-
-;----------------------------------------------------------------------
-;	bnz/yabファイルの仮想キーコードを、AutoHotKeyでsendできる形式に変換
-;	入力：v??
-;	出力：vk??
-;----------------------------------------------------------------------
-ConvVkey(aStr) {
-	StringLen _len, aStr
-	if(_len <> 3)
-		return
-
-	c0 := SubStr(aStr,1,1)
-	if c0 in V,v
-	{
-		c1 := SubStr(aStr,2,1)
-		if c1 in 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,a,b,c,d,e,f
-		{
-			c2 := SubStr(aStr,3,1)
-			if c2 in 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,a,b,c,d,e,f
-			{
-				vOut := "vk" . c1 . c2
-				return vOut
-			}
-		}
-	}
-	return
-}
-
-;----------------------------------------------------------------------
-; かなをローマ字に変換する
-; 引数　：aStr：対応するキー入力
-; 戻り値：ローマ字に変換した後
-;----------------------------------------------------------------------
-Kana2Romaji(aStr)
-{
-	global roma3Hash
-	_len := strlen(aStr)	; 全角
-	if(_len = 0)
-	{
-		return ""
-	}
-	; かな文字をローマ字に展開
-	_aStr2 := ""
-	loop,Parse, aStr
-	{
-		_c2 := roma3Hash[A_LoopField]
-		if(_c2 <> "")
-		{
-			_aStr2 := _aStr2 . _c2
-		}
-		else
-		{
-			_aStr2 := _aStr2 . A_LoopField
-		}
-	}
-	return _aStr2
 }
 
 ;----------------------------------------------------------------------
@@ -1214,65 +1160,76 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 	_error := ""
 	_status := ""
 	_len := strlen(aStr)	; 全角
-	if(_len = 0)
+	if(_len == 0)
 	{
 		return ""
 	}
 	; 入力文字列をAutohotkeyのSend形式に変換
-	_dn := ""	;"{Blind}"
+	_dn := ""
 	_up := ""
 	_quotation := ""
 	_qstr := ""
 	_vkey := ""
 	_vcnt := 0
 	_c2 := ""
-	loop,Parse, aStr
+	_idx := 1
+	while(_idx <= _len)
 	{
+		_a1 := substr(aStr,_idx,1)
+		_a2 := substr(aStr,_idx,2)
+		
 		if(_c2 != "") {
 			_dn := _dn .  "{" . _c2 . " up}"
 			_c2 := ""
 		}
 		
-		if(A_LoopField == "v" || A_LoopField == "V") {	; 仮想キーコードのマーク
-			_vkey := "vk"
+		if(_a1 == "v" || _a1 == "V") {	; 仮想キーコードのマーク
+			_c2 := "vk"
 			_vcnt := 1
+			_idx := _idx + 1
 		} else if(_vcnt == 1 || _vcnt == 2) {
-			if(instr("0123456789ABCDEFabcdef",A_LoopField) == 0) {
+			if(instr("0123456789ABCDEFabcdef",_a1) == 0) {
 				_error := "仮想キーコードの記載が誤っています"
 			}
-			_vkey := _vkey . A_LoopField
+			_c2 := _c2 . _a1
 			_vcnt := _vcnt + 1
 			if(_vcnt >= 3) {
-				_dn := _dn . "{" . _vkey . "}"
-				_vkey := ""
+				_dn := _dn . "{" . _c2 . " down}"
 				_vcnt := 0
 				_status := _status . "v"		; 仮想キーコード
 			}
-		} else if(A_LoopField = "'" || A_LoopField = """") {	; 引用符のマーク
+			_idx := _idx + 1
+		} else if(_a1 == "'" || _a1 == """") {	; 引用符のマーク
 			if(_quotation == "") {
-				_quotation := A_LoopField
-				_qstr := ""
+				_quotation := _a1
 			} else {
-				_dn := _dn . _qstr
 				_quotation := ""
-				_qstr := ""
 				_status := _status . "Q"		; 引用があった
 			}
+			_idx := _idx + 1
 		} else if(_quotation != "") {
-			_qstr := _qstr . A_LoopField
-		} else if(modifierHash[A_LoopField] != "") {
-			if(A_Index != _len) {
-				_dn := _dn .  modifierHash[A_LoopField]
+			_dn := _dn . "{" . _a1 . "}"
+			_idx := _idx + 1
+		} else if(modifierHash[_a1] != "") {
+			if(_idx != _len) {
+				_dn := _dn .  modifierHash[_a1]
 			}
 			_status := _status . "m"			; 修飾キーがあった
+			_idx := _idx + 1
 		} else {
-			if(ctrlKeyHash[A_LoopField] != "") {
+			if(ctrlKeyHash[_a1] != "") {
 				_status := _status . "c"		; 制御キーがあった
 			}
-			if(roma3Hash[A_LoopField] != "") {
-				_c1 := roma3Hash[A_LoopField]
+			if(roma3Hash[_a2] != "") {
+				_c1 := roma3Hash[_a2]
+				_idx := _idx + strlen(_a2)
+			} else
+			if(roma3Hash[_a1] != "") {
+				_c1 := roma3Hash[_a1]
+				_idx := _idx + 1
 			} else {
-				_c1 := A_LoopField
+				_c1 := _a1
+				_idx := _idx + 1
 			}
 			loop,Parse, _c1
 			{
@@ -1283,13 +1240,13 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 				_c2 := z2hHash[A_LoopField]
 				if(_c2 != "")
 				{
-					_dn := _dn .  "{" . _c2 . " Down}"
+					_dn := _dn .  "{" . _c2 . " down}"
 				}
 			}
 		}
 	}
 	if(_c2 != "") {
-		_up := _up .  "{blind}{" . _c2 . " up}"
+		_up := _up .  "{" . _c2 . " up}"
 		_c2 := ""
 	}
 	if(_quotation != "") {
@@ -1311,7 +1268,43 @@ CountObject(_obj)
 	}
 	return _cnt
 }
-
+;----------------------------------------------------------------------
+;	オブジェクトの要素を削除
+;----------------------------------------------------------------------
+RemoveObject(_obj)
+{
+	if(isObject(_obj)) {
+		loop
+		{
+			_cnt := 0
+			enum := _obj._NewEnum()
+			While enum[k, v]
+			{
+				_obj.Remove(k,k)
+				_cnt := _cnt + 1
+			}
+			if(_cnt == 0)
+				break
+		}
+	}
+}
+;----------------------------------------------------------------------
+;	オブジェクトの要素リストを返す
+;----------------------------------------------------------------------
+listSimulMode(_Romaji)
+{
+	global g_SimulMode
+	
+	_ddlist := ""
+	enum := g_SimulMode._NewEnum()
+	While enum[k, v]
+	{
+		if(substr(v,1,1)==_Romaji) {
+			_ddlist := ddlist . v . "|"
+		}
+	}
+	return _ddlist
+}
 ;----------------------------------------------------------------------
 ;	レイアウト名からモード名に変換
 ;----------------------------------------------------------------------
@@ -1601,6 +1594,120 @@ MakeRoma3Hash()
 	hash["ゕ"] := "ｌｋａ"
 	hash["ゖ"] := "ｌｋｅ"
 
+	hash["うぃ"]   := "ｗｉ"
+	hash["うぇ"]   := "ｗｅ"
+
+	hash["ふぁ"] := "ｆａ"
+	hash["ふぃ"] := "ｆｉ"
+	hash["ふぇ"] := "ｆｅ"
+	hash["ふぉ"] := "ｆｏ"
+
+	hash["くぁ"] := "ｑａ"
+	hash["くぃ"] := "ｑｉ"
+	hash["くぇ"] := "ｑｅ"
+	hash["くぉ"] := "ｑｏ"
+
+	hash["きゃ"] := "ｋｙａ"
+	hash["きぃ"] := "ｋｙｉ"
+	hash["きゅ"] := "ｋｙｕ"
+	hash["きぇ"] := "ｋｙｅ"
+	hash["きょ"] := "ｋｙｏ"
+
+	hash["ぎゃ"] := "ｇｙａ"
+	hash["ぎぃ"] := "ｇｙｉ"
+	hash["ぎゅ"] := "ｇｙｕ"
+	hash["ぎぇ"] := "ｇｙｅ"
+	hash["ぎょ"] := "ｇｙｏ"
+
+	hash["しゃ"] := "ｓｙａ"
+	hash["しぃ"] := "ｓｙｉ"
+	hash["しゅ"] := "ｓｙｕ"
+	hash["しぇ"] := "ｓｙｅ"
+	hash["しょ"] := "ｓｙｏ"
+
+	hash["しゃ"] := "ｓｈａ"
+	hash["しゅ"] := "ｓｈｕ"
+	hash["しぇ"] := "ｓｈｅ"
+	hash["しょ"] := "ｓｈｏ"
+	
+	hash["じゃ"] := "ｚｙａ"
+	hash["じぃ"] := "ｚｙｉ"
+	hash["じゅ"] := "ｚｙｕ"
+	hash["じぇ"] := "ｚｙｅ"
+	hash["じょ"] := "ｚｙｏ"
+
+	hash["てゃ"] := "ｔｈａ"
+	hash["てぃ"] := "ｔｈｉ"
+	hash["てゅ"] := "ｔｈｕ"
+	hash["てぇ"] := "ｔｈｅ"
+	hash["てょ"] := "ｔｈｏ"
+
+	hash["ちゃ"] := "ｔｙａ"
+	hash["ちぃ"] := "ｔｙｉ"
+	hash["ちゅ"] := "ｔｙｕ"
+	hash["ちぇ"] := "ｔｙｅ"
+	hash["ちょ"] := "ｔｙｏ"
+
+	hash["ぢゃ"] := "ｄｙａ"
+	hash["ぢぃ"] := "ｄｙｉ"
+	hash["ぢゅ"] := "ｄｙｕ"
+	hash["ぢぇ"] := "ｄｙｅ"
+	hash["ぢょ"] := "ｄｙｏ"
+
+	hash["にゃ"] := "ｎｙａ"
+	hash["にぃ"] := "ｎｙｉ"
+	hash["にゅ"] := "ｎｙｕ"
+	hash["にぇ"] := "ｎｙｅ"
+	hash["にょ"] := "ｎｙｏ"
+
+	hash["でゃ"] := "ｄｈａ"
+	hash["でぃ"] := "ｄｈｉ"
+	hash["でゅ"] := "ｄｈｕ"
+	hash["でぇ"] := "ｄｈｅ"
+	hash["でょ"] := "ｄｈｏ"
+
+	hash["びゃ"] := "ｂｙａ"
+	hash["びぃ"] := "ｂｙｉ"
+	hash["びゅ"] := "ｂｙｕ"
+	hash["びぇ"] := "ｂｙｅ"
+	hash["びょ"] := "ｂｙｏ"
+
+	hash["ひゃ"] := "ｈｙａ"
+	hash["ひぃ"] := "ｈｙｉ"
+	hash["ひゅ"] := "ｈｙｕ"
+	hash["ひぇ"] := "ｈｙｅ"
+	hash["ひょ"] := "ｈｙｏ"
+
+	hash["ぴゃ"] := "ｐｙａ"
+	hash["ぴぃ"] := "ｐｙｉ"
+	hash["ぴゅ"] := "ｐｙｕ"
+	hash["ぴぇ"] := "ｐｙｅ"
+	hash["ぴょ"] := "ｐｙｏ"
+
+	hash["みゃ"] := "ｍｙａ"
+	hash["みぃ"] := "ｍｙｉ"
+	hash["みゅ"] := "ｍｙｕ"
+	hash["みぇ"] := "ｍｙｅ"
+	hash["みょ"] := "ｍｙｏ"
+
+	hash["りゃ"] := "ｒｙａ"
+	hash["りぃ"] := "ｒｙｉ"
+	hash["りゅ"] := "ｒｙｕ"
+	hash["りぇ"] := "ｒｙｅ"
+	hash["りょ"] := "ｒｙｏ"
+	
+	hash["とぁ"] := "ｔｗａ"
+	hash["とぃ"] := "ｔｗｉ"
+	hash["とぅ"] := "ｔｗｕ"
+	hash["とぇ"] := "ｔｗｅ"
+	hash["とぉ"] := "ｔｗｏ"
+
+	hash["どぁ"] := "ｄｗａ"
+	hash["どぃ"] := "ｄｗｉ"
+	hash["どぅ"] := "ｄｗｕ"
+	hash["どぇ"] := "ｄｗｅ"
+	hash["どぉ"] := "ｄｗｏ"
+
 	hash["ァ"] := "ｌａ"
 	hash["ア"] := "ａ"
 	hash["ィ"] := "ｌｉ"
@@ -1687,6 +1794,115 @@ MakeRoma3Hash()
 	hash["ヴ"] := "ｖｕ"
 	hash["ヵ"] := "ｌｋａ"
 	hash["ヶ"] := "ｌｋｅ"
+
+	hash["ウィ"] := "ｗｉ"
+	hash["ウェ"] := "ｗｅ"
+
+	hash["ファ"] := "ｆａ"
+	hash["フィ"] := "ｆｉ"
+	hash["フェ"] := "ｆｅ"
+	hash["フォ"] := "ｆｏ"
+
+	hash["クァ"] := "ｑａ"
+	hash["クィ"] := "ｑｉ"
+	hash["クェ"] := "ｑｅ"
+	hash["クォ"] := "ｑｏ"
+
+	hash["キャ"] := "ｋｙａ"
+	hash["キィ"] := "ｋｙｉ"
+	hash["キュ"] := "ｋｙｕ"
+	hash["キェ"] := "ｋｙｅ"
+	hash["キョ"] := "ｋｙｏ"
+
+	hash["ギャ"] := "ｇｙａ"
+	hash["ギィ"] := "ｇｙｉ"
+	hash["ギュ"] := "ｇｙｕ"
+	hash["ギェ"] := "ｇｙｅ"
+	hash["ギョ"] := "ｇｙｏ"
+
+	hash["シャ"] := "ｓｙａ"
+	hash["シィ"] := "ｓｙｉ"
+	hash["シュ"] := "ｓｙｕ"
+	hash["シェ"] := "ｓｙｅ"
+	hash["ショ"] := "ｓｙｏ"
+
+	hash["ジャ"] := "ｚｙａ"
+	hash["ジィ"] := "ｚｙｉ"
+	hash["ジュ"] := "ｚｙｕ"
+	hash["ジェ"] := "ｚｙｅ"
+	hash["ジョ"] := "ｚｙｏ"
+
+	hash["テャ"] := "ｔｈａ"
+	hash["ティ"] := "ｔｈｉ"
+	hash["テュ"] := "ｔｈｕ"
+	hash["テェ"] := "ｔｈｅ"
+	hash["テョ"] := "ｔｈｏ"
+
+	hash["チャ"] := "ｔｙａ"
+	hash["チィ"] := "ｔｙｉ"
+	hash["チュ"] := "ｔｙｕ"
+	hash["チェ"] := "ｔｙｅ"
+	hash["チョ"] := "ｔｙｏ"
+
+	hash["ヂャ"] := "ｄｙａ"
+	hash["ヂィ"] := "ｄｙｉ"
+	hash["ヂュ"] := "ｄｙｕ"
+	hash["ヂェ"] := "ｄｙｅ"
+	hash["ヂョ"] := "ｄｙｏ"
+
+	hash["ニャ"] := "ｎｙａ"
+	hash["ニィ"] := "ｎｙｉ"
+	hash["ニュ"] := "ｎｙｕ"
+	hash["ニェ"] := "ｎｙｅ"
+	hash["ニョ"] := "ｎｙｏ"
+
+	hash["デャ"] := "ｄｈａ"
+	hash["ディ"] := "ｄｈｉ"
+	hash["デュ"] := "ｄｈｕ"
+	hash["デェ"] := "ｄｈｅ"
+	hash["デョ"] := "ｄｈｏ"
+
+	hash["ビャ"] := "ｂｙａ"
+	hash["ビィ"] := "ｂｙｉ"
+	hash["ビュ"] := "ｂｙｕ"
+	hash["ビェ"] := "ｂｙｅ"
+	hash["ビョ"] := "ｂｙｏ"
+
+	hash["ヒャ"] := "ｈｙａ"
+	hash["ヒィ"] := "ｈｙｉ"
+	hash["ヒュ"] := "ｈｙｕ"
+	hash["ヒェ"] := "ｈｙｅ"
+	hash["ヒョ"] := "ｈｙｏ"
+
+	hash["ピャ"] := "ｐｙａ"
+	hash["ピィ"] := "ｐｙｉ"
+	hash["ピュ"] := "ｐｙｕ"
+	hash["ピェ"] := "ｐｙｅ"
+	hash["ピョ"] := "ｐｙｏ"
+
+	hash["ミャ"] := "ｍｙａ"
+	hash["ミィ"] := "ｍｙｉ"
+	hash["ミュ"] := "ｍｙｕ"
+	hash["ミェ"] := "ｍｙｅ"
+	hash["ミョ"] := "ｍｙｏ"
+
+	hash["リャ"] := "ｒｙａ"
+	hash["リィ"] := "ｒｙｉ"
+	hash["リュ"] := "ｒｙｕ"
+	hash["リェ"] := "ｒｙｅ"
+	hash["リョ"] := "ｒｙｏ"
+	
+	hash["トァ"] := "ｔｗａ"
+	hash["トィ"] := "ｔｗｉ"
+	hash["トゥ"] := "ｔｗｕ"
+	hash["トェ"] := "ｔｗｅ"
+	hash["トォ"] := "ｔｗｏ"
+
+	hash["ドァ"] := "ｄｗａ"
+	hash["ドィ"] := "ｄｗｉ"
+	hash["ドゥ"] := "ｄｗｕ"
+	hash["ドェ"] := "ｄｗｅ"
+	hash["ドォ"] := "ｄｗｏ"
 	return hash
 }
 
@@ -2098,6 +2314,12 @@ MakeKanaHash()
 	hash["ｔｙｕ"] := "ちゅ"
 	hash["ｔｙｅ"] := "ちぇ"
 	hash["ｔｙｏ"] := "ちょ"
+
+	hash["ｄｙａ"] := "ぢゃ"
+	hash["ｄｙｉ"] := "ぢぃ"
+	hash["ｄｙｕ"] := "ぢゅ"
+	hash["ｄｙｅ"] := "ぢぇ"
+	hash["ｄｙｏ"] := "ぢょ"
 
 	hash["ｎｙａ"] := "にゃ"
 	hash["ｎｙｉ"] := "にぃ"

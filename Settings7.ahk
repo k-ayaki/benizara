@@ -306,7 +306,7 @@ gURLsupport:
 ;-----------------------------------------------------------------------
 G2DrawKeyFrame:
 	Critical
-	_ch := GuiLayoutHash[g_Romaji]
+	_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
 	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W720 H270,%_ch%
 	_col := 1
 	_ypos := 105
@@ -523,7 +523,7 @@ G2PollingLayout:
 		if(s_Romaji != g_Romaji) 
 		{
 			s_Romaji := g_Romaji
-			_ch := GuiLayoutHash[g_Romaji]
+			_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
 			GuiControl,,vkeyLayoutName,%_ch%
 			Gosub,G2RefreshLayout
 			
@@ -975,6 +975,9 @@ gFileSelect:
 		}
 		GuiControl,, vFilePath, %vLayoutFile%
 
+		SetTimer,Interrupt10,off
+		SetHook("off","off")
+		
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
 		if(_error <> "")
@@ -989,6 +992,14 @@ gFileSelect:
 		}
 		Gosub, SetLayoutProperty
 		g_LayoutFile := vLayoutFile
+		
+		_currentTick := Pf_Count()	;A_TickCount
+		g_MojiTick[0] := _currentTick
+		g_OyaTick["R"] := _currentTick
+		g_OyaTick["L"] := _currentTick
+		SetTimer,Interrupt10,on
+		vIntKeyUp := 0
+		vIntKeyDn := 0
 	}
 	Gui,Destroy
 	g_CurrSimulMode := "…"
