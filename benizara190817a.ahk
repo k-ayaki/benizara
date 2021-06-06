@@ -1074,7 +1074,7 @@ keydownM:
 	}
 	
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
-	if(g_KeyInPtn=="M")	; S2)Mオン状態
+	if(g_KeyInPtn=="M" || g_KeyInPtn="RM" || g_KeyInPtn="LM")	;S5)O-Mオン状態
 	{
 		; M2キー押下
 		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
@@ -1117,7 +1117,8 @@ keydownM:
 	}
 	else if(g_KeyInPtn="MR")	; S4)M-Oオン状態
 	{
-		if(g_MojiOnHold[1]<>"") {
+		_mode := g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2]
+		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
 			; 処理A 3キー判定
 			g_Interval["RM"] := keyTick[g_layoutPos] - g_OyaTick["R"]
 			if(g_Interval["RM"] <= g_Interval["MR"])	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
@@ -1131,7 +1132,8 @@ keydownM:
 	}
 	else if(g_KeyInPtn="ML")	; S4)M-Oオン状態
 	{
-		if(g_MojiOnHold[1]<>"") {
+		_mode := g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2]
+		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
 			; 処理A 3キー判定
 			g_Interval["LM"] := keyTick[g_layoutPos] - g_OyaTick["L"]
 			if(g_Interval["LM"] <= g_Interval["ML"])	; 文字キーaから親指キーsまでの時間は、親指キーsから文字キーbまでの時間よりも長い
@@ -1142,18 +1144,6 @@ keydownM:
 				Gosub, SendOnHoldMO		; 保留キーの同時打鍵
 			}
 		}
-	}
-	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")		;S5)O-Mオン状態
-	{
-		; M2キー押下
-		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
-			; 保留中の１文字を確定（出力）
-			Gosub, SendOnHoldM
-		}
-		;if(g_MojiOnHold[g_OnHoldIdx]<>"") {
-		;	Gosub, SendOnHoldMO
-		;}
 	}
 	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S6)O-M-Oオフ状態
 	{
@@ -1261,6 +1251,17 @@ keydownM:
 				g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
 				dequeueKey()
 			}
+			; 当該キーとその前を同時打鍵として保留
+			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
+			g_KeyInPtn := "MM"
+		} else
+		if(g_KeyInPtn == "M" . g_Oya) {
+			g_MetaOnHold[2]   := g_MetaOnHold[1]
+			g_MojiOnHold[2]   := g_MojiOnHold[1]
+			g_TDownOnHold[2]  := g_TDownOnHold[1]
+			g_TUpOnHold[2]    := g_TUpOnHold[1]			
+			dequeueKey()
+			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"

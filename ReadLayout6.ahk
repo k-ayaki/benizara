@@ -64,17 +64,11 @@ ReadLayout:
 ; 各テーブルを読み込んだか否かの判定変数の初期化とデフォルトテーブル
 ;
 InitLayout2:
-	RemoveObject(kst)
 	kst := Object()	; キーの状態
-	RemoveObject(ksc)
 	ksc := Object()	; 最大同時打鍵個数
-	RemoveObject(kup)
 	kup := Object()	; keyup したときの Send形式
-	RemoveObject(kdn)
 	kdn := Object()	; keydown したときの Send形式
-	RemoveObject(mup)
 	mup := Object()	; キーボードそのものを keyup したときの Send形式
-	RemoveObject(mdn)
 	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
 	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
@@ -82,7 +76,6 @@ InitLayout2:
 	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
 	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
 
-	RemoveObject(g_Oya2Layout)
 	g_Oya2Layout := Object()
 
 	roma3hash := MakeRoma3Hash()
@@ -103,26 +96,16 @@ InitLayout2:
 	ctrlKeyHash := MakeCtrlKeyHash()
 	modifierHash := MakeModifierHash()
 
-	RemoveObject(keyAttribute3)
 	keyAttribute3 := MakeKeyAttribute3Hash()
-
-	RemoveObject(keyState)
 	keyState := MakeKeyState()
-
-	RemoveObject(keyNameHash)
 	keyNameHash := MakeKeyNameHash()
-
-	RemoveObject(kLabel)
 	kLabel := MakeKeyLabelHash()
-
-	RemoveObject(g_SimulMode)
 	g_SimulMode := Object()
 
 	g_layoutName := ""
 	g_layoutVersion := ""
 	g_layoutURL := ""
 
-	RemoveObject(LF)
 	LF := Object()
 	LF["ANN"] := ""
 	LF["ALN"] := ""
@@ -609,7 +592,6 @@ Mode3Key:
 			_lpos2 := substr(_spos,4,3)
 		}
 	}
-	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -619,7 +601,6 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
-		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -639,7 +620,6 @@ Mode3Key:
 		_error := g_Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
-	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -649,7 +629,6 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
-		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -669,7 +648,6 @@ Mode3Key:
 		_error := g_Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
-	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -679,7 +657,6 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
-		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -699,7 +676,6 @@ Mode3Key:
 		_error := g_Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
-	RemoveObject(_lpos)
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
 	if(strlen(_spos)>=6) {
@@ -709,7 +685,6 @@ Mode3Key:
 		Gosub, SetSimulKeyTable
 	}
 	if(_cpos != _spos) {
-		RemoveObject(_lpos)
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
 		if(strlen(_cpos)>=6) {
@@ -727,7 +702,6 @@ Mode3Key:
 ;	レイアウトファイルの設定
 ;----------------------------------------------------------------------
 SetLayoutProperty:
-	RemoveObject(ShiftMode)
 	ShiftMode := Object()
 	ShiftMode["A"] := ""
 	if(LF["ANN"]!="" && LF["ALN"]!="" && LF["ARN"]!="")
