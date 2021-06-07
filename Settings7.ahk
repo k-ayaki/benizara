@@ -150,7 +150,7 @@ _Settings:
 		else
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
 
-		Gui, Add, Text,X490 Y70,同時打鍵：
+		Gui, Add, Text,X490 Y70,同時打鍵の表示：
 		_ddlist := "…"
 		if(v == g_CurrSimulMode) {
 			_ddlist := _ddlist . "||"
@@ -168,7 +168,7 @@ _Settings:
 				}
 			}
 		}
-		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X560 Y70 W95,%_ddlist%
+		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X600 Y70 W95,%_ddlist%
 	}
 	else if(ShiftMode["R"] = "プレフィックスシフト")
 	{
