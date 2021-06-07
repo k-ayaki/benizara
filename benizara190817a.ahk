@@ -1077,10 +1077,19 @@ keydownM:
 	if(g_KeyInPtn=="M" || g_KeyInPtn="RM" || g_KeyInPtn="LM")	;S5)O-Mオン状態
 	{
 		; M2キー押下
-		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-		if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
-			; 保留中の１文字を確定（出力）
-			Gosub, SendOnHoldM
+		if(g_MetaOnHold[1]=="M") {
+			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+			if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
+				; 保留中の１文字を確定（出力）
+				Gosub, SendOnHoldM
+			}
+		} else 
+		if(g_MetaOnHold[2]=="M") {	; 保留キーがアップされた		
+			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+			if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[2] . g_layoutPos]=="")) {
+				; 保留中の１文字を確定（出力）
+				Gosub, SendOnHoldMO
+			}
 		}
 	}
 	else if(g_KeyInPtn == "MM") {
@@ -1609,7 +1618,8 @@ keyupM:
 	}
 	else if(g_KeyInPtn="MR")	; M-Oオン状態
 	{
-		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
+		if((g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
+		|| (g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
 		{
 			; 処理C
 			g_Interval["M_M"] := g_TUpOnHold[1] - g_TDownOnHold[1]
@@ -1627,7 +1637,8 @@ keyupM:
 	}
 	else if(g_KeyInPtn="ML")	; M-Oオン状態
 	{
-		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
+		if((g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
+		|| (g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
 		{
 			; 処理C
 			g_Interval["M_M"] := g_TUpOnHold[1] - g_TDownOnHold[1]
@@ -1645,7 +1656,8 @@ keyupM:
 	}
 	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")	; O-Mオン状態
 	{
-		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
+		if((g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
+		|| (g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
 		{
 			; 処理E
 			Gosub, SendOnHoldMO
@@ -1653,7 +1665,8 @@ keyupM:
 	}
 	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;O-M-Oオフ状態
 	{
-		if(g_layoutPos==g_MojiOnHold[1])	; 保留キーがアップされた
+		if((g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
+		|| (g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
 		{
 			Gosub, SendOnHoldMO
 		}
