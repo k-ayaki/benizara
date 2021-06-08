@@ -118,6 +118,7 @@
 	keyTick := Object()
 	g_SendQueue := Object()
 	g_SendQueueIdx := 0
+	g_KeyOnHold := ""
 	
 	g_sansTick := INFINITE
 	g_sans := "N"
@@ -655,15 +656,23 @@ SendOnHoldMO:
 SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 {
 	global kdn, kup, kup_save, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel, kst
-	global g_LastKey, g_Koyubi
+	global g_LastKey, g_Koyubi, g_KeyOnHold
 	
 	_MojiOnHoldLast := substr(_MojiOnHold,strlen(_MojiOnHold)-2)
 	
+	if(strlen(_MojiOnHold)==3 && strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+		_MojiOnHold := g_KeyOnHold . _MojiOnHold
+	} else
+	if(strlen(_MojiOnHold)==3 && strlen(g_KeyOnHold)==3 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+		_MojiOnHold := g_KeyOnHold . _MojiOnHold
+	} else
+	if(strlen(_MojiOnHold)==6 && strlen(g_KeyOnHold)==3 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+		_MojiOnHold := g_KeyOnHold . _MojiOnHold
+	}
 	vOut := kdn[_mode . _MojiOnHold]
 	kup_save[_MojiOnHoldLast] := kup[_mode . _MojiOnHold]
 	_kLabel := kLabel[_mode . _MojiOnHold]
 	_kst    := kst[_mode . _MojiOnHold]
-	
 	_nextKey := nextDakuten(_mode,_MojiOnHold)
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
@@ -1183,11 +1192,12 @@ keydownM:
 			g_KeyInPtn := "M"
 			SetTimeout()
 			; 連続打鍵の判定 
-			_pushedKey := GetPushedKeys()
-			if(_pushedKey != "") {
+			g_KeyOnHold := GetPushedKeys()
+			if(g_KeyOnHold != "") {
 				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-				if(kdn[_mode . _pushedKey . g_MojiOnHold[1]] != "") {
-					SendOnHold(_mode, _pushedKey . g_MojiOnHold[1], g_ZeroDelay)
+				if((strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[1]] != "")
+				|| (strlen(g_KeyOnHold)==3 && ksc[_mode . g_MojiOnHold[1]]==2 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[1]] != "")) {
+					SendOnHold(_mode, g_KeyOnHold . g_MojiOnHold[1], g_ZeroDelay)
 					dequeueKey()
 					clearQueue()
 					g_SendTick := INFINITE
@@ -1204,6 +1214,19 @@ keydownM:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+			; 連続打鍵の判定 
+			g_KeyOnHold := GetPushedKeys()
+			if(g_KeyOnHold != "" && strlen(g_KeyOnHold)==3) {
+				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+				if(kdn[_mode . g_KeyOnHold . g_MojiOnHold[1] . g_MojiOnHold[2]] != "") {
+					SendOnHold(_mode, g_KeyOnHold . g_MojiOnHold[1] . g_MojiOnHold[2], g_ZeroDelay)
+					dequeueKey()
+					dequeueKey()
+					clearQueue()
+					g_SendTick := INFINITE
+					g_keyInPtn := ""
+				}
+			}
 		}
 		else if(g_KeyInPtn=="MM")	; MMオン状態
 		{
@@ -1223,14 +1246,16 @@ keydownM:
 			SetTimeout()
 			;g_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Interval[g_Oya . "M"]*g_OverlapOM)/(100-g_OverlapOM)),g_Threshold)
 			g_KeyInPtn := g_Oya . "M"
+			
 			; 連続打鍵の判定 
-			_pushedKey := GetPushedKeys()
-			if(_pushedKey != "") {
+			g_KeyOnHold := GetPushedKeys()
+			if(g_KeyOnHold != "") {
 				if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
 				|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M")) {
 					_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-					if(kdn[_mode . _pushedKey . g_MojiOnHold[2]] != "") {
-						SendOnHold(_mode, _pushedKey . g_MojiOnHold[2], g_ZeroDelay)
+					if((strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[2]] != "")
+					|| (strlen(g_KeyOnHold)==3 && ksc[_mode . g_MojiOnHold[1]]==2 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[2]] != "")) {
+						SendOnHold(_mode, g_KeyOnHold . g_MojiOnHold[2], g_ZeroDelay)
 						dequeueKey()
 						dequeueKey()
 						clearQueue()
@@ -1239,8 +1264,9 @@ keydownM:
 					}
 				} else {
 					_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-					if(kdn[_mode . _pushedKey . g_MojiOnHold[1]] != "") {
-						SendOnHold(_mode, _pushedKey . g_MojiOnHold[1], g_ZeroDelay)
+					if((strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[1]] != "")
+					|| (strlen(g_KeyOnHold)==3 && ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_KeyOnHold . g_MojiOnHold[1]] != "")) {
+						SendOnHold(_mode, g_KeyOnHold . g_MojiOnHold[1], g_ZeroDelay)
 						dequeueKey()
 						clearQueue()
 						g_SendTick := INFINITE
@@ -1263,6 +1289,20 @@ keydownM:
 			; 当該キーとその前を同時打鍵として保留
 			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+
+			; 連続打鍵の判定 
+			g_KeyOnHold := GetPushedKeys()
+			if(g_KeyOnHold != "" && strlen(g_KeyOnHold)==3) {
+				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+				if(kdn[_mode . g_KeyOnHold . g_MojiOnHold[1] . g_MojiOnHold[2]] != "") {
+					SendOnHold(_mode, g_KeyOnHold . g_MojiOnHold[1] . g_MojiOnHold[2], g_ZeroDelay)
+					dequeueKey()
+					dequeueKey()
+					clearQueue()
+					g_SendTick := INFINITE
+					g_keyInPtn := ""
+				}
+			}
 		} else
 		if(g_KeyInPtn == "M" . g_Oya) {
 			g_MetaOnHold[2]   := g_MetaOnHold[1]
@@ -1779,32 +1819,12 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		_keyName := keyNameHash["C06"]
-		g_debugout2 := GetKeyState(_keyName,"P")
+		g_debugout2 := kdn["RNNC06C07"]
+		;g_debugout2 := GetPushedKeys()
 		_mode := g_Romaji . g_Oya . g_Koyubi
 		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
-		
-		g_S12Interval := g_Interval["S12"]
-		g_S2_1Interval := g_Interval["S2_1"]
-		g_S_1_2Interval := g_Interval["S_1_2"]
-		;Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval% %g_debugout2%, 0, 0, 2 ; debug
-		;Tooltip, DBG%g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
-		;if(ShiftMode["R"] == "文字同時打鍵" ) {
-		;	g_S12Interval := g_Interval["S12"]
-		;	g_S2_1Interval := g_Interval["S2_1"]
-		;	g_S_1_2Interval := g_Interval["S_1_2"]
-		;	;Tooltip, %g_S12Interval% %g_S2_1Interval% %g_S_1_2Interval%, 0, 0, 2 ; debug
-		;	Tooltip, %g_debugout%, 0, 0, 2 ; debug
-		;} else
-		;if(ShiftMode["R"] == "親指シフト" ) {
-		;	g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_LastKey["status"] . ":" . g_LastKey["snapshot"] 
-		;	Tooltip, %g_debugout%, 0, 0, 2 ; debug
-		;} else {
-		;	g_debugout := vImeMode . ":" . vImeConvMode . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . "XXX[" . g_prefixshift . "]" . ShiftMode[g_Romaji]
-		;	Tooltip, %g_debugout%, 0, 0, 2 ; debug
-		;}
 	}
 
 Polling:

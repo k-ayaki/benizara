@@ -594,20 +594,24 @@ Mode3Key:
 	}
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
-	if(strlen(_spos)>=6) {
+	if(strlen(_spos)>=6) {				; 同時打鍵
 		_lpos[2] := substr(_spos,4,3)
 		Gosub, SetSimulKeyTable3
 	} else {
 		Gosub, SetSimulKeyTable
 	}
-	if(_cpos != _spos) {
+	if(_cpos != _spos) {				; キー押下＋打鍵
 		_lpos := Object()
 		_lpos[1] := substr(_cpos,1,3)
-		if(strlen(_cpos)>=6) {
+		if(strlen(_cpos)>=6) {			; キー押下＋キー押下＋打鍵
 			_lpos[2] := substr(_cpos,4,3)
 			Gosub, SetSimulKeyTable3
 		} else {
 			Gosub, SetSimulKeyTable
+		}
+		if(strlen(_spos)>=6) {			; キー押下＋打鍵＋打鍵
+			_lpos[2] := substr(_spos,4,3)
+			Gosub, SetSimulKeyTable3
 		}
 	}
 	if(_error <> "")
@@ -637,6 +641,10 @@ Mode3Key:
 		} else {
 			Gosub, SetSimulKeyTable
 		}
+		if(strlen(_spos)>=6) {
+			_lpos[2] := substr(_spos,4,3)
+			Gosub, SetSimulKeyTable3
+		}
 	}
 	if(_error <> "")
 		return
@@ -665,6 +673,10 @@ Mode3Key:
 		} else {
 			Gosub, SetSimulKeyTable
 		}
+		if(strlen(_spos)>=6) {
+			_lpos[2] := substr(_spos,4,3)
+			Gosub, SetSimulKeyTable3
+		}
 	}	
 	if(_error <> "")
 		return
@@ -692,6 +704,10 @@ Mode3Key:
 			Gosub, SetSimulKeyTable3
 		} else {
 			Gosub, SetSimulKeyTable
+		}
+		if(strlen(_spos)>=6) {
+			_lpos[2] := substr(_spos,4,3)
+			Gosub, SetSimulKeyTable3
 		}
 	}
 	if(_error <> "")
@@ -944,9 +960,14 @@ SetSimulKeyTable:
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
-
+		if(org[A_Index] == "無") {
+			continue
+		}
 		if(ksc[g_mode . _lpos[0]] < 2) {
 			ksc[g_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1]] < 2) {
+			ksc[g_mode . _lpos[1]] := 2	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
@@ -996,8 +1017,18 @@ SetSimulKeyTable3:
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
+		
+		if(org[A_Index] == "無") {
+			continue
+		}
 		if(ksc[g_mode . _lpos[0]]<3) {
 			ksc[g_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[2]]<3) {
+			ksc[g_mode . _lpos[2]] := 3	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
