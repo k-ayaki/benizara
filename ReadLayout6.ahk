@@ -252,6 +252,8 @@ ReadLayoutFile:
 	g_layoutName := ""
 	g_layoutVersion := ""
 	g_layoutURL := ""
+	g_keySequence := Object()
+	
 	_fileObj := fileOpen(vLayoutFile,"r")
 	if(isObject(_fileObj)==false) {
 		_error := "ファイルが開けません " . vLayoutFile
@@ -283,10 +285,6 @@ ReadLayoutFile:
 	    if(_line2 != "")
 		{
 			if(SubStr(_line2,1,1)=="[" && SubStr(_line2,StrLen(_line2),1)=="]") {
-				g_Section := _line2
-			}
-			if((SubStr(_line2,1,1)=="<" || SubStr(_line2,1,1)=="{")
-			&& (SubStr(_line2,StrLen(_line2),1)==">" || SubStr(_line2,StrLen(_line2),1)=="}")) {
 				g_Section := _line2
 			}
 			if(layout2Hash[_line2] != "") {
@@ -328,45 +326,63 @@ ReadLayoutFile:
 						}
 					}
 					_spos := ""
+					g_keySequence := Object()
 					_mline2 := 0
 					_mline := _mline + 1
 				}
 				else if(_mline == 5) {
-					if(ParseSimulPos(_line2) != "") {
-						_spos := ParseSimulPos(_line2)		; 同時打鍵パターンがあるか
-						_cpos := ParseContPos(_line2)	; 連続打鍵パターンがあるか
-						_simulMode := _line2
-						if(_spos != "")
-						{
-							_mline2 := 1
-							LF[g_mode . _spos . _colhash[1]] := ""
-							LF[g_mode . _spos . _colhash[2]] := ""
-							LF[g_mode . _spos . _colhash[3]] := ""
-							LF[g_mode . _spos . _colhash[4]] := ""
-						}
+					if((SubStr(_line2,1,1)=="<" && SubStr(_line2,3,1)==">")
+					|| (SubStr(_line2,1,1)=="{" && SubStr(_line2,3,1)=="}")) {
+						g_keySequence := StrSplit(_line2, " ")
+						_mline2 := 1
 						continue
 					}
-					if(_spos != "") {
-						if(1<=_mline2 && _mline2 <= 4)
+					if(g_keySequence.MaxIndex() != 0 && (1<=_mline2 && _mline2 <= 4)) {
+						loop % g_keySequence.MaxIndex()
 						{
-							LF[g_mode . _spos . _colhash[_mline2]] := _line2
-							if(_mline2 == 4) {
+							_spos := ParseSimulPos(g_keySequence[A_Index])		; 同時打鍵パターンがあるか
+							if(_spos!="") {
+								LF[g_mode . _spos . _colhash[_mline2]] := _line2
+							}
+							_spos := ParseContPos(g_keySequence[A_Index])		; 連続打鍵パターンがあるか
+							if(_spos!="") {
+								LF[g_mode . _spos . _colhash[_mline2]] := _line2
+							}
+						}
+						if(_mline2 == 4) {
+							loop % g_keySequence.MaxIndex()
+							{
+								_spos := ParseSimulPos(g_keySequence[A_Index])	; 同時打鍵パターンがあるか
+								_simulMode := g_keySequence[A_Index]
 								GoSub, Mode3Key		; 同時打鍵レイアウトの処理
 								if(_error <> "")
 								{
 									_error := vLayoutFile . ":" . g_modeName . ":" . _error
-
 									g_Section := ""
 									g_mode := ""
-									_spos := ""
+									g_keySequence := Object()
 									_mline2 := 0
 									_fileObj.Close()
 									return
 								}
-								_spos := ""
+								_spos := ParseContPos(g_keySequence[A_Index])	; 連続打鍵パターンがあるか
+								_simulMode := g_keySequence[A_Index]
+								GoSub, Mode3Key		; 同時打鍵レイアウトの処理
+								if(_error <> "")
+								{
+									_error := vLayoutFile . ":" . g_modeName . ":" . _error
+									g_Section := ""
+									g_mode := ""
+									g_keySequence := Object()
+									_mline2 := 0
+									_fileObj.Close()
+									return
+								}
 							}
-							_mline2 := _mline2 + 1
+							g_keySequence := Object()
+							_spos := ""
 						}
+						_mline2 := _mline2 + 1
 						continue
 					}
 					continue
@@ -594,25 +610,11 @@ Mode3Key:
 	}
 	_lpos := Object()
 	_lpos[1] := substr(_spos,1,3)
-	if(strlen(_spos)>=6) {				; 同時打鍵
+	if(strlen(_spos)>=6) {
 		_lpos[2] := substr(_spos,4,3)
 		Gosub, SetSimulKeyTable3
 	} else {
 		Gosub, SetSimulKeyTable
-	}
-	if(_cpos != _spos) {				; キー押下＋打鍵
-		_lpos := Object()
-		_lpos[1] := substr(_cpos,1,3)
-		if(strlen(_cpos)>=6) {			; キー押下＋キー押下＋打鍵
-			_lpos[2] := substr(_cpos,4,3)
-			Gosub, SetSimulKeyTable3
-		} else {
-			Gosub, SetSimulKeyTable
-		}
-		if(strlen(_spos)>=6) {			; キー押下＋打鍵＋打鍵
-			_lpos[2] := substr(_spos,4,3)
-			Gosub, SetSimulKeyTable3
-		}
 	}
 	if(_error <> "")
 		return
@@ -632,20 +634,6 @@ Mode3Key:
 	} else {
 		Gosub, SetSimulKeyTable
 	}
-	if(_cpos != _spos) {
-		_lpos := Object()
-		_lpos[1] := substr(_cpos,1,3)
-		if(strlen(_cpos)>=6) {
-			_lpos[2] := substr(_cpos,4,3)
-			Gosub, SetSimulKeyTable3
-		} else {
-			Gosub, SetSimulKeyTable
-		}
-		if(strlen(_spos)>=6) {
-			_lpos[2] := substr(_spos,4,3)
-			Gosub, SetSimulKeyTable3
-		}
-	}
 	if(_error <> "")
 		return
 	
@@ -664,20 +652,6 @@ Mode3Key:
 	} else {
 		Gosub, SetSimulKeyTable
 	}
-	if(_cpos != _spos) {
-		_lpos := Object()
-		_lpos[1] := substr(_cpos,1,3)
-		if(strlen(_cpos)>=6) {
-			_lpos[2] := substr(_cpos,4,3)
-			Gosub, SetSimulKeyTable3
-		} else {
-			Gosub, SetSimulKeyTable
-		}
-		if(strlen(_spos)>=6) {
-			_lpos[2] := substr(_spos,4,3)
-			Gosub, SetSimulKeyTable3
-		}
-	}	
 	if(_error <> "")
 		return
 
@@ -695,20 +669,6 @@ Mode3Key:
 		Gosub, SetSimulKeyTable3
 	} else {
 		Gosub, SetSimulKeyTable
-	}
-	if(_cpos != _spos) {
-		_lpos := Object()
-		_lpos[1] := substr(_cpos,1,3)
-		if(strlen(_cpos)>=6) {
-			_lpos[2] := substr(_cpos,4,3)
-			Gosub, SetSimulKeyTable3
-		} else {
-			Gosub, SetSimulKeyTable
-		}
-		if(strlen(_spos)>=6) {
-			_lpos[2] := substr(_spos,4,3)
-			Gosub, SetSimulKeyTable3
-		}
 	}
 	if(_error <> "")
 		return
@@ -1164,14 +1124,14 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 	
 	_error := ""
 	_status := ""
+	_dn := ""
+	_up := ""
 	_len := strlen(aStr)	; 全角
 	if(_len == 0)
 	{
 		return ""
 	}
 	; 入力文字列をAutohotkeyのSend形式に変換
-	_dn := ""
-	_up := ""
 	_quotation := ""
 	_qstr := ""
 	_vkey := ""
