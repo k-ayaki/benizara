@@ -228,7 +228,7 @@ keydownL:
 		; 連続モードでなければ押されていない状態に
 		if(g_Continue == 1)
 		{
-			g_SendTick := INFINITE	;g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
+			g_SendTick := INFINITE
 			g_KeyInPtn := g_Oya
 		}
 		critical,off
@@ -247,7 +247,7 @@ keydownL:
 				Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
 				if(g_KeyInPtn == "M") {
 					SendKeyUp()
-					SetTimeout()
+					g_SendTick := SetTimeout("M")
 				}
 			} else {
 				; ３キー判定
@@ -257,13 +257,13 @@ keydownL:
 					Gosub, SendOnHoldMM
 					if(g_KeyInPtn == "M") {
 						SendKeyUp()
-						SetTimeout()
+						g_SendTick := SetTimeout("M")
 					}
 				} else {
 					Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
 					if(g_KeyInPtn == "M") {
 						SendKeyUp()
-						SetTimeout()
+						g_SendTick := SetTimeout("M")
 					}
 				}
 			}
@@ -276,37 +276,37 @@ keydownL:
 		if(g_KeyInPtn == "") 		;S1)初期状態
 		{
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-			g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
-			g_KeyInPtn := g_KeyInPtn . g_Oya	;S3に遷移
+			g_KeyInPtn := g_Oya	;S3に遷移
+			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 		else if(g_KeyInPtn == "M")	;S2)Mオン状態
 		{
-			g_Interval["M" . g_metaKey] := g_OyaTick[g_metaKey] - g_TDownOnHold[g_OnHoldIdx]
-			if(g_Interval["M" . g_metaKey] > minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)) {
+			g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]
+			if(g_Interval["M" . g_Oya] > minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)) {
 				Gosub, SendOnHoldM	; タイムアウト・保留キーの打鍵
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 				g_KeyInPtn := g_Oya	;Oオンに遷移
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			} else {
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_SendTick := g_OyaTick[g_Oya] + minimum(floor(g_Interval["M" . g_metaKey]*g_OverlapMO/(100-g_OverlapMO)),g_MaxTimeout)
 				g_KeyInPtn := g_KeyInPtn . g_Oya	;MOオンに遷移
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
 		} 
 		else if(g_KeyInPtn == g_OyaAlt[g_Oya])	;S3)Oオン状態　（既に他の親指キーオン）
 		{
 			Gosub, SendOnHoldO	; 他の親指キー（保留キー）の打鍵
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-			g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 			g_KeyInPtn := g_Oya				;S4)Oオンに遷移
+			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 		else if(g_KeyInPtn == "M" . g_OyaAlt[g_Oya])	;S4)M-Oオン状態で反対側のOキーオン
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-			g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
-			g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
+			g_KeyInPtn := g_Oya	; S3)Oオンに遷移
+			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 		else if(g_KeyInPtn == g_OyaAlt[g_Oya] . "M")	;S5)O-Mオン状態で反対側のOキーオン
 		{
@@ -318,8 +318,8 @@ keydownL:
 				Gosub, SendOnHoldMO	; 保留キーの打鍵　L,Rモードに遷移
 
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
-				g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
+				g_KeyInPtn := g_KeyInPtn . g_Oya	; S3)Oオンに遷移
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
 			else
 			{
@@ -329,8 +329,8 @@ keydownL:
 				}
 				Gosub, SendOnHoldO	; 保留キーの打鍵, Mモードに遷移
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Interval["M" . g_Oya]*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
 				g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
+				g_SendTick := SetTimeout(g_KeyInPtn)
 				SendZeroDelay(g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2], g_MojiOnHold[1], g_ZeroDelay)
 			}
 		}
@@ -338,8 +338,8 @@ keydownL:
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-			g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 			g_KeyInPtn := g_KeyInPtn . g_Oya		; S3)Oオンに遷移
+			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 	}
 	if(g_KeyInPtn == "L" || g_KeyInPtn == "R") {
@@ -387,9 +387,8 @@ keyupL:
 					if(vOverlap < g_OverlapOM && g_Interval["M_" . g_Oya] <= g_Tau)
 					{
 						;Gosub, SendOnHoldO	; 保留キーの単独打鍵
-						;g_SendTick := g_OyaUpTick[g_Oya] + g_Interval["M_" . g_Oya]
-						g_SendTick := g_OyaTick[g_Oya] + floor((g_Interval["M_" . g_Oya]*100)/g_OverlapOM)
 						g_KeyInPtn := g_KeyInPtn . g_metaKeyUp[g_Oya]	;"RMr" "OMo" "LMl"
+						g_SendTick := SetTimeout(g_KeyInPtn)
 					} else {
 						Gosub, SendOnHoldMO	; 保留キーの打鍵
 					}
@@ -670,17 +669,49 @@ SendKeyUp()
 ;----------------------------------------------------------------------
 ; タイムアウト時間を設定
 ;----------------------------------------------------------------------
-SetTimeout()
+SetTimeout(_KeyInPtn)
 {
-	global g_SendTick, g_TDownOnHold, g_OnHoldIdx, g_Threshold, g_OverlapMO, g_MaxTimeout
-	global g_SimulMode, g_ThresholdSS, g_OverlapSS
+	global g_TDownOnHold, g_OnHoldIdx, g_Threshold, g_OverlapMO, g_OverlapOM, g_MaxTimeout, g_OnHoldIdx
+	global g_SimulMode, g_ThresholdSS, g_OverlapSS, INFINITE, g_Interval
+	global g_OyaTick, g_OyaUpTick, g_Oya
 	
-	g_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
-	if(CountObject(g_SimulMode)!=0) {
-		; 文字同時打鍵があればタイムアウトの大きい方に合わせる
-		g_SendTick := maximum(g_SendTick, g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout))
+	_SendTick := INFINITE
+	if(_KeyInPtn=="") {
+		_SendTick := INFINITE
+	} else 
+	if(_KeyInPtn=="M") {
+		_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
+		if(CountObject(g_SimulMode)!=0) {
+			; 文字同時打鍵があればタイムアウトの大きい方に合わせる
+			_SendTick := maximum(_SendTick, g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout))
+		}
+	} else
+	if(_KeyInPtn=="MM") {
+		_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
+	} else
+	if(_KeyInPtn=="MMm") {
+		g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
+		_SendTick := g_TDownOnHold[1] + minimum(floor((g_Interval["S2_1"]*100)/g_OverlapSS),g_MaxTimeout)
+	} else
+	if(_KeyInPtn=="MMM") {
+		_SendTick := g_TDownOnHold[g_OnHoldIdx]
+	} else
+	if(_KeyInPtn=="L" || _KeyInPtn=="R") {
+		_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
+	} else
+	if(_KeyInPtn=="LM" || _KeyInPtn=="RM") {
+		g_Interval[g_Oya . "M"] := g_TDownOnHold[g_OnHoldIdx] - g_OyaTick[g_Oya]
+		_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor(g_Interval[g_Oya . "M"]*g_OverlapOM/(100-g_OverlapOM)),g_MaxTimeout)
+	} else
+	if(_KeyInPtn=="ML" || _KeyInPtn=="MR") {
+		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]
+		_SendTick := g_OyaTick[g_Oya] + minimum(floor(g_Interval["M" . g_Oya]*g_OverlapMO/(100-g_OverlapMO)),g_MaxTimeout)
+	} else
+	if(_KeyInPtn=="RMr" || _KeyInPtn=="LMl") {
+		g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
+		_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Interval["M_" . g_Oya]*100)/g_OverlapOM),g_MaxTimeout)
 	}
-	return g_SendTick
+	return _SendTick
 }
 ;----------------------------------------------------------------------
 ; 保留キーの出力：セットされた文字の出力
@@ -1186,7 +1217,7 @@ keydownM:
 			; 当該キーを単独打鍵として保留
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			g_KeyInPtn := "M"
-			SetTimeout()
+			g_SendTick := SetTimeout(g_KeyInPtn)
 
 			; 連続打鍵の判定 
 			Gosub, JudgePushedKeys
@@ -1198,8 +1229,8 @@ keydownM:
 		{
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+			g_SendTick := SetTimeout(g_KeyInPtn)
 			; 連続打鍵の判定 
 			Gosub, JudgePushedKeys
 		}
@@ -1208,8 +1239,9 @@ keydownM:
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx]	; + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MMM"
+			g_SendTick := SetTimeout(g_KeyInPtn)
+			
 			GoSub, SendOnHoldMMM
 			clearQueue()
 			g_SendTick := INFINITE
@@ -1222,12 +1254,12 @@ keydownM:
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			g_MojiCount[g_Oya] := g_MojiCount[g_Oya] + 1
 			if(g_KeyInPtn=="") {
-				SetTimeout()
+				g_KeyInPtn := g_Oya . "M"
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			} else {
-				g_Interval[g_Oya . "M"] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]
-				g_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor(g_Interval[g_Oya . "M"]*g_OverlapOM/(100-g_OverlapOM)),g_MaxTimeout)
+				g_KeyInPtn := g_Oya . "M"
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
-			g_KeyInPtn := g_Oya . "M"
 			; 連続打鍵の判定 
 			Gosub, JudgePushedKeys
 			if(g_keyInPtn == g_Oya . "M") {
@@ -1238,8 +1270,8 @@ keydownM:
 			mergeKey()
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+			g_SendTick := SetTimeout(g_KeyInPtn)
 
 			; 連続打鍵の判定 
 			Gosub, JudgePushedKeys
@@ -1248,16 +1280,16 @@ keydownM:
 			mergeKey()
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MM"
+			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 		else if(g_KeyInPtn=="MM")	; MMオン状態
 		{
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			
 			; 当該キーとその前を同時打鍵として保留
-			g_SendTick := g_TDownOnHold[g_OnHoldIdx]	; + maximum(g_ThresholdSS,g_Threshold)
 			g_KeyInPtn := "MMM"
+			g_SendTick := SetTimeout(g_KeyInPtn)
 			GoSub, SendOnHoldMMM
 		}
 	}
@@ -1565,19 +1597,16 @@ keyupM:
 			g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
 			g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
 			vOverlap := floor((100*g_Interval["S2_1"])/(g_Interval["S12"]+g_Interval["S2_1"]))	; 重なり厚み計算
-			if(g_OverlapSS <= vOverlap) {
+			if(g_OverlapSS <= vOverlap  || g_Interval["S2_1"] > g_Threshold) {
 				; S4)M1M2オンM1オフモードに遷移
-				;g_SendTick :=g_TUpOnHold[1] + minimum(floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS) - g_Interval["S12"],g_MaxTimeout)
-				;g_SendTick := maximum(g_SendTick, g_TDownOnHold[2] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout))
-				
-				g_SendTick := g_TDownOnHold[1] + minimum(floor((g_Interval["S2_1"]*100)/g_OverlapSS),g_MaxTimeout)
 				g_KeyInPtn := "MMm"
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			} else {
 				Gosub, SendOnHoldM	; ２文字前を単独打鍵して確定
 				SendKeyUp()
 				; １文字前の待機
-				SetTimeout()
 				g_KeyInPtn := "M"
+				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold[2]) {
@@ -1624,7 +1653,7 @@ keyupM:
 			if(vOverlap < g_OverlapMO && g_Interval[g_Oya . "_M"] < g_Threshold)	; g_Tau
 			{
 				Gosub, SendOnHoldM
-				g_SendTick := g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
+				g_SendTick := SetTimeout(g_Oya)
 			} else {
 				Gosub, SendOnHoldMO
 			}

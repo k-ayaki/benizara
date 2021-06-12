@@ -929,6 +929,12 @@ SetSimulKeyTable:
 		if(ksc[g_mode . _lpos[1]] < 2) {
 			ksc[g_mode . _lpos[1]] := 2	; 最大同時打鍵数を設定
 		}
+		if(ksc[g_mode . _lpos[0] . _lpos[1]]<2) {
+			ksc[g_mode . _lpos[0] . _lpos[1]] := 2	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1] . _lpos[0]]<2) {
+			ksc[g_mode . _lpos[1] . _lpos[0]] := 2	; 最大同時打鍵数を設定
+		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
 		if(_error <> "") {
@@ -989,6 +995,43 @@ SetSimulKeyTable3:
 		}
 		if(ksc[g_mode . _lpos[2]]<3) {
 			ksc[g_mode . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[0] . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1] . _lpos[0]]<3) {
+			ksc[g_mode . _lpos[1] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1] . _lpos[2]]<3) {
+			ksc[g_mode . _lpos[1] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[2] . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[2] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[0] . _lpos[2]]<3) {
+			ksc[g_mode . _lpos[0] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[2] . _lpos[0]]<3) {
+			ksc[g_mode . _lpos[2] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		}
+
+		if(ksc[g_mode . _lpos[0] . _lpos[1] . _lpos[2]]<3) {
+			ksc[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[1] . _lpos[2] . _lpos[0]]<3) {
+			ksc[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[2] . _lpos[1] . _lpos[0]]<3) {
+			ksc[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[0] . _lpos[2] . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		}
+		if(ksc[g_mode . _lpos[2] . _lpos[0] . _lpos[1]]<3) {
+			ksc[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
 		GenSendStr3(org[A_Index], _down, _up, _status)
