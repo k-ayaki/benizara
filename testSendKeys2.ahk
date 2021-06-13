@@ -12,14 +12,19 @@
 	Return
 
 *SC002::
-	send,{b down}{b up}{y down}{y up}{o down}{o up}
+	send,{capslock}
+	send,{: down}
+	send,{capslock}
 	Return
 	
 *SC002 up::
+	send,{capslock}
+	send,{: up}
+	send,{capslock}
 	Return
 
 *SC003::
-	send, +{Right down}
+	send, {け}{ん}{ち}
 	Return
 	
 *SC003 up::

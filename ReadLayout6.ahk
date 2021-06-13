@@ -891,6 +891,12 @@ SetKeyTable:
 			break
 		}
 		kst[g_mode . _lpos2] := _status
+		;if(_status=="m" || _status=="c" || _status=="v") {
+		;	g_mode2 := substr(g_mode,1,1) . substr(g_mode,3,1)
+		;	if(keyAttribute3[g_mode2 . _lpos2] == "M") {
+		;		keyAttribute3[g_mode2 . _lpos2] := "X"
+		;	}
+		;}
 		if( _down <> "")
 		{
 			if(SubStr(g_mode,1,1)=="R")
