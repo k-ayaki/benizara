@@ -2383,11 +2383,6 @@ SetHook(flg,oya_flg)
 		Hotkey,*sc079,off
 		Hotkey,*sc079 up,off
 	}
-	if(flg="off") {
-		g_MojiCount["R"] := 0
-		g_MojiCount["L"] := 0
-		g_Oya := "N"
-	}
 	Critical,off
 	return
 }
