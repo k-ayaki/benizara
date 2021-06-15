@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.7 .... 2021/6/4
+;	ver.0.1.4.7 .... 2021/6/15
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -13,7 +13,7 @@
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
 	g_Ver := "ver.0.1.4.7"
-	g_Date := "2021/6/4"
+	g_Date := "2021/6/15"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -69,7 +69,7 @@
 	if(g_MaxTimeout == 0) {
 		g_MaxTimeout := 500
 	}
-	g_ThresholdSS := 80	; 
+	g_ThresholdSS := 250	; 
 	g_OverlapMO := 50
 	g_OverlapOM := 50
 	g_OverlapSS := 70
@@ -521,6 +521,7 @@ SubSend(vOut)
 	_scnt := 0
 	_len := strlen(vOut)
 	_cnt := 0
+	_sendch := ""
 	loop, Parse, vOut
 	{
 		_cnt := _cnt + 1
@@ -528,6 +529,10 @@ SubSend(vOut)
 		StringLeft, _left2c, _stroke, 2
 		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
 			_scnt := _scnt + 1
+			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+				Send, {capslock}
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
+			}
 			SetKeyDelay, -1
 			Send, %_stroke%
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
@@ -535,6 +540,14 @@ SubSend(vOut)
 			if(_cnt != _len && mod(_scnt,2)==0) {
 				Sleep,10
 			}
+			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+				Send, {capslock}
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
+			}
+			_sendch := ""
+		}
+		if(_sendch=="" && substr(_left2c,1,1)=="{") {
+			_sendch := substr(_left2c,2,1)
 		}
 	}
 	if(_stroke != "") {
@@ -544,7 +557,20 @@ SubSend(vOut)
 	}
 	critical,off
 }
-
+;----------------------------------------------------------------------
+;	capslockが必要か
+;----------------------------------------------------------------------
+isCapsLock(_ch)
+{
+	_code := ASC(_ch)
+	if(0x61<= _code && 0x7A <=_code) {
+		return true
+	}
+	if(instr("1234567890-^\@[;:],./\", _ch)>0) {
+		return true
+	}
+	return false
+}
 ;----------------------------------------------------------------------
 ; キーから送信文字列に変換
 ;----------------------------------------------------------------------
@@ -661,9 +687,6 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K") {
-		vOut := "{capslock}" . vOut . "{capslock}"
-	}
 	if(g_ZeroDelay == 1)
 	{
 		if(vOut <> g_ZeroDelayOut)
@@ -714,8 +737,10 @@ SetTimeout(_KeyInPtn)
 		_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 	} else
 	if(_KeyInPtn=="MMm") {
+		g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
 		g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
-		_SendTick := g_TDownOnHold[1] + minimum(floor((g_Interval["S2_1"]*100)/g_OverlapSS),g_MaxTimeout)
+		;_SendTick := g_TDownOnHold[1] + minimum(floor((g_Interval["S2_1"]*100)/g_OverlapSS),g_MaxTimeout)
+		_SendTick := g_TUpOnHold[1] + minimum(floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)-g_Interval["S12"],g_MaxTimeout)
 	} else
 	if(_KeyInPtn=="MMM") {
 		_SendTick := g_TDownOnHold[g_OnHoldIdx]
@@ -1144,6 +1169,12 @@ keydownM:
 		critical,off
 		return
 	}
+	; キーリピート
+	if(g_MojiOnHold[g_OnHoldIdx]==g_layoutPos) {
+		g_KeyOnHold := GetPushedKeys()
+		; 保留中の文字出力
+		Gosub, ModeInitialize
+	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
@@ -1405,9 +1436,6 @@ SendKey(_mode, _MojiOnHold){
 		g_LastKey["表層"] := kLabel[_mode . _MojiOnHold]
 		g_LastKey["状態"] := kst[_mode . _MojiOnHold]
 	}
-	if(g_Koyubi=="K") {
-		vOut := "{capslock}" . vOut . "{capslock}"
-	}	
 	SubSend(vOut)
 }
 ;----------------------------------------------------------------------
@@ -1554,9 +1582,6 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 				_kLabel := g_LastKey["表層"]
 				_kst    := g_LastKey["状態"]
 			}
-			if(g_Koyubi=="K" && _kst == "") {
-				vOut := "{capslock}" . vOut . "{capslock}"
-			}
 			g_ZeroDelayOut := vOut
 			SubSend(vOut)
 		} else {
@@ -1630,21 +1655,28 @@ keyupM:
 	else if(g_KeyInPtn == "MM")
 	{
 		if(g_layoutPos == g_MojiOnHold[1]) {
-			g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
-			g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
-			vOverlap := floor((100*g_Interval["S2_1"])/(g_Interval["S12"]+g_Interval["S2_1"]))	; 重なり厚み計算
-			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if((g_OverlapSS <= vOverlap  || g_Interval["S2_1"] > g_Threshold)
-			&& kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]!="") {			
-				; S4)M1M2オンM1オフモードに遷移
-				g_KeyInPtn := "MMm"
-				g_SendTick := SetTimeout(g_KeyInPtn)
-			} else {
+			if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]=="") {
 				Gosub, SendOnHoldM	; ２文字前を単独打鍵して確定
 				SendKeyUp()
 				; １文字前の待機
 				g_KeyInPtn := "M"
 				g_SendTick := SetTimeout(g_KeyInPtn)
+			} else {
+				g_Interval["S1_1"] := g_TUpOnHold[1] - g_TDownOnHold[1]	; 前回の文字キー押しからの重なり期間
+				g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]	; 最初の文字だけをオンしていた期間
+				vOverlap := floor((100*g_Interval["S2_1"])/g_Interval["S1_1"])	; 重なり厚み計算
+				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+				if(g_Interval["S2_1"] > g_ThresholdSS || g_OverlapSS <= vOverlap) {
+					Gosub, SendOnHoldMM
+					if(g_KeyInPtn == "M") {
+						SendKeyUp()
+						Gosub, SendOnHoldM
+					}
+				} else {
+					; S4)M1M2オンM1オフモードに遷移
+					g_KeyInPtn := "MMm"
+					g_SendTick := SetTimeout(g_KeyInPtn)
+				}
 			}
 		} else
 		if(g_layoutPos == g_MojiOnHold[2]) {
@@ -1658,9 +1690,9 @@ keyupM:
 	else if(g_KeyInPtn == "MMm")
 	{
 		if(g_layoutPos == g_MojiOnHold[2]) {
-			g_Interval["S_1_2"] := g_TUpOnHold[2] - g_TUpOnHold[1]		; 前回の文字キーオフからの期間
-			g_Interval["S2_1"]  := g_TUpOnHold[1] - g_TDownOnHold[2]	; 重なり期間
-			vOverlap := floor((100*g_Interval["S2_1"])/(g_Interval["S2_1"]+g_Interval["S_1_2"]))	; 重なり厚み計算
+			g_Interval["S1_2"] := g_TUpOnHold[2] - g_TDownOnHold[1]	; 第１文字キーオンからの期間
+			g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]	; 重なり期間
+			vOverlap := floor((100*g_Interval["S2_1"])/g_Interval["S1_2"])	; 重なり厚み計算
 			; 同時打鍵を確定
 			if(g_OverlapSS <= vOverlap) {
 				Gosub, SendOnHoldMM

@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.7 .... 2021/4/22
+;	ver.0.1.4.7 .... 2021/6/15
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -35,7 +35,7 @@ Init:
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
 		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
-		g_OverlapSS := 35
+		g_OverlapSS := 50
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey

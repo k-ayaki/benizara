@@ -19,7 +19,7 @@ Logs:
 	Gui, Add, Button,ggButtonClose X431 Y666 W77 H22,閉じる
 	Gui, Show, W547 H700, 紅皿ログ
 	Gui, Font,s9 c000000,ＭＳ ゴシック
-	Gui, Add, Text,X30 Y10,TIME   INPUT  MD  TG  SEND
+	Gui, Add, Text,X30 Y10,TIME   INPUT  MD  EV  SEND
 	loop, 64
 	{
 		_yaxis := A_Index*10 + 10
