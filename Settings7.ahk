@@ -35,7 +35,7 @@ Init:
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
 		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
-		g_OverlapSS := 50
+		g_OverlapSS := 100
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
@@ -858,15 +858,15 @@ gContinue:
 	g_Continue := %A_GuiControl%
 	if(g_Continue = 1)
 	{
-		g_Threshold := 50
+		g_Threshold := 100
 		g_OverlapOM := 35
 		g_OverlapMO := 70
 	}
 	else
 	{
 		g_Threshold := 150
-		g_OverlapOM := 50
-		g_OverlapMO := 50
+		g_OverlapOM := 35
+		g_OverlapMO := 70
 	}
 	GuiControl,,vThSlider,%g_Threshold%
 	GuiControl,,vThresholdNum,%g_Threshold%

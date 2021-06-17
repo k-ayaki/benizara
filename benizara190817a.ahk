@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.7 .... 2021/6/15
+;	ver.0.1.4.7 .... 2021/6/16
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -13,7 +13,7 @@
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
 	g_Ver := "ver.0.1.4.7"
-	g_Date := "2021/6/15"
+	g_Date := "2021/6/16"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -58,7 +58,7 @@
 	g_Modifier := 0
 	g_LayoutFile := ".\NICOLA配列.bnz"
 	g_Continue := 1
-	g_Threshold := 150	; 
+	g_Threshold := 100	; 
 	RegRead,_keyboardDelayIdx,HKEY_CURRENT_USER\Control Panel\Keyboard,KeyboardDelay
 	g_keyboardDelay := Object()
 	g_keyboardDelay[0] := 250
@@ -70,9 +70,9 @@
 		g_MaxTimeout := 500
 	}
 	g_ThresholdSS := 250	; 
-	g_OverlapMO := 50
-	g_OverlapOM := 50
-	g_OverlapSS := 70
+	g_OverlapMO := 35
+	g_OverlapOM := 70
+	g_OverlapSS := 35
 	g_ZeroDelay := 1		; 零遅延モード
 	g_ZeroDelayOut := ""
 	g_ZeroDelaySurface := ""	; 零遅延モードで出力される表層文字列
@@ -393,7 +393,7 @@ keyupL:
 			{
 				g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
 				g_Interval[g_Oya . "_" . g_Oya] := g_OyaUpTick[g_Oya] - g_OyaTick[g_Oya]	; 右親指キー押しから右親指キー解除までの期間
-				if(g_Continue == 0) {
+				if(g_Continue == 1) {
 					if(g_Interval["M_" . g_Oya] > g_Threshold || g_MojiCount[g_Oya] == 1)
 					{
 						; タイムアウト状態または親指シフト１文字目：親指シフト文字の出力
@@ -739,7 +739,6 @@ SetTimeout(_KeyInPtn)
 	if(_KeyInPtn=="MMm") {
 		g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
 		g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
-		;_SendTick := g_TDownOnHold[1] + minimum(floor((g_Interval["S2_1"]*100)/g_OverlapSS),g_MaxTimeout)
 		_SendTick := g_TUpOnHold[1] + minimum(floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)-g_Interval["S12"],g_MaxTimeout)
 	} else
 	if(_KeyInPtn=="MMM") {
@@ -762,7 +761,7 @@ SetTimeout(_KeyInPtn)
 	} else
 	if(_KeyInPtn=="RMr" || _KeyInPtn=="LMl") {
 		g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
-		_SendTick := g_OyaUpTick[g_Oya] + g_Interval["M_" . g_Oya]	;minimum(floor((g_Interval["M_" . g_Oya]*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
+		_SendTick := g_OyaUpTick[g_Oya] + minimum(floor((g_Interval["M_" . g_Oya]*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 	}
 	return _SendTick
 }
