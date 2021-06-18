@@ -110,67 +110,50 @@ InitLayout2:
 	LF["ANN"] := ""
 	LF["ALN"] := ""
 	LF["ARN"] := ""
-	LF["A1N"] := ""
-	LF["A2N"] := ""
-	LF["A3N"] := ""
-	LF["A4N"] := ""
 
 	LF["ANK"] := ""
 	LF["ALK"] := ""
 	LF["ARK"] := ""
-	LF["A1K"] := ""
-	LF["A2K"] := ""
-	LF["A3K"] := ""
-	LF["A4K"] := ""
 
 	LF["RNN"] := ""
 	LF["RLN"] := ""
 	LF["RRN"] := ""
-	LF["R1N"] := ""
-	LF["R2N"] := ""
-	LF["R3N"] := ""
-	LF["R4N"] := ""
 
 	LF["RNK"] := ""
 	LF["RLK"] := ""
 	LF["RRK"] := ""
-	LF["R1K"] := ""
-	LF["R2K"] := ""
-	LF["R3K"] := ""
-	LF["R4K"] := ""
+	loop,10
+	{
+		LF["A" . mod(A_Index,10) . "N"] := ""
+		LF["A" . mod(A_Index,10) . "K"] := ""
+		LF["R" . mod(A_Index,10) . "N"] := ""
+		LF["R" . mod(A_Index,10) . "K"] := ""
+	}
 	loop,4
 	{
-		LF["ANN" . _colhash[A_Index]] := ""
-		LF["ALN" . _colhash[A_Index]] := ""
-		LF["ARN" . _colhash[A_Index]] := ""
-		LF["A1N" . _colhash[A_Index]] := ""
-		LF["A2N" . _colhash[A_Index]] := ""
-		LF["A3N" . _colhash[A_Index]] := ""
-		LF["A4N" . _colhash[A_Index]] := ""
+		_col := _colhash[A_Index]
+		LF["ANN" . _col] := ""
+		LF["ALN" . _col] := ""
+		LF["ARN" . _col] := ""
 
-		LF["ANK" . _colhash[A_Index]] := ""
-		LF["ALK" . _colhash[A_Index]] := ""
-		LF["ARK" . _colhash[A_Index]] := ""
-		LF["A1K" . _colhash[A_Index]] := ""
-		LF["A2K" . _colhash[A_Index]] := ""
-		LF["A3K" . _colhash[A_Index]] := ""
-		LF["A4K" . _colhash[A_Index]] := ""
+		LF["ANK" . _col] := ""
+		LF["ALK" . _col] := ""
+		LF["ARK" . _col] := ""
 
-		LF["RNN" . _colhash[A_Index]] := ""
-		LF["RLN" . _colhash[A_Index]] := ""
-		LF["RRN" . _colhash[A_Index]] := ""
-		LF["R1N" . _colhash[A_Index]] := ""
-		LF["R2N" . _colhash[A_Index]] := ""
-		LF["R3N" . _colhash[A_Index]] := ""
-		LF["R4N" . _colhash[A_Index]] := ""
+		LF["RNN" . _col] := ""
+		LF["RLN" . _col] := ""
+		LF["RRN" . _col] := ""
 
-		LF["RNK" . _colhash[A_Index]] := ""
-		LF["RLK" . _colhash[A_Index]] := ""
-		LF["RRK" . _colhash[A_Index]] := ""
-		LF["R1K" . _colhash[A_Index]] := ""
-		LF["R2K" . _colhash[A_Index]] := ""
-		LF["R3K" . _colhash[A_Index]] := ""
-		LF["R4K" . _colhash[A_Index]] := ""
+		LF["RNK" . _col] := ""
+		LF["RLK" . _col] := ""
+		LF["RRK" . _col] := ""
+		loop,10
+		{
+			LF["A" . mod(A_Index,10) . "N" . _col] := ""
+			LF["A" . mod(A_Index,10) . "K" . _col] := ""
+			LF["R" . mod(A_Index,10) . "N" . _col] := ""
+			LF["R" . mod(A_Index,10) . "K" . _col] := ""
+		}
 	}
 	; デフォルトテーブル
 	LF["ADNE"] := "１,２,３,４,５,６,７,８,９,０,－,＾,￥,後"
@@ -353,6 +336,7 @@ ReadLayoutFile:
 							loop % g_keySequence.MaxIndex()
 							{
 								_spos := ParseSimulPos(g_keySequence[A_Index])	; 同時打鍵パターンがあるか
+								_tmode := ParseTableMode(g_keySequence[A_Index])
 								_simulMode := g_keySequence[A_Index]
 								GoSub, Mode3Key		; 同時打鍵レイアウトの処理
 								if(_error <> "")
@@ -366,6 +350,7 @@ ReadLayoutFile:
 									return
 								}
 								_spos := ParseContPos(g_keySequence[A_Index])	; 連続打鍵パターンがあるか
+								_tmode := ParseTableMode(g_keySequence[A_Index])
 								_simulMode := g_keySequence[A_Index]
 								GoSub, Mode3Key		; 同時打鍵レイアウトの処理
 								if(_error <> "")
@@ -446,13 +431,17 @@ ParseSimulPos(_line)
 	global code2SimulPos
 
 	_spos := ""
-	if(strlen(_line) >= 3)
+	if(strlen(_line) >= 3 && substr(_line,2,1)!="*")
 	{
 		_spos := code2SimulPos[substr(_line,1,3)]
 	}
-	if(strlen(_line) >= 6)
+	if(strlen(_line) >= 6 && substr(_line,5,1)!="*")
 	{
 		_spos := _spos . code2SimulPos[substr(_line,4,3)]
+	}
+	if(strlen(_line) >= 9 && substr(_line,8,1)!="*")
+	{
+		_spos := _spos . code2SimulPos[substr(_line,7,3)]
 	}
 	return _spos
 }
@@ -464,16 +453,40 @@ ParseContPos(_line)
 	global code2ContPos
 
 	_cpos := ""
-	if(strlen(_line) >= 3)
+	if(strlen(_line) >= 3 && substr(_line,2,1)!="*")
 	{
 		_cpos := code2ContPos[substr(_line,1,3)]
 	}
-	if(strlen(_line) >= 6)
+	if(strlen(_line) >= 6 && substr(_line,5,1)!="*")
 	{
 		_cpos := _cpos . code2ContPos[substr(_line,4,3)]
 	}
+	if(strlen(_line) >= 9 && substr(_line,8,1)!="*")
+	{
+		_cpos := _cpos . code2ContPos[substr(_line,7,3)]
+	}
 	return _cpos
 }
+;----------------------------------------------------------------------
+;	文字同時打鍵の指定を解釈
+;----------------------------------------------------------------------
+ParseTableMode(_line)
+{
+	if(strlen(_line) >= 3 && substr(_line,1,3)=="<*>" || substr(_line,1,3)=="{*}")
+	{
+		return substr(_line,1,3)
+	}
+	if(strlen(_line) >= 6 && substr(_line,4,3)=="<*>" || substr(_line,4,3)=="{*}")
+	{
+		return substr(_line,4,3)
+	}
+	if(strlen(_line) >= 9 && substr(_line,7,3)=="<*>" || substr(_line,7,3)=="{*}")
+	{
+		return substr(_line,7,3)
+	}
+	return "<*>"
+}
+
 ;----------------------------------------------------------------------
 ;	各モードのレイアウトを処理
 ;----------------------------------------------------------------------
@@ -696,7 +709,7 @@ SetLayoutProperty:
 			Gosub, SetE2AKeyTables
 		}
 	} else 
-	if(LF["ANN"]!="" && LF["A1N"]!="") 
+	if(LF["ANN"]!="" && isPrefixShift("A"))
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
 	}
@@ -728,7 +741,7 @@ SetLayoutProperty:
 			Gosub, SetE2AKeyTables
 		}
 	} else
-	if(LF["RNN"]!="" && LF["R1N"]!="")
+	if(LF["RNN"]!="" && isPrefixShift("R"))
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
 	}
@@ -743,6 +756,25 @@ SetLayoutProperty:
 		ShiftMode["R"] := "小指シフト"
 	}
 	return
+
+;----------------------------------------------------------------------
+;	プレフィックスシフト
+;----------------------------------------------------------------------
+isPrefixShift(_Romaji)
+{
+	global LF
+	
+	loop, 10
+	{
+		if(LF[_Romaji . Mod(A_Index,10) . "N"]!="") {
+			return true
+		}
+		if(LF[_Romaji . Mod(A_Index,10) . "K"]!="") {
+			return true
+		}
+	}
+	return false
+}
 
 ;----------------------------------------------------------------------
 ;	E段からA段までカラム列からキー配列表を設定
@@ -863,10 +895,13 @@ SetKeyTable:
 		_lpos2 := _col . _row2
 		if(ksc[g_mode . _lpos2] < 1) {
 			ksc[g_mode . _lpos2] := 1	; 最大同時打鍵数を１に初期化
+			ksc[g_mode . _lpos2 . _lpos2] := 0
+			ksc[g_mode . _lpos2 . _lpos2 . _lpos2] := 0
 		}
 
 		; 月配列などのプレフィックスシフトキー
-		if(org[A_Index] == " 1" || org[A_Index] == " 2" || org[A_Index] == " 3" || org[A_Index] == " 4")
+		if(org[A_Index]==" 1" || org[A_Index]==" 2" || org[A_Index]==" 3" || org[A_Index]==" 4" || org[A_Index]==" 5"
+		|| org[A_Index]==" 6" || org[A_Index]==" 7" || org[A_Index]==" 8" || org[A_Index]==" 9" || org[A_Index]==" 0")
 		{
 			kdn[g_mode . _lpos2] := ""
 			kup[g_mode . _lpos2] := ""
@@ -891,12 +926,6 @@ SetKeyTable:
 			break
 		}
 		kst[g_mode . _lpos2] := _status
-		;if(_status=="m" || _status=="c" || _status=="v") {
-		;	g_mode2 := substr(g_mode,1,1) . substr(g_mode,3,1)
-		;	if(keyAttribute3[g_mode2 . _lpos2] == "M") {
-		;		keyAttribute3[g_mode2 . _lpos2] := "X"
-		;	}
-		;}
 		if( _down <> "")
 		{
 			if(SubStr(g_mode,1,1)=="R")
@@ -926,6 +955,10 @@ SetSimulKeyTable:
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
+		if(_tmode == "{*}") {
+			_lpos[0] := chr(asc(_col)-asc("A")+asc("1")) . _row2
+		}
+		
 		if(org[A_Index] == "無") {
 			continue
 		}
@@ -989,6 +1022,9 @@ SetSimulKeyTable3:
 	{
 		_row2 := _rowhash[A_Index]
 		_lpos[0] := _col . _row2
+		if(_tmode == "{*}") {
+			_lpos[0] := chr(asc(_col)-asc("A")+asc("1")) . _row2
+		}
 		
 		if(org[A_Index] == "無") {
 			continue
@@ -1341,35 +1377,86 @@ MakeLayout2Hash() {
 	Hash["[英数２プリフィックスシフト]"]         := "A2N"	; for 月配列
 	Hash["[英数３プリフィックスシフト]"]         := "A3N"	; for 月配列
 	Hash["[英数４プリフィックスシフト]"]         := "A4N"	; for 月配列
+	Hash["[英数５プリフィックスシフト]"]         := "A5N"	; for 月配列
+	Hash["[英数６プリフィックスシフト]"]         := "A6N"	; for 月配列
+	Hash["[英数７プリフィックスシフト]"]         := "A7N"	; for 月配列
+	Hash["[英数８プリフィックスシフト]"]         := "A8N"	; for 月配列
+	Hash["[英数９プリフィックスシフト]"]         := "A9N"	; for 月配列
+	Hash["[英数０プリフィックスシフト]"]         := "A0N"	; for 月配列
 	Hash["[英数小指１プリフィックスシフト]"]     := "A1K"	; for 月配列
 	Hash["[英数小指２プリフィックスシフト]"]     := "A2K"	; for 月配列	
 	Hash["[英数小指３プリフィックスシフト]"]     := "A3K"	; for 月配列
 	Hash["[英数小指４プリフィックスシフト]"]     := "A4K"	; for 月配列	
+	Hash["[英数小指５プリフィックスシフト]"]     := "A5K"	; for 月配列
+	Hash["[英数小指６プリフィックスシフト]"]     := "A6K"	; for 月配列	
+	Hash["[英数小指７プリフィックスシフト]"]     := "A7K"	; for 月配列
+	Hash["[英数小指８プリフィックスシフト]"]     := "A8K"	; for 月配列	
+	Hash["[英数小指９プリフィックスシフト]"]     := "A9K"	; for 月配列
+	Hash["[英数小指０プリフィックスシフト]"]     := "A0K"	; for 月配列	
 	Hash["[ローマ字１プリフィックスシフト]"]     := "R1N"	; for 月配列
 	Hash["[ローマ字２プリフィックスシフト]"]     := "R2N"	; for 月配列
 	Hash["[ローマ字３プリフィックスシフト]"]     := "R3N"	; for 月配列
 	Hash["[ローマ字４プリフィックスシフト]"]     := "R4N"	; for 月配列
+	Hash["[ローマ字５プリフィックスシフト]"]     := "R5N"	; for 月配列
+	Hash["[ローマ字６プリフィックスシフト]"]     := "R6N"	; for 月配列
+	Hash["[ローマ字７プリフィックスシフト]"]     := "R7N"	; for 月配列
+	Hash["[ローマ字８プリフィックスシフト]"]     := "R8N"	; for 月配列
+	Hash["[ローマ字９プリフィックスシフト]"]     := "R9N"	; for 月配列
+	Hash["[ローマ字０プリフィックスシフト]"]     := "R0N"	; for 月配列
 	Hash["[ローマ字小指１プリフィックスシフト]"] := "R1K"	; for 月配列
 	Hash["[ローマ字小指２プリフィックスシフト]"] := "R2K"	; for 月配列	
 	Hash["[ローマ字小指３プリフィックスシフト]"] := "R3K"	; for 月配列
 	Hash["[ローマ字小指４プリフィックスシフト]"] := "R4K"	; for 月配列	
+	Hash["[ローマ字小指５プリフィックスシフト]"] := "R5K"	; for 月配列
+	Hash["[ローマ字小指６プリフィックスシフト]"] := "R6K"	; for 月配列	
+	Hash["[ローマ字小指７プリフィックスシフト]"] := "R7K"	; for 月配列
+	Hash["[ローマ字小指８プリフィックスシフト]"] := "R8K"	; for 月配列	
+	Hash["[ローマ字小指９プリフィックスシフト]"] := "R9K"	; for 月配列
+	Hash["[ローマ字小指０プリフィックスシフト]"] := "R0K"	; for 月配列	
 	; やまぶき互換
 	Hash["[1英数シフト無し]"]     := "A1N"	; for 月配列
 	Hash["[2英数シフト無し]"]     := "A2N"	; for 月配列
 	Hash["[3英数シフト無し]"]     := "A3N"	; for 月配列
 	Hash["[4英数シフト無し]"]     := "A4N"	; for 月配列
+	Hash["[5英数シフト無し]"]     := "A5N"	; for 月配列
+	Hash["[6英数シフト無し]"]     := "A6N"	; for 月配列
+	Hash["[7英数シフト無し]"]     := "A7N"	; for 月配列
+	Hash["[8英数シフト無し]"]     := "A8N"	; for 月配列
+	Hash["[9英数シフト無し]"]     := "A9N"	; for 月配列
+	Hash["[0英数シフト無し]"]     := "A0N"	; for 月配列
+	
 	Hash["[1英数小指シフト]"]     := "A1K"	; for 月配列
 	Hash["[2英数小指シフト]"]     := "A2K"	; for 月配列
 	Hash["[3英数小指シフト]"]     := "A3K"	; for 月配列
 	Hash["[4英数小指シフト]"]     := "A4K"	; for 月配列
+	Hash["[5英数小指シフト]"]     := "A5K"	; for 月配列
+	Hash["[6英数小指シフト]"]     := "A6K"	; for 月配列
+	Hash["[7英数小指シフト]"]     := "A7K"	; for 月配列
+	Hash["[8英数小指シフト]"]     := "A8K"	; for 月配列
+	Hash["[9英数小指シフト]"]     := "A9K"	; for 月配列
+	Hash["[0英数小指シフト]"]     := "A0K"	; for 月配列
+
 	Hash["[1ローマ字シフト無し]"] := "R1N"	; for 月配列
 	Hash["[2ローマ字シフト無し]"] := "R2N"	; for 月配列
 	Hash["[3ローマ字シフト無し]"] := "R3N"	; for 月配列
 	Hash["[4ローマ字シフト無し]"] := "R4N"	; for 月配列
+	Hash["[5ローマ字シフト無し]"] := "R5N"	; for 月配列
+	Hash["[6ローマ字シフト無し]"] := "R6N"	; for 月配列
+	Hash["[7ローマ字シフト無し]"] := "R7N"	; for 月配列
+	Hash["[8ローマ字シフト無し]"] := "R8N"	; for 月配列
+	Hash["[9ローマ字シフト無し]"] := "R9N"	; for 月配列
+	Hash["[0ローマ字シフト無し]"] := "R0N"	; for 月配列
+
 	Hash["[1ローマ字小指シフト]"] := "R1K"	; for 月配列
 	Hash["[2ローマ字小指シフト]"] := "R2K"	; for 月配列
 	Hash["[3ローマ字小指シフト]"] := "R3K"	; for 月配列
 	Hash["[4ローマ字小指シフト]"] := "R4K"	; for 月配列
+	Hash["[5ローマ字小指シフト]"] := "R5K"	; for 月配列
+	Hash["[6ローマ字小指シフト]"] := "R6K"	; for 月配列
+	Hash["[7ローマ字小指シフト]"] := "R7K"	; for 月配列
+	Hash["[8ローマ字小指シフト]"] := "R8K"	; for 月配列
+	Hash["[9ローマ字小指シフト]"] := "R9K"	; for 月配列
+	Hash["[0ローマ字小指シフト]"] := "R0K"	; for 月配列
 	return Hash
 }
 

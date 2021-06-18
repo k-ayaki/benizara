@@ -1168,19 +1168,15 @@ keydownM:
 		critical,off
 		return
 	}
-	; キーリピート
-	if(g_MojiOnHold[g_OnHoldIdx]==g_layoutPos) {
-		g_KeyOnHold := GetPushedKeys()
-		; 保留中の文字出力
-		Gosub, ModeInitialize
-	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
 		; M2キー押下
 		if(g_MetaOnHold[1]=="M") {
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
+			if(ksc[_mode . g_layoutPos]<=1 
+			|| (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")
+			|| ksc[_mode . g_MojiOnHold[1] . g_layoutPos]==0) {
 				; 保留中の１文字を確定（出力）
 				Gosub, SendOnHoldM
 			}
@@ -1192,14 +1188,18 @@ keydownM:
 		; M2キー押下
 		if(g_MetaOnHold[1]=="M") {
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")) {
+			if(ksc[_mode . g_layoutPos]<=1 
+			|| (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[1] . g_layoutPos]=="")
+			|| ksc[_mode . g_MojiOnHold[1] . g_layoutPos]==0) {
 				; 保留中の１文字を確定（出力）
 				Gosub, SendOnHoldMO
 			}
 		} else 
-		if(g_MetaOnHold[2]=="M") {		
+		if(g_MetaOnHold[2]=="M") {
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			if(ksc[_mode . g_layoutPos]<=1 || (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[2] . g_layoutPos]=="")) {
+			if(ksc[_mode . g_layoutPos]<=1 
+			|| (ksc[_mode . g_layoutPos]==2 && kdn[_mode . g_MojiOnHold[2] . g_layoutPos]=="")
+			|| ksc[_mode . g_MojiOnHold[1] . g_layoutPos]==0) {
 				; 保留中の１文字を確定（出力）
 				Gosub, SendOnHoldMO
 			} else {
