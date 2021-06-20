@@ -296,6 +296,7 @@ keydownL:
 		else if(g_KeyInPtn == g_OyaAlt[g_Oya])	;S3)Oオン状態　（既に他の親指キーオン）
 		{
 			Gosub, SendOnHoldO	; 他の親指キー（保留キー）の打鍵
+			g_Oya := g_metaKey
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
 			g_KeyInPtn := g_Oya				;S4)Oオンに遷移
 			g_SendTick := SetTimeout(g_KeyInPtn)
@@ -303,6 +304,7 @@ keydownL:
 		else if(g_KeyInPtn == "M" . g_OyaAlt[g_Oya])	;S4)M-Oオン状態で反対側のOキーオン
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
+			g_Oya := g_metaKey
 			
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
 			g_KeyInPtn := g_Oya	; S3)Oオンに遷移
@@ -313,12 +315,13 @@ keydownL:
 			; 処理B 3キー判定
 			g_Interval[g_OyaAlt[g_Oya] . "M"] := g_TDownOnHold[1] - g_OyaTick[g_OyaAlt[g_Oya]]	; 他の親指キー押しから文字キー押しまでの期間
 			g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから当該親指キー押しまでの期間
-			if(g_Interval["M" . g_Oya] > g_Interval[g_OyaAlt[g_Oya] . "M"])
+			if(g_Interval["M" . g_Oya] > g_Interval[g_OyaAlt[g_Oya] . "M"] || g_Continue==1)
 			{
 				Gosub, SendOnHoldMO	; 保留キーの打鍵　L,Rモードに遷移
+				g_Oya := g_metaKey
 
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_KeyInPtn := g_KeyInPtn . g_Oya	; S3)Oオンに遷移
+				g_KeyInPtn := g_Oya	; S3)Oオンに遷移
 				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
 			else
@@ -328,8 +331,9 @@ keydownL:
 					CancelZeroDelayOut(g_ZeroDelay)
 				}
 				Gosub, SendOnHoldO	; 保留キーの打鍵, Mモードに遷移
+				g_Oya := g_metaKey
 				enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
-				g_KeyInPtn := g_KeyInPtn . g_Oya	; S4)M-Oオンに遷移
+				g_KeyInPtn := "M" . g_Oya	; S4)M-Oオンに遷移
 				g_SendTick := SetTimeout(g_KeyInPtn)
 				SendZeroDelay(g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2], g_MojiOnHold[1], g_ZeroDelay)
 			}
@@ -338,6 +342,7 @@ keydownL:
 		{
 			if(g_Continue == 0 && g_OnHoldIdx >= 2) {
 				Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
+				g_Oya := g_metaKey
 			}
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, g_OyaTick[g_metaKey])
 			g_KeyInPtn := g_KeyInPtn . g_Oya		; S3)Oオンに遷移
@@ -1089,6 +1094,10 @@ SendOnHoldO:
 		{
 			g_keyInPtn := ""
 		}
+	} else
+	if(g_KeyInPtn=="RM" || g_KeyInPtn=="LM") {
+		g_OyaOnHold[1] := "N"
+		g_keyInPtn := "M"
 	}
 	; debugging 
 	if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
