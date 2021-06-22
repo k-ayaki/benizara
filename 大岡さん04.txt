@@ -1,0 +1,72 @@
+【テキスト表示】
+なんでだろう。なんでだろろ。
+【ログ】
+ver.0.1.4.7
+
+オーバラップ文字親指=70
+オーバラップ親指文字=35
+オーバラップ文字同時=50
+親指シフト同時打鍵間隔=100
+文字同時打鍵間隔=27
+連続モード=1
+零遅延モード=1
+親指キー単独打鍵=無効
+親指キーリピート=0
+TIME INPUT MD  TG   SEND
+;な
+ 273 m down
+;ん
+  23 , down
+  66 m up
+   3       MM  m   {n down}
+   4       MM  m   {n up}
+  15       MM  m   {a down}
+   3       M   m   {a up}
+   8 , up
+   3       M   m   {n down}
+   2       M   m   {n up}
+  15       M   m   {n down}
+   3           m   {n up}
+;て
+  22 e down
+;濁点
+  48 j down
+  58 j up
+   3       MM  m   {d down}
+   2       MM  m   {d up}
+   4       MM  m   {e down}
+  13 e up
+   3           m   {e up}
+;濁点
+  63 f down
+;た
+  34 n down
+  52 n up
+   3       MM  m   {d down}
+   3       MM  m   {d up}
+  17       MM  m   {a down}
+   9 f up
+   3           m   {a up}
+;ろ
+  53 a down
+  53       M   TO  {r down}
+   2       M   TO  {r up}
+   5       M   TO  {o down}
+;う
+  12 l down
+  19 a up
+   6           m   {o up}
+;以下、不正な出力
+  27       M   TO  {r down}
+   1       M   TO  {r up}
+  12       M   TO  {o down}
+   7 l up
+  26 sc039 down
+  86 m down
+  59       M   TO  {. down}
+   2       M   TO  {. up}
+   9       M   TO  {Enter down}
+   2 m up
+   2           m   {Enter up}
+  62 sc039 up
+ 

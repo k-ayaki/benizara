@@ -410,6 +410,7 @@ ReadLayoutFile:
 						keyNameHash[_layoutPos] := _code
 						kLabel[_layoutPos] := CodeNameHash[_code]
 						if(org[2] == "Space&Shift") {
+							g_sansPos := _layoutPos
 							keyAttribute3["AN" . _layoutPos] := "S"	; Space
 							keyAttribute3["AK" . _layoutPos] := "S"	; Space
 							keyAttribute3["RN" . _layoutPos] := "S"	; Space

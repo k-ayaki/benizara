@@ -1,0 +1,78 @@
+【テキスト表示】
+なんてでかだろう。
+【ログ】
+ver.0.1.4.7
+
+オーバラップ文字親指=70
+オーバラップ親指文字=35
+オーバラップ文字同時=50
+親指シフト同時打鍵間隔=100
+文字同時打鍵間隔=27
+連続モード=1
+零遅延モード=1
+親指キー単独打鍵=無効
+親指キーリピート=0
+
+TIME INPUT MD  TG  SEND
+な
+ 512 m down
+ん
+  13 , down
+  42 m up
+   4       MM  m  {n down}
+   3       MM  m  {n up}
+  19       MM  m  {a down}
+   3       M   m  {a up}
+て
+   8 e down
+  18 , up
+   5       MM  m  {n down}
+   3       MM  m  {n up}
+  10       MM  m  {n down}
+   4       M   m  {n up}
+  25       M   TO {t down}
+   2       M   TO {t up}
+  13       M   TO {e down}
+濁点
+  26 j down
+  47 e up
+   1       M   m  {e up}
+  10       M   TO {d down}
+   2       M   TO {d up}
+   8       M   TO {e down}
+   1 j up
+   1           m  {e up}
+濁点
+  82 f down
+  50      M   TO {k down}
+   3      M   TO {k up}
+   4      M   TO {a down}
+た
+   1 n down
+  48 n up
+   1      M   m  {d down}
+   2      M   m  {d up}
+  11      M   m  {a down}
+   2          m  {a up}
+   0 f up
+   1          m  {a up}
+ろ
+  46 a down
+  46      M   TO {r down}
+   1      M   TO {r up}
+  13      M   TO {o down}
+う
+   0 l down
+  34 a up
+   2      M   m  {o up}
+  14      M   TO {u down}
+   8 l up
+   2          m  {u up}
+  38 sc039 down
+  65 m down
+  49      M   TO {. down}
+   3      M   TO {. up}
+   4      M   TO {Enter down}
+  36 m up
+   4        m {Enter up}
+  96 sc039 up

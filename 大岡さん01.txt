@@ -1,0 +1,84 @@
+【テキスト表示】
+があるがあるがあるがあるがあるがああるが
+
+オーバラップ文字親指=70
+オーバラップ親指文字=35
+オーバラップ文字同時=50
+親指シフト同時打鍵間隔=100
+文字同時打鍵間隔=27
+連続モード=1
+零遅延モード=1
+親指キー単独打鍵=無効
+親指キーリピート=0
+TIME INPUT MD TG SEND
+1 MM m {g up}
+7 MM m {a down}
+2 m {a up}
+23 f up
+32 j down
+64 M TO {a down}
+53 j up
+2 m {a up}
+29 i down
+50 M TO {r down}
+2 M TO {r up}
+9 M TO {u down}
+63 i up
+1 m {u up}
+152 j down
+57 M TO {a down}
+31 j up
+2 m {a up}
+1191 u down
+62 M TO {BS down}
+41 u up
+3 m {BS up}
+141 j down
+16 f down
+50 j up
+6 MM m {g down}
+3 MM m {g up}
+10 MM m {a down}
+4 m {a up}
+1 f up
+55 j down
+53 M TO {a down}
+27 j up
+2 m {a up}
+32 i down
+52 M TO {r down}
+3 M TO {r up}
+5 M TO {u down}
+8 i up
+3 m {u up}
+
+
+;か
+ 189 f down
+;濁点
+  10 j down
+  62 j up
+   4       MM  m  {a down}
+   3       M   m  {a up}
+  37 f up
+  13       M   TO {a down}
+;あ
+   7 j down
+  63       M   TO {a down}
+  46 j up
+   2           m  {a up}
+;る
+  76 i down
+  53 i up
+   2       M   m  {r down}
+   1       M   m  {r up}
+  14       M   m  {u down}
+   2           m  {u up}
+3037 v down
+   8 m down
+;Enterの同時打鍵
+  57 v up
+   2       MM m {Enter down}
+   5          m {Enter up}
+  39 m up
+   4          m {Enter up}

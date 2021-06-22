@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.7 .... 2021/6/16
+;	ver.0.1.4.74 .... 2021/6/23
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.7"
-	g_Date := "2021/6/16"
+	g_Ver := "ver.0.1.4.74"
+	g_Date := "2021/6/23"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -118,6 +118,7 @@
 	
 	g_sansTick := INFINITE
 	g_sans := "N"
+	g_sansPos := ""
 	
 	g_debugout := ""
 	
@@ -615,6 +616,7 @@ RegLogs(thisLog)
 ; 保留キーの出力：セットされた文字のセットされた親指の出力
 ;----------------------------------------------------------------------
 SendOnHoldMO:
+	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -774,6 +776,7 @@ SetTimeout(_KeyInPtn)
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
+	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -792,34 +795,36 @@ SendOnHoldM:
 		}
 		SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
 		dequeueKey()
+		g_SendTick := INFINITE
+		if(g_KeyInPtn=="MR")
+		{
+			g_keyInPtn := "R"
+		}
+		else if(g_KeyInPtn=="ML")
+		{
+			g_keyInPtn := "L"
+		}
+		else if(g_KeyInPtn=="M")
+		{
+			clearQueue()
+			g_keyInPtn := ""		
+		}
+		else if(g_KeyInPtn=="RMr" || g_KeyInPtn=="LMl")
+		{
+			g_keyInPtn := ""
+		}
+		else if(g_KeyInPtn=="MM" || g_KeyInPtn=="MMm")
+		{
+			g_keyInPtn := "M"
+		}
+		else if(g_KeyInPtn=="MMM")
+		{
+			g_keyInPtn := "MM"
+		}
 	} else {
 		; 不具合対策
-		dequeueKey()
-	}
-	g_SendTick := INFINITE
-	if(g_KeyInPtn=="MR")
-	{
-		g_keyInPtn := "R"
-	}
-	else if(g_KeyInPtn=="ML")
-	{
-		g_keyInPtn := "L"
-	}
-	else if(g_KeyInPtn=="M")
-	{
+		clearQueue()
 		g_keyInPtn := ""
-	}
-	else if(g_KeyInPtn=="RMr" || g_KeyInPtn=="LMl")
-	{
-		g_keyInPtn := ""
-	}
-	else if(g_KeyInPtn=="MM" || g_KeyInPtn=="MMm")
-	{
-		g_keyInPtn := "M"
-	}
-	else if(g_KeyInPtn=="MMM")
-	{
-		g_keyInPtn := "MM"
 	}
 	return
 
@@ -974,6 +979,7 @@ countMoji()
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldMM:
+	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -983,6 +989,7 @@ SendOnHoldMM:
 	}
 	else if(cntM == 1) {
 		Gosub, SendOnHoldM
+		clearQueue()
 		g_SendTick := INFINITE
 		g_keyInPtn := ""
 		return
@@ -1017,6 +1024,7 @@ SendOnHoldMM:
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldMMM:
+	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -1121,6 +1129,9 @@ keydownM:
 	keyTick[g_layoutPos] := Pf_Count()
 	keyState[g_layoutPos] := 2
 	g_sansTick := INFINITE
+	if(keyState[g_sansPos]==2) {
+		keyState[g_sansPos] := 1
+	}
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
@@ -1391,6 +1402,7 @@ JudgePushedKeys:
 			g_keyInPtn := ""
 		}
 	}
+	g_KeyOnHold := ""
 	return
 
 ;----------------------------------------------------------------------
@@ -1675,6 +1687,7 @@ keyupM:
 				vOverlap := floor((100*g_Interval["S2_1"])/g_Interval["S1_1"])	; 重なり厚み計算
 				_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 				if(g_Interval["S2_1"] > g_ThresholdSS || g_OverlapSS <= vOverlap) {
+					; 押下キー判定 
 					Gosub, SendOnHoldMM
 					if(g_KeyInPtn == "M") {
 						SendKeyUp()
@@ -1796,11 +1809,11 @@ keyupS:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
-	keyState[g_layoutPos] := 0
 	if(g_sansTick != INFINITE) {
 		SubSend(MnDown(kName) . MnUp(kName))
 		g_sansTick := INFINITE
 	}
+	keyState[g_layoutPos] := 0
 	g_sans := "N"
 	critical,off
 	return
@@ -1932,11 +1945,15 @@ Polling:
 				g_OyaOnHold[1] := "N"
 				Gosub, SendOnHoldM		; 保留文字キーの単独打鍵
 			}
+			clearQueue()
+			g_SendTick := INFINITE
+			g_KeyInPtn := ""
 		}
 		if(_TickCount > g_sansTick) 	; タイムアウト
 		{
-			SubSend(MnDown(kName) . MnUp(kName))
+			SubSend(MnDown(keyNameHash[g_sansPos]) . MnUp(keyNameHash[g_sansPos]))
 			g_sansTick := INFINITE
+			keyState[g_sansPos] := 1
 		}
 	}
 	g_trigger := ""
@@ -2040,6 +2057,9 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldMO
 	}
+	clearQueue()
+	g_SendTick := INFINITE
+	g_KeyInPtn := ""
 	return
 
 ;-----------------------------------------------------------------------
