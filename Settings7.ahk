@@ -305,7 +305,6 @@ gURLsupport:
 ; 機能：キーレイアウトの表示
 ;-----------------------------------------------------------------------
 G2DrawKeyFrame:
-	Critical
 	_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
 	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W720 H270,%_ch%
 	_col := 1
@@ -344,7 +343,6 @@ G2DrawKeyFrame:
 		Gosub,DrawKeyA
 	}
 	Gosub,DrawKeyUsage
-	critical,off
 	return
 
 ;-----------------------------------------------------------------------
@@ -590,7 +588,6 @@ RefreshLayoutA:
 ; 機能：Ａ列のキー表示の更新
 ;-----------------------------------------------------------------------
 RefreshLayoutA1:
-	Critical
 	Gui, Submit, NoHide
 	GuiControl,-Redraw,vkeyDN%_layoutPos%
 	if(keyAttribute3[g_Romaji . "N" . _layoutPos] == "L")
@@ -619,13 +616,11 @@ RefreshLayoutA1:
 	vkeyDN%_layoutPos% := "　"
 	GuiControl,2:,vkeyDN%_layoutPos%,　
 	GuiControl,+Redraw,vkeyDN%_layoutPos%
-	Critical,off
 	return
 ;-----------------------------------------------------------------------
 ; 機能：凡例表示の更新
 ;-----------------------------------------------------------------------
 RefreshLayoutUsage:
-	Critical
 	Gui, Submit, NoHide
 	if(ShiftMode["R"] == "親指シフト" || ShiftMode["R"] == "文字同時打鍵") {
 		GuiControl,,vkeyRLA00,左親
@@ -636,14 +631,12 @@ RefreshLayoutUsage:
 		GuiControl,,vkeyRLA00,１
 		GuiControl,,vkeyRRA00,２
 	}
-	Critical,off
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え
 ;-----------------------------------------------------------------------
 G2RefreshLayout:
-	Critical
 	Gui, Submit, NoHide
 	for index, element in layoutArys
 	{
@@ -701,7 +694,6 @@ G2RefreshLayout:
 		GuiControl,+Redraw,vkeyRL%element%
 		GuiControl,+Redraw,vkeyRR%element%
 	}
-	Critical,off
 	return
 
 
@@ -724,7 +716,6 @@ SetFontColor:
 ; 機能：キーのオンオフ表示の更新
 ;-----------------------------------------------------------------------
 ReadKeyboardState:
-	Critical
 	;VarSetCapacity(stKtbl, cbSize:=512, 0)
 	;NumPut(cbSize, stKtbl,  0, "UChar")   ;	
 	;stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
@@ -762,7 +753,6 @@ ReadKeyboardState:
 		_vkey := vkeyHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
-	critical,off
 	return
 
 SetKeyGui2:

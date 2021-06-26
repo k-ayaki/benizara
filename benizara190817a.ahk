@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.74 .... 2021/6/23
+;	ver.0.1.4.76 .... 2021/6/23
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.74"
-	g_Date := "2021/6/23"
+	g_Ver := "ver.0.1.4.76"
+	g_Date := "2021/6/24"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -211,7 +211,7 @@ DoResume:
 
 keydownR:
 keydownL:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
@@ -232,6 +232,7 @@ keydownL:
 			g_KeyInPtn := g_Oya
 		}
 		critical,off
+		sleep,-1
 		return
 	}
 	if(keyState[g_layoutPos] == 0) 	; キーリピートの抑止
@@ -354,6 +355,7 @@ keydownL:
 		g_SendTick := INFINITE
 	}
 	critical,off
+	sleep,-1
 	return  
 
 ;-----------------------------------------------------------------------
@@ -361,7 +363,7 @@ keydownL:
 ;-----------------------------------------------------------------------
 keyupR:
 keyupL:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
@@ -444,6 +446,7 @@ keyupL:
 	}
 	g_MojiCount[g_metaKey] := 0
 	critical,off
+	sleep,-1
 	return
 ;----------------------------------------------------------------------
 ; 最小値
@@ -522,7 +525,6 @@ SubSend(vOut)
 	global g_KeyInPtn, g_trigger
 	global g_Koyubi
 
-	critical
 	_stroke := ""
 	_scnt := 0
 	_len := strlen(vOut)
@@ -543,8 +545,8 @@ SubSend(vOut)
 			Send, %_stroke%
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
-			if(_cnt != _len && mod(_scnt,2)==0) {
-				Sleep,10
+			if(_cnt != _len && mod(_scnt,4)==0) {
+				DllCall("kernel32.dll\Sleep", "UInt", 10)
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
 				Send, {capslock}
@@ -561,7 +563,6 @@ SubSend(vOut)
 		Send, %_stroke%
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 	}
-	critical,off
 }
 ;----------------------------------------------------------------------
 ;	capslockが必要か
@@ -1121,7 +1122,7 @@ SendOnHoldO:
 ; 文字キー押下
 ;----------------------------------------------------------------------
 keydownM:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 	
@@ -1142,6 +1143,7 @@ keydownM:
 			g_KeyInPtn := ""
 			g_prefixshift := ""
 			critical,off
+			sleep,-1
 			return
 		}
 		if(g_prefixshift <> "" )
@@ -1150,11 +1152,13 @@ keydownM:
 			g_SendTick := INFINTE
 			g_prefixshift := ""
 			critical,off
+			sleep,-1
 			return
 		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		g_SendTick := INFINTE
 		critical,off
+		sleep,-1
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
@@ -1169,12 +1173,14 @@ keydownM:
 			g_KeyInPtn := ""
 			g_prefixshift := ""
 			critical,off
+			sleep,-1
 			return
 		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		clearQueue()
 
 		critical,off
+		sleep,-1
 		return
 	}
 	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
@@ -1186,6 +1192,7 @@ keydownM:
 		g_LastKey["状態"] := ""
 		g_KeyInPtn := ""
 		critical,off
+		sleep,-1
 		return
 	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
@@ -1300,9 +1307,9 @@ keydownM:
 		g_SendTick := INFINITE
 		g_KeyInPtn := ""
 		critical,off
+		sleep,-1
 		return
 	}
-	Critical,5
 	Gosub,ChkIME
 
 	if(g_Oya=="N")
@@ -1384,6 +1391,7 @@ keydownM:
 		}
 	}
 	critical,off
+	sleep,-1
 	return
 ;----------------------------------------------------------------------
 ; 連続打鍵の判定
@@ -1463,7 +1471,7 @@ SendKey(_mode, _MojiOnHold){
 ;----------------------------------------------------------------------
 keydown:
 keydownX:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
@@ -1477,6 +1485,7 @@ keydownX:
 		g_LastKey["状態"] := ""
 		g_prefixshift := ""
 		critical,off
+		sleep,-1
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
@@ -1488,13 +1497,14 @@ keydownX:
 	g_LastKey["状態"] := ""
 	g_KeyInPtn := ""
 	critical,off
+	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
 ; スペース＆シフトキー押下
 ;----------------------------------------------------------------------
 keydownS:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
@@ -1515,6 +1525,7 @@ keydownS:
 		g_KeyInPtn := ""
 	}
 	critical,off
+	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
@@ -1522,7 +1533,7 @@ keydownS:
 ;----------------------------------------------------------------------
 keydown1:
 keydown2:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
@@ -1540,12 +1551,14 @@ keydown2:
 
 		g_prefixshift := ""
 		critical,off
+		sleep,-1
 		return
 	}
 	if(g_prefixshift == "")
 	{
 		g_prefixshift := g_metaKey
 		critical,off
+		sleep,-1
 		return
 	}
 	SendKey(g_Romaji . g_prefixshift . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
@@ -1553,6 +1566,7 @@ keydown2:
 
 	g_prefixshift := ""
 	critical,off
+	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
@@ -1645,7 +1659,7 @@ nextDakuten(_mode,_MojiOnHold)
 ; キーアップ（押下終了）
 ;----------------------------------------------------------------------
 keyupM:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 	RegLogs(kName . " up")
@@ -1657,6 +1671,7 @@ keyupM:
 		SubSend(vOut)
 		kup_save[g_layoutPos] := ""
 		critical,off
+		sleep,-1
 		return
 	}
 	loop,4
@@ -1781,6 +1796,7 @@ keyupM:
 	kup_save[g_layoutPos] := ""
 	g_trigger := ""
 	critical,off
+	sleep,-1
 	return
 
 
@@ -1789,7 +1805,7 @@ keyupM:
 ;----------------------------------------------------------------------
 keyup:
 keyupX:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
@@ -1798,13 +1814,14 @@ keyupX:
 	vOut := MnUp(kName)
 	SubSend(vOut)
 	critical,off
+	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
 ; スペース＆シフトキー（押下終了）
 ;----------------------------------------------------------------------
 keyupS:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
@@ -1816,6 +1833,7 @@ keyupS:
 	keyState[g_layoutPos] := 0
 	g_sans := "N"
 	critical,off
+	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
@@ -1823,7 +1841,7 @@ keyupS:
 ;----------------------------------------------------------------------
 keyup1:
 keyup2:
-	Critical
+	critical
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
@@ -1832,6 +1850,7 @@ keyup2:
 	SubSend(kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
 	critical,off
+	sleep,-1
 	return
 
 
@@ -1839,6 +1858,7 @@ keyup2:
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
 Interrupt10:
+	critical
 	Gosub,ScanModifier
 	;if(A_IsCompiled <> 1)
 	;{
@@ -1888,7 +1908,11 @@ Interrupt10:
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 	}
-
+	Gosub,Polling
+	critical,off
+	sleep,-1
+	return
+	
 ;----------------------------------------------------------------------
 ; 10mSECなどのポーリング
 ;----------------------------------------------------------------------
@@ -1973,7 +1997,6 @@ ScanModifier:
 			g_Koyubi := "N"
 		}
 	}
-	Critical
 	g_Modifier := 0x00
 	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
 	g_Modifier := g_Modifier | stLCtrl
@@ -2010,7 +2033,6 @@ ScanModifier:
 			Gosub,pauseKeyDown
 		}
 	}
-	critical,off
 	return
 
 ;----------------------------------------------------------------------
@@ -2169,7 +2191,6 @@ ChkIME:
 ;----------------------------------------------------------------------
 SetHookInit()
 {
-	Critical
 	hotkey,*sc002,gSC002		;1
 	hotkey,*sc002 up,gSC002up
 	hotkey,*sc003,gSC003		;2
@@ -2302,7 +2323,6 @@ SetHookInit()
 	Hotkey,*sc079 up,gSC079up
 	Hotkey,*sc07B,gSC07B
 	Hotkey,*sc07B up,gSC07Bup
-	Critical,off
 	return
 }
 
@@ -2314,7 +2334,7 @@ SetHookInit()
 SetHook(flg,oya_flg)
 {
 	global ShiftMode, g_KeySingle, g_MojiCount, g_Oya, g_Romaji, g_Koyubi
-	Critical
+
 	hotkey,*sc002,%flg%		;1
 	hotkey,*sc002 up,%flg%
 	hotkey,*sc003,%flg%		;2
@@ -2443,7 +2463,6 @@ SetHook(flg,oya_flg)
 		Hotkey,*sc079,off
 		Hotkey,*sc079 up,off
 	}
-	Critical,off
 	return
 }
 
