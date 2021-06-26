@@ -502,6 +502,7 @@ Mode2Key:
 		return
 	}
 	if(CountObject(org) == 13) {
+		keyAttribute3[substr(g_mode,1,1) . substr(g_mode,3,1) . "E14"] := "X"
 		org[14] := "後"
 	}
 	Gosub, SetKeyTable
@@ -926,7 +927,10 @@ SetKeyTable:
 			_error := _lpos2 . ":" . _error
 			break
 		}
-		kst[g_mode . _lpos2] := _status
+;		kst[g_mode . _lpos2] := kst[g_mode . _lpos2] . _status
+		kst[substr(g_mode,1,1) . "N" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "N" . substr(g_mode,3,1) . _lpos2] . _status)
+		kst[substr(g_mode,1,1) . "R" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "R" . substr(g_mode,3,1) . _lpos2] . _status)
+		kst[substr(g_mode,1,1) . "L" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "L" . substr(g_mode,3,1) . _lpos2] . _status)
 		if( _down <> "")
 		{
 			if(SubStr(g_mode,1,1)=="R")
@@ -981,8 +985,8 @@ SetSimulKeyTable:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[g_mode . _lpos[0]] := kst[g_mode . _lpos[0]] . _status
-		kst[g_mode . _lpos[1]] := kst[g_mode . _lpos[1]] . _status
+		kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
+		kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
 		kst[g_mode . _simulMode . _lpos[0]] := _status
 		kst[g_mode . _lpos[1] . _lpos[0]] := _status
 		kst[g_mode . _lpos[0] . _lpos[1]] := _status
@@ -1082,9 +1086,9 @@ SetSimulKeyTable3:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[g_mode . _lpos[0]] := kst[g_mode . _lpos[0]] . _status
-		kst[g_mode . _lpos[1]] := kst[g_mode . _lpos[1]] . _status
-		kst[g_mode . _lpos[2]] := kst[g_mode . _lpos[2]] . _status
+		kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
+		kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
+		kst[g_mode . _lpos[2]] := MergeStatus(kst[g_mode . _lpos[2]] . _status)
 		
 		kst[g_mode . _simulMode . _lpos[0]] := _status	; 普通の文字"M" 修飾キーm
 		kst[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _status
@@ -1306,6 +1310,25 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 	return _dn
 }
 
+;----------------------------------------------------------------------
+;	ステータスを合わせる
+;----------------------------------------------------------------------
+MergeStatus(_status)
+{
+	_status2 := ""
+	if(instr(_status,"Q") > 0 ) {	; 引用符
+		_status2 := _status2 . "Q"
+	}
+	if(instr(_status,"v") > 0 ) {	; 仮想キーコード
+		_status2 := _status2 . "v"
+	}
+	if(instr(_status,"c") > 0 ) {	; 制御キー
+		_status2 := _status2 . "c"
+	}
+	if(instr(_status,"m") > 0 ) {	; 修飾キー
+		_status2 := _status2 . "m"
+	}
+}
 ;----------------------------------------------------------------------
 ;	オブジェクトの要素数を数える
 ;----------------------------------------------------------------------

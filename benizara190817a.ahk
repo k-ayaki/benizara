@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.76 .... 2021/6/23
+;	ver.0.1.4.77 .... 2021/6/26
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.76"
-	g_Date := "2021/6/24"
+	g_Ver := "ver.0.1.4.77"
+	g_Date := "2021/6/26"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -211,8 +211,6 @@ DoResume:
 
 keydownR:
 keydownL:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
 	RegLogs(g_metaKey . " down")
@@ -363,8 +361,6 @@ keydownL:
 ;-----------------------------------------------------------------------
 keyupR:
 keyupL:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
@@ -1122,8 +1118,6 @@ SendOnHoldO:
 ; 文字キー押下
 ;----------------------------------------------------------------------
 keydownM:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 	
 	RegLogs(kName . " down")
@@ -1183,18 +1177,18 @@ keydownM:
 		sleep,-1
 		return
 	}
-	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-	if(kst[_mode . g_layoutPos]=="c" || kst[_mode . g_layoutPos]=="m") {
-		Gosub, ModeInitialize
-		Gosub, SendOnHoldM
-		keyState[g_layoutPos] := 1
-		g_LastKey["表層"] := ""
-		g_LastKey["状態"] := ""
-		g_KeyInPtn := ""
-		critical,off
-		sleep,-1
-		return
-	}
+;	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
+;	if(kst[_mode . g_layoutPos]=="c" || kst[_mode . g_layoutPos]=="m") {	;制御キーまたは修飾
+;		Gosub, ModeInitialize
+;		Gosub, SendOnHoldM
+;		keyState[g_layoutPos] := 1
+;		g_LastKey["表層"] := ""
+;		g_LastKey["状態"] := ""
+;		g_KeyInPtn := ""
+;		critical,off
+;		sleep,-1
+;		return
+;	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
@@ -1471,8 +1465,6 @@ SendKey(_mode, _MojiOnHold){
 ;----------------------------------------------------------------------
 keydown:
 keydownX:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
 	RegLogs(kName . " down")
@@ -1504,8 +1496,6 @@ keydownX:
 ; スペース＆シフトキー押下
 ;----------------------------------------------------------------------
 keydownS:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	g_trigger := g_metaKey
 
 	RegLogs(kName . " down")
@@ -1533,8 +1523,6 @@ keydownS:
 ;----------------------------------------------------------------------
 keydown1:
 keydown2:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
 	keyState[g_layoutPos] := 2
@@ -1596,11 +1584,11 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 
 	if(g_ZeroDelay == 1)
 	{
-		; 保留キーがあれば先行出力（零遅延モード）
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
-
+		; 保留キーがあれば先行出力（零遅延モード）
 		; １文字通常出力の非制御コードならば先行出力
 		if(kst[_mode . _MojiOnHold] == "" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+
 			vOut                  := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
 			_kLabel := kLabel[_mode . _MojiOnHold]
@@ -1659,8 +1647,6 @@ nextDakuten(_mode,_MojiOnHold)
 ; キーアップ（押下終了）
 ;----------------------------------------------------------------------
 keyupM:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 	RegLogs(kName . " up")
 	keyState[g_layoutPos] := 0
@@ -1805,8 +1791,6 @@ keyupM:
 ;----------------------------------------------------------------------
 keyup:
 keyupX:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
@@ -1821,8 +1805,6 @@ keyupX:
 ; スペース＆シフトキー（押下終了）
 ;----------------------------------------------------------------------
 keyupS:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
@@ -1841,8 +1823,6 @@ keyupS:
 ;----------------------------------------------------------------------
 keyup1:
 keyup2:
-	critical
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
@@ -1895,22 +1875,34 @@ Interrupt10:
 			goto, keyup%g_metaKey%
 		}
 	}
+	if(g_sans=="K") {
+		if(GetKeyState(keyNameHash[g_sansPos],"P") == 0) {
+			if(g_sansTick!=INFINITE)	; 未タイムアウト
+			{
+				SubSend(MnDown(keyNameHash[g_sansPos]) . MnUp(keyNameHash[g_sansPos]))
+				g_sansTick := INFINITE
+				keyState[g_sansPos] := 0
+			}
+			g_sans := "N"
+		}
+	}
+	Gosub,Polling
+	critical,off
+	sleep,-1
 	if(A_IsCompiled != 1)
 	{
 		vImeMode := IME_GET() & 32767
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		;g_debugout3 := kdn["RNN204B06B09"]
-		g_debugout2 := GetPushedKeys()
+		g_debugout3 := kst["RNNC01"]
+		;g_debugout2 := GetPushedKeys()
+		g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout3 . ":" . g_debugout2
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 	}
-	Gosub,Polling
-	critical,off
-	sleep,-1
 	return
 	
 ;----------------------------------------------------------------------
@@ -2547,9 +2539,11 @@ gSC07B:					; 無変換キー（左）
 gSC079:				; 変換キー（右）
 gLCTRL:
 gRCTRL:
+	critical
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
+	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
 
 ; Ｅ段目
@@ -2613,8 +2607,10 @@ gSC070up:	;ひらがな／カタカナ
 gSC039up:
 gSC07Bup:
 gSC079up:
+	critical
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
+	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	goto, keyup%g_metaKey%
 
