@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.79 .... 2021/6/27
+;	ver.0.1.4.710 .... 2021/6/27
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,7 +12,7 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.79"
+	g_Ver := "ver.0.1.4.710"
 	g_Date := "2021/6/27"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
@@ -159,7 +159,8 @@
 	VarSetCapacity(lpKeyState,256,0)
 	SetTimer,Interrupt10,10
 
-	SetHook("off","off")
+	SetHook("off")
+	SetHookOya("off")
 	g_hookShift := "off"
 	SetHookShift("off")
 	return
@@ -212,9 +213,8 @@ DoResume:
 keydownR:
 keydownL:
 	g_trigger := g_metaKey
-
-	RegLogs(g_metaKey . " down")
 	g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
+	RegLogs(g_metaKey . " down")
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat == 1 || g_layoutPos == "A02"))
 	{
 	 	; キーリピートの処理
@@ -542,7 +542,7 @@ SubSend(vOut)
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
 			if(_cnt != _len && mod(_scnt,4)==0) {
-				DllCall("kernel32.dll\Sleep", "UInt", 5)
+				DllCall("kernel32.dll\Sleep", "UInt", 10)
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
 				Send, {capslock}
@@ -1116,9 +1116,8 @@ SendOnHoldO:
 ;----------------------------------------------------------------------
 keydownM:
 	g_trigger := g_metaKey
-	
-	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
+	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_sansTick := INFINITE
 	if(keyState[g_sansPos]==2) {
@@ -1449,9 +1448,8 @@ SendKey(_mode, _MojiOnHold){
 keydown:
 keydownX:
 	g_trigger := g_metaKey
-
-	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
+	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSend(MnDown(kName))
@@ -1480,9 +1478,8 @@ keydownX:
 ;----------------------------------------------------------------------
 keydownS:
 	g_trigger := g_metaKey
-
-	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
+	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 
 	g_ModifierTick := keyTick[g_layoutPos]
@@ -1506,8 +1503,8 @@ keydownS:
 ;----------------------------------------------------------------------
 keydown1:
 keydown2:
-	RegLogs(kName . " down")
 	keyTick[g_layoutPos] := Pf_Count()
+	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
 
@@ -1642,9 +1639,9 @@ nextDakuten(_mode,_MojiOnHold)
 ;----------------------------------------------------------------------
 keyupM:
 	g_trigger := g_metaKeyUp[g_metaKey]
+	g_MojiUpTick := Pf_Count()	;A_TickCount
 	RegLogs(kName . " up")
 	keyState[g_layoutPos] := 0
-	g_MojiUpTick := Pf_Count()	;A_TickCount
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト" || ShiftMode[g_Romaji] == "小指シフト") {
 		vOut := kup_save[g_layoutPos]
@@ -1841,21 +1838,24 @@ Interrupt10:
 	if(g_Modifier!=0) 
 	{
 		Gosub,ModeInitialize
-		SetHook("off","on")
+		SetHook("off")
+		SetHookOya("on")
 	} else
 	if(g_Pause==1) 
 	{
 		Gosub,ModeInitialize
-		SetHook("off","off")
+		SetHook("off")
+		SetHookOya("off")
 	} else {
 		Gosub,ChkIME
 
 		; 現在の配列面が定義されていればキーフック
 		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
-			SetHook("on","on")
+			SetHook("on")
 		} else {
-			SetHook("off","on")
+			SetHook("off")
 		}
+		SetHookOya("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1889,7 +1889,7 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		g_debugout3 := ksc["RNN204B06B09"] . ":" . kdn["RNN204B06B09"]
+		g_debugout3 := ksc["RNND02"] . ":" . kst["RNND02"]
 		g_debugout2 := GetPushedKeys()
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
@@ -2121,7 +2121,6 @@ GetPushedKeys()
 			if(GetKeyState(_keyName,"P")==0) {
 				keyState[element] := 0
 			}
-			;_cont := chr(asc(element)-asc("A")+asc("1")) . substr(element,2)
 			_cont := g_colPushedHash[substr(element,1,1)] . substr(element,2,2)
 			_pushedKeys := _pushedKeys . _cont
 		}
@@ -2317,12 +2316,9 @@ SetHookInit()
 ;----------------------------------------------------------------------
 ; 動的にホットキーをオン・オフする
 ; flg : 文字キーと機能キー
-; oya_flg : 親指キーかつ無変換または変換
 ;----------------------------------------------------------------------
-SetHook(flg,oya_flg)
+SetHook(flg)
 {
-	global ShiftMode, g_KeySingle, g_MojiCount, g_Oya, g_Romaji, g_Koyubi
-
 	hotkey,*sc002,%flg%		;1
 	hotkey,*sc002 up,%flg%
 	hotkey,*sc003,%flg%		;2
@@ -2436,6 +2432,15 @@ SetHook(flg,oya_flg)
 	
 	Hotkey,*sc039,%flg%
 	Hotkey,*sc039 up,%flg%
+	return
+}
+;----------------------------------------------------------------------
+; 動的にホットキーをオン・オフする
+; oya_flg : 親指キーかつ無変換または変換
+;----------------------------------------------------------------------
+SetHookOya(oya_flg)
+{
+	global g_Romaji, g_Koyubi, keyAttribute3
 
 	if(keyAttribute3[g_Romaji . g_Koyubi . "A01"]!="X") {
 		Hotkey,*sc07B,%oya_flg%

@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.79 .... 2021/6/27
+;	ver.0.1.4.710 .... 2021/6/27
 ;-----------------------------------------------------------------------
 ReadLayout:
 
@@ -419,10 +419,6 @@ ReadLayoutFile:
 						kLabel[_layoutPos] := CodeNameHash[_code]
 						if(org[2] == "Space&Shift") {
 							g_sansPos := _layoutPos
-							keyAttribute3["AN" . _layoutPos] := "S"	; Space
-							keyAttribute3["AK" . _layoutPos] := "S"	; Space
-							keyAttribute3["RN" . _layoutPos] := "S"	; Space
-							keyAttribute3["RK" . _layoutPos] := "S"	; Space
 						}
 					}
 				}
@@ -558,8 +554,7 @@ Mode2Key:
 	if(g_mode == "ANN")
 		Gosub, SetAlphabet
 	_col := "A"
-	;org := SplitColumn("換,空,変,日")
-	org := SplitColumn(LF[g_mode . "A"])	
+	org := SplitColumn(LF[g_mode . "A"])
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
@@ -722,16 +717,19 @@ SetLayoutProperty:
 	if(LF["ANN"]!="" && isPrefixShift("A"))
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
+		InitOyakey("A")
 	}
 	else
 	if(LF["ANN"]!="" && listSimulMode("A")!="")
 	{
 		ShiftMode["A"] := "文字同時打鍵"
+		InitOyakey("A")
 	}
 	else
 	if(LF["ANN"]!="" && LF["ANK"]!="")
 	{
 		ShiftMode["A"] := "小指シフト"
+		InitOyakey("A")
 	}
 	
 	ShiftMode["R"] := ""
@@ -754,17 +752,21 @@ SetLayoutProperty:
 	if(LF["RNN"]!="" && isPrefixShift("R"))
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
+		InitOyakey("R")
 	}
 	else
 	if(LF["RNN"]!="" && listSimulMode("R")!="")
 	{
 		ShiftMode["R"] := "文字同時打鍵"
+		InitOyakey("R")
 	}
 	else
 	if(LF["RNN"]!="" LF["RNK"]!="")
 	{
 		ShiftMode["R"] := "小指シフト"
+		InitOyakey("R")
 	}
+	SetSansKey(g_sansPos)
 	return
 
 ;----------------------------------------------------------------------
@@ -892,7 +894,34 @@ RemapOyaKey(_Romaji) {
 	}
 	return
 }
+;----------------------------------------------------------------------
+;	キー属性配列を初期化する
+;----------------------------------------------------------------------
+InitOyakey(_Romaji)
+{
+	global keyAttribute3
 
+	keyAttribute3[_Romaji . "NA01"] := "X"
+	keyAttribute3[_Romaji . "NA02"] := "X"
+	keyAttribute3[_Romaji . "NA03"] := "X"
+	keyAttribute3[_Romaji . "KA01"] := "X"
+	keyAttribute3[_Romaji . "KA02"] := "X"
+	keyAttribute3[_Romaji . "KA03"] := "X"
+}
+;----------------------------------------------------------------------
+;	スペース＆シフトの設定
+;----------------------------------------------------------------------
+SetSansKey(_sansPos)
+{
+	global keyAttribute3
+
+	if(_sansPos!="") {
+		keyAttribute3["AN" . _sansPos] := "S"	; Space&Shift
+		keyAttribute3["AK" . _sansPos] := "S"	; Space&Shift
+		keyAttribute3["RN" . _sansPos] := "S"	; Space&Shift
+		keyAttribute3["RK" . _sansPos] := "S"	; Space&Shift
+	}
+}
 ;----------------------------------------------------------------------
 ;	ローマ字・英数のときのキーダウン・キーアップの際に送信する内容を作成
 ;----------------------------------------------------------------------

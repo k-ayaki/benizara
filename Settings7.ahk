@@ -966,7 +966,8 @@ gFileSelect:
 		GuiControl,, vFilePath, %vLayoutFile%
 
 		SetTimer,Interrupt10,off
-		SetHook("off","off")
+		SetHook("off")
+		SetHookOya("off")
 		
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
