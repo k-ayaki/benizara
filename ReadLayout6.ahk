@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.6 .... 2021/5/2
+;	ver.0.1.4.79 .... 2021/6/27
 ;-----------------------------------------------------------------------
 ReadLayout:
 
@@ -11,6 +11,14 @@ ReadLayout:
 	_colhash[3] := "C"
 	_colhash[4] := "B"
 	_colhash[5] := "A"
+
+	; キーオンを押されているキーのインデックスに変換
+	g_colPushedHash := Object()
+	g_colPushedHash["E"] := "5"
+	g_colPushedHash["D"] := "4"
+	g_colPushedHash["C"] := "3"
+	g_colPushedHash["B"] := "2"
+	g_colPushedHash["A"] := "1"
 
 	_colkeyshash := Object()
 	_colkeyshash["E"] := 13
@@ -927,7 +935,6 @@ SetKeyTable:
 			_error := _lpos2 . ":" . _error
 			break
 		}
-;		kst[g_mode . _lpos2] := kst[g_mode . _lpos2] . _status
 		kst[substr(g_mode,1,1) . "N" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "N" . substr(g_mode,3,1) . _lpos2] . _status)
 		kst[substr(g_mode,1,1) . "R" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "R" . substr(g_mode,3,1) . _lpos2] . _status)
 		kst[substr(g_mode,1,1) . "L" . substr(g_mode,3,1) . _lpos2] := MergeStatus(kst[substr(g_mode,1,1) . "L" . substr(g_mode,3,1) . _lpos2] . _status)
@@ -958,20 +965,23 @@ SetKeyTable:
 SetSimulKeyTable:
 	loop, % CountObject(org)
 	{
-		_row2 := _rowhash[A_Index]
-		_lpos[0] := _col . _row2
-		if(_tmode == "{*}") {
-			_lpos[0] := chr(asc(_col)-asc("A")+asc("1")) . _row2
-		}
-		
 		if(org[A_Index] == "無") {
 			continue
 		}
-		if(ksc[g_mode . _lpos[0]] < 2) {
-			ksc[g_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
+		_row2 := _rowhash[A_Index]
+		_lpos[0] := _col . _row2
+		if(_tmode == "{*}") {
+			_lpos[0] := g_colPushedHash[_col] . _row2
 		}
-		if(ksc[g_mode . _lpos[1]] < 2) {
-			ksc[g_mode . _lpos[1]] := 2	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[0]] > 0) {	; キーオンか
+			if(ksc[g_mode . _lpos[0]] < 2) {
+				ksc[g_mode . _lpos[0]] := 2	; 最大同時打鍵数を設定
+			}
+		}
+		if(vkeyHash[_lpos[1]] > 0) {	; キーオンか
+			if(ksc[g_mode . _lpos[1]] < 2) {
+				ksc[g_mode . _lpos[1]] := 2	; 最大同時打鍵数を設定
+			}
 		}
 		if(ksc[g_mode . _lpos[0] . _lpos[1]]<2) {
 			ksc[g_mode . _lpos[0] . _lpos[1]] := 2	; 最大同時打鍵数を設定
@@ -985,11 +995,16 @@ SetSimulKeyTable:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
-		kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
-		kst[g_mode . _simulMode . _lpos[0]] := _status
-		kst[g_mode . _lpos[1] . _lpos[0]] := _status
-		kst[g_mode . _lpos[0] . _lpos[1]] := _status
+		if(vkeyHash[_lpos[0]] > 0) {	; キーオンか
+			kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
+		}
+		if(vkeyHash[_lpos[1]] > 0) {	; キーオンか
+			kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
+		}
+
+		kst[g_mode . _simulMode . _lpos[0]] := MergeStatus(_status)
+		kst[g_mode . _lpos[1] . _lpos[0]] := MergeStatus(_status)
+		kst[g_mode . _lpos[0] . _lpos[1]] := MergeStatus(_status)
 		if( _down <> "")
 		{
 			if(SubStr(g_mode,1,1)=="R") {
@@ -1025,48 +1040,58 @@ SetSimulKeyTable:
 SetSimulKeyTable3:
 	loop, % CountObject(org)
 	{
-		_row2 := _rowhash[A_Index]
-		_lpos[0] := _col . _row2
-		if(_tmode == "{*}") {
-			_lpos[0] := chr(asc(_col)-asc("A")+asc("1")) . _row2
-		}
-		
 		if(org[A_Index] == "無") {
 			continue
 		}
-		if(ksc[g_mode . _lpos[0]]<3) {
-			ksc[g_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		_row2 := _rowhash[A_Index]
+		_lpos[0] := _col . _row2
+		if(_tmode == "{*}") {
+			_lpos[0] := g_colPushedHash[_col] . _row2
 		}
-		if(ksc[g_mode . _lpos[1]]<3) {
-			ksc[g_mode . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[0]] > 0) {	; キーオンか
+			if(ksc[g_mode . _lpos[0]]<3) {
+				ksc[g_mode . _lpos[0]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[2]]<3) {
-			ksc[g_mode . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[1]] > 0) {	; キーオンか
+			if(ksc[g_mode . _lpos[1]]<3) {
+				ksc[g_mode . _lpos[1]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[0] . _lpos[1]]<3) {
-			ksc[g_mode . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[2]] > 0) {	; キーオンか
+			if(ksc[g_mode . _lpos[2]]<3) {
+				ksc[g_mode . _lpos[2]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[1] . _lpos[0]]<3) {
-			ksc[g_mode . _lpos[1] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[0]] > 0 || vkeyHash[_lpos[1]] > 0) {
+			if(ksc[g_mode . _lpos[0] . _lpos[1]]<3) {
+				ksc[g_mode . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+			}
+			if(ksc[g_mode . _lpos[1] . _lpos[0]]<3) {
+				ksc[g_mode . _lpos[1] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[1] . _lpos[2]]<3) {
-			ksc[g_mode . _lpos[1] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[0]] > 0 || vkeyHash[_lpos[2]] > 0) {
+			if(ksc[g_mode . _lpos[0] . _lpos[2]]<3) {
+				ksc[g_mode . _lpos[0] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+			}
+			if(ksc[g_mode . _lpos[2] . _lpos[0]]<3) {
+				ksc[g_mode . _lpos[2] . _lpos[0]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[2] . _lpos[1]]<3) {
-			ksc[g_mode . _lpos[2] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		if(vkeyHash[_lpos[1]] > 0 || vkeyHash[_lpos[2]] > 0) {
+			if(ksc[g_mode . _lpos[1] . _lpos[2]]<3) {
+				ksc[g_mode . _lpos[1] . _lpos[2]] := 3	; 最大同時打鍵数を設定
+			}
+			if(ksc[g_mode . _lpos[2] . _lpos[1]]<3) {
+				ksc[g_mode . _lpos[2] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+			}
 		}
-		if(ksc[g_mode . _lpos[0] . _lpos[2]]<3) {
-			ksc[g_mode . _lpos[0] . _lpos[2]] := 3	; 最大同時打鍵数を設定
-		}
-		if(ksc[g_mode . _lpos[2] . _lpos[0]]<3) {
-			ksc[g_mode . _lpos[2] . _lpos[0]] := 3	; 最大同時打鍵数を設定
-		}
-
 		if(ksc[g_mode . _lpos[0] . _lpos[1] . _lpos[2]]<3) {
 			ksc[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := 3	; 最大同時打鍵数を設定
 		}
-		if(ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[1]]<3) {
-			ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
+		if(ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[2]]<3) {
+			ksc[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := 3	; 最大同時打鍵数を設定
 		}
 		if(ksc[g_mode . _lpos[1] . _lpos[2] . _lpos[0]]<3) {
 			ksc[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := 3	; 最大同時打鍵数を設定
@@ -1086,17 +1111,22 @@ SetSimulKeyTable3:
 			_error := _lpos[0] . ":" . _error
 			break
 		}
-		kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
-		kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
-		kst[g_mode . _lpos[2]] := MergeStatus(kst[g_mode . _lpos[2]] . _status)
-		
-		kst[g_mode . _simulMode . _lpos[0]] := _status	; 普通の文字"M" 修飾キーm
-		kst[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := _status
-		kst[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := _status
-		kst[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := _status
-		kst[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := _status
-		kst[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := _status
-		kst[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := _status
+		if(vkeyHash[_lpos[0]] > 0) {	; キーオンか
+			kst[g_mode . _lpos[0]] := MergeStatus(kst[g_mode . _lpos[0]] . _status)
+		}
+		if(vkeyHash[_lpos[1]] > 0) {	; キーオンか
+			kst[g_mode . _lpos[1]] := MergeStatus(kst[g_mode . _lpos[1]] . _status)
+		}
+		if(vkeyHash[_lpos[2]] > 0) {	; キーオンか
+			kst[g_mode . _lpos[2]] := MergeStatus(kst[g_mode . _lpos[2]] . _status)
+		}
+		kst[g_mode . _simulMode . _lpos[0]] := MergeStatus(_status)	; 普通の文字"M" 修飾キーm
+		kst[g_mode . _lpos[1] . _lpos[2] . _lpos[0]] := MergeStatus(_status)
+		kst[g_mode . _lpos[0] . _lpos[2] . _lpos[1]] := MergeStatus(_status)
+		kst[g_mode . _lpos[0] . _lpos[1] . _lpos[2]] := MergeStatus(_status)
+		kst[g_mode . _lpos[1] . _lpos[0] . _lpos[2]] := MergeStatus(_status)
+		kst[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := MergeStatus(_status)
+		kst[g_mode . _lpos[2] . _lpos[1] . _lpos[0]] := MergeStatus(_status)
 		if( _down <> "")
 		{
 			if(SubStr(g_mode,1,1)=="R") {
@@ -1151,6 +1181,18 @@ SetSimulKeyTable3:
 	}
 	return
 
+;----------------------------------------------------------------------
+;	修飾キー＋文字キーの出力の際に送信する内容を作成
+;----------------------------------------------------------------------
+GetOnKeyPos(_pushedKeys)
+{
+	_OnKeyPos := _pushedKeys
+	pos := instr("54321",substr(_pushedKeys,1,1))
+	if(pos != 0) {
+		_OnKeyPos := substr("EDBCA",pos,1) . substr(_pushedKeys,2,2)
+	}
+	return _OnKeyPos
+}
 
 ;----------------------------------------------------------------------
 ;	修飾キー＋文字キーの出力の際に送信する内容を作成
@@ -1316,6 +1358,9 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 MergeStatus(_status)
 {
 	_status2 := ""
+	if(instr(_status,"S") > 0 ) {	; 無の指定時のスキャンコード
+		_status2 := _status2 . "S"
+	}
 	if(instr(_status,"Q") > 0 ) {	; 引用符
 		_status2 := _status2 . "Q"
 	}
@@ -1328,6 +1373,7 @@ MergeStatus(_status)
 	if(instr(_status,"m") > 0 ) {	; 修飾キー
 		_status2 := _status2 . "m"
 	}
+	return _status2
 }
 ;----------------------------------------------------------------------
 ;	オブジェクトの要素数を数える

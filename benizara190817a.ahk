@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.77 .... 2021/6/26
+;	ver.0.1.4.79 .... 2021/6/27
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.77"
-	g_Date := "2021/6/26"
+	g_Ver := "ver.0.1.4.79"
+	g_Date := "2021/6/27"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -542,7 +542,7 @@ SubSend(vOut)
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
 			if(_cnt != _len && mod(_scnt,4)==0) {
-				DllCall("kernel32.dll\Sleep", "UInt", 10)
+				DllCall("kernel32.dll\Sleep", "UInt", 5)
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
 				Send, {capslock}
@@ -613,7 +613,6 @@ RegLogs(thisLog)
 ; 保留キーの出力：セットされた文字のセットされた親指の出力
 ;----------------------------------------------------------------------
 SendOnHoldMO:
-	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -662,7 +661,8 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 {
 	global kdn, kup, kup_save, g_ZeroDelayOut, g_ZeroDelaySurface, kLabel, kst
 	global g_LastKey, g_Koyubi, g_KeyOnHold
-	
+
+	g_KeyOnHold := GetPushedKeys()
 	_MojiOnHoldLast := substr(_MojiOnHold,strlen(_MojiOnHold)-2)
 	
 	if(strlen(_MojiOnHold)==3 && strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
@@ -773,7 +773,6 @@ SetTimeout(_KeyInPtn)
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldM:
-	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -940,7 +939,7 @@ clearQueue()
 ;----------------------------------------------------------------------
 ; 押されている文字キーの取得
 ;----------------------------------------------------------------------
-GetMoji()
+GetMojiOnHold()
 {
 	global g_MojiOnHold, g_OnHoldIdx, g_MetaOnHold
 	
@@ -976,7 +975,6 @@ countMoji()
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldMM:
-	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -1021,7 +1019,6 @@ SendOnHoldMM:
 ; 保留キーの出力：セットされた文字の出力
 ;----------------------------------------------------------------------
 SendOnHoldMMM:
-	g_KeyOnHold := GetPushedKeys()
 	cntM := countMoji()
 	if(g_OnHoldIdx < 1) {
 		clearQueue()
@@ -1177,18 +1174,6 @@ keydownM:
 		sleep,-1
 		return
 	}
-;	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-;	if(kst[_mode . g_layoutPos]=="c" || kst[_mode . g_layoutPos]=="m") {	;制御キーまたは修飾
-;		Gosub, ModeInitialize
-;		Gosub, SendOnHoldM
-;		keyState[g_layoutPos] := 1
-;		g_LastKey["表層"] := ""
-;		g_LastKey["状態"] := ""
-;		g_KeyInPtn := ""
-;		critical,off
-;		sleep,-1
-;		return
-;	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
@@ -1315,7 +1300,7 @@ keydownM:
 			g_SendTick := SetTimeout(g_KeyInPtn)
 
 			; 連続打鍵の判定 
-			Gosub, JudgePushedKeys
+			JudgePushedKeys(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1])
 			if(g_keyInPtn == "M") {
 				SendZeroDelay(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1], g_ZeroDelay)
 			}
@@ -1327,7 +1312,7 @@ keydownM:
 			g_KeyInPtn := "MM"
 			g_SendTick := SetTimeout(g_KeyInPtn)
 			; 連続打鍵の判定 
-			Gosub, JudgePushedKeys
+			JudgePushedKeys(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[2] . g_MojiOnHold[1])
 		}
 		else if(g_KeyInPtn=="MM")	; MMオン状態
 		{
@@ -1352,7 +1337,7 @@ keydownM:
 			g_SendTick := SetTimeout(g_KeyInPtn)
 
 			; 連続打鍵の判定 
-			Gosub, JudgePushedKeys
+			JudgePushedKeys(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[1])
 			if(g_keyInPtn == g_Oya . "M") {
 				Gosub, SendZeroDelayMO
 			}
@@ -1365,7 +1350,7 @@ keydownM:
 			g_SendTick := SetTimeout(g_KeyInPtn)
 
 			; 連続打鍵の判定 
-			Gosub, JudgePushedKeys
+			JudgePushedKeys(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[2] . g_MojiOnHold[1])
 		} else
 		if(g_KeyInPtn == "M" . g_Oya) {
 			mergeKey()
@@ -1390,23 +1375,21 @@ keydownM:
 ;----------------------------------------------------------------------
 ; 連続打鍵の判定
 ;----------------------------------------------------------------------
-JudgePushedKeys:
-	g_KeyOnHold := GetPushedKeys()
-	g_Moji := GetMoji()
-	if(g_KeyOnHold != "" && g_Moji != "") {
-		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-		if((strlen(g_KeyOnHold)==6 && strlen(g_Moji)==3 && kdn[_mode . g_KeyOnHold . g_Moji] != "")
-		|| (strlen(g_KeyOnHold)==3 && strlen(g_Moji)==3 && ksc[_mode . g_Moji]==2 && kdn[_mode . g_KeyOnHold . g_Moji] != "")
-		|| (strlen(g_KeyOnHold)==3 && strlen(g_Moji)==6 && kdn[_mode . g_KeyOnHold . g_Moji] != "")) {
-			SendOnHold(_mode, g_KeyOnHold . g_Moji, g_ZeroDelay)
-			clearQueue()
-			g_SendTick := INFINITE
-			g_keyInPtn := ""
-		}
-	}
-	g_KeyOnHold := ""
-	return
+JudgePushedKeys(_mode,_MojiOnHold)
+{
+	global g_KeyOnHold, kdn, ksc, g_SendTick, g_KeyInPtn, g_ZeroDelay
 
+	g_KeyOnHold := GetPushedKeys()
+	if((strlen(g_KeyOnHold)==6 && strlen(_MojiOnHold)==3 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "")
+	|| (strlen(g_KeyOnHold)==3 && strlen(_MojiOnHold)==3 && ksc[_mode . _MojiOnHold]==2 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "")
+	|| (strlen(g_KeyOnHold)==3 && strlen(_MojiOnHold)==6 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "")) {
+		SendOnHold(_mode, g_KeyOnHold . _MojiOnHold, g_ZeroDelay)
+		clearQueue()
+		g_SendTick := INFINITE
+		g_keyInPtn := ""
+	}
+	return
+}
 ;----------------------------------------------------------------------
 ; 小指シフトとSanSの論理和
 ;----------------------------------------------------------------------
@@ -1580,17 +1563,28 @@ SendZeroDelayMO:
 ;----------------------------------------------------------------------
 SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 	global g_ZeroDelaySurface, g_ZeroDelayOut, kup_save, kdn, kup, kLabel
-	global g_LastKey, ctrlKeyHash, kst, g_Koyubi
+	global g_LastKey, ctrlKeyHash, kst, g_Koyubi, g_KeyOnHold
 
 	if(g_ZeroDelay == 1)
 	{
+		g_KeyOnHold := GetPushedKeys()
+		_MojiOnHoldLast := substr(_MojiOnHold,strlen(_MojiOnHold)-2)
+		
+		if(strlen(_MojiOnHold)==3 && strlen(g_KeyOnHold)==6 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+			_MojiOnHold := g_KeyOnHold . _MojiOnHold
+		} else
+		if(strlen(_MojiOnHold)==3 && strlen(g_KeyOnHold)==3 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+			_MojiOnHold := g_KeyOnHold . _MojiOnHold
+		} else
+		if(strlen(_MojiOnHold)==6 && strlen(g_KeyOnHold)==3 && kdn[_mode . g_KeyOnHold . _MojiOnHold] != "") {
+			_MojiOnHold := g_KeyOnHold . _MojiOnHold
+		}
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
+		
 		; 保留キーがあれば先行出力（零遅延モード）
-		; １文字通常出力の非制御コードならば先行出力
-		if(kst[_mode . _MojiOnHold] == "" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
-
-			vOut                  := kdn[_mode . _MojiOnHold]
-			kup_save[_MojiOnHold] := kup[_mode . _MojiOnHold]
+		if(kst[_mode . _MojiOnHoldLast] == "" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+			vOut := kdn[_mode . _MojiOnHold]
+			kup_save[_MojiOnHoldLast] := kup[_mode . _MojiOnHold]
 			_kLabel := kLabel[_mode . _MojiOnHold]
 			_kst    := kst[_mode . _MojiOnHold]			
 			
@@ -1895,9 +1889,9 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		g_debugout3 := kst["RNNC01"]
-		;g_debugout2 := GetPushedKeys()
-		g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
+		g_debugout3 := ksc["RNN204B06B09"] . ":" . kdn["RNN204B06B09"]
+		g_debugout2 := GetPushedKeys()
+		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
 		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
@@ -2117,6 +2111,7 @@ GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
 GetPushedKeys()
 {
 	global layoutArys, keyState
+	global g_colPushedHash
 
 	_pushedKeys := ""
 	for index, element in layoutArys
@@ -2126,7 +2121,8 @@ GetPushedKeys()
 			if(GetKeyState(_keyName,"P")==0) {
 				keyState[element] := 0
 			}
-			_cont := chr(asc(element)-asc("A")+asc("1")) . substr(element,2)
+			;_cont := chr(asc(element)-asc("A")+asc("1")) . substr(element,2)
+			_cont := g_colPushedHash[substr(element,1,1)] . substr(element,2,2)
 			_pushedKeys := _pushedKeys . _cont
 		}
 	}
