@@ -967,7 +967,8 @@ gFileSelect:
 
 		SetTimer,Interrupt10,off
 		SetHook("off")
-		SetHookOya("off")
+		SetHookHenkan("off")
+		SetHookSpace("off")
 		
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile

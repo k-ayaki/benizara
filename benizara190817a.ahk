@@ -160,7 +160,8 @@
 	SetTimer,Interrupt10,10
 
 	SetHook("off")
-	SetHookOya("off")
+	SetHookSpace("off")
+	SetHookHenkan("off")
 	g_hookShift := "off"
 	SetHookShift("off")
 	return
@@ -1839,23 +1840,31 @@ Interrupt10:
 	{
 		Gosub,ModeInitialize
 		SetHook("off")
-		SetHookOya("on")
+		SetHookSpace("off")
+		SetHookHenkan("on")
 	} else
 	if(g_Pause==1) 
 	{
 		Gosub,ModeInitialize
 		SetHook("off")
-		SetHookOya("off")
+		SetHookSpace("off")
+		SetHookHenkan("off")
 	} else {
 		Gosub,ChkIME
 
 		; 現在の配列面が定義されていればキーフック
 		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
 			SetHook("on")
+			if(g_Koyubi=="N") {
+				SetHookSpace("on")
+			} else {
+				SetHookSpace("off")
+			}
 		} else {
 			SetHook("off")
+			SetHookSpace("off")
 		}
-		SetHookOya("on")
+		SetHookHenkan("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -2430,28 +2439,39 @@ SetHook(flg)
 	;hotkey,RCtrl,%flg%
 	;hotkey,RCtrl up,%flg%
 	
+	;Hotkey,*sc039,%flg%
+	;Hotkey,*sc039 up,%flg%
+	return
+}
+;----------------------------------------------------------------------
+; 動的にスペースキーをオン・オフする
+;----------------------------------------------------------------------
+SetHookSpace(flg)
+{
 	Hotkey,*sc039,%flg%
 	Hotkey,*sc039 up,%flg%
 	return
 }
+
 ;----------------------------------------------------------------------
-; 動的にホットキーをオン・オフする
-; oya_flg : 親指キーかつ無変換または変換
+; 動的に変換・無変換キーをオン・オフする
 ;----------------------------------------------------------------------
-SetHookOya(oya_flg)
+SetHookHenkan(flg)
 {
 	global g_Romaji, g_Koyubi, keyAttribute3
 
-	if(keyAttribute3[g_Romaji . g_Koyubi . "A01"]!="X") {
-		Hotkey,*sc07B,%oya_flg%
-		Hotkey,*sc07B up,%oya_flg%
+	if(keyAttribute3[g_Romaji . g_Koyubi . "A01"]=="L"
+	|| keyAttribute3[g_Romaji . g_Koyubi . "A01"]=="R") {
+		Hotkey,*sc07B,%flg%
+		Hotkey,*sc07B up,%flg%
 	} else {
 		Hotkey,*sc07B,off
 		Hotkey,*sc07B up,off
 	}
-	if(keyAttribute3[g_Romaji . g_Koyubi . "A03"]!="X") {
-		Hotkey,*sc079,%oya_flg%
-		Hotkey,*sc079 up,%oya_flg%
+	if(keyAttribute3[g_Romaji . g_Koyubi . "A03"]=="L"
+	|| keyAttribute3[g_Romaji . g_Koyubi . "A03"]=="R") {
+		Hotkey,*sc079,%flg%
+		Hotkey,*sc079 up,%flg%
 	} else {
 		Hotkey,*sc079,off
 		Hotkey,*sc079 up,off
