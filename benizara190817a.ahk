@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.711 .... 2021/6/28
+;	ver.0.1.4.712 .... 2021/6/29
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.711"
-	g_Date := "2021/6/28"
+	g_Ver := "ver.0.1.4.712"
+	g_Date := "2021/6/29"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -231,7 +231,6 @@ keydownL:
 			g_KeyInPtn := g_Oya
 		}
 		critical,off
-		sleep,-1
 		return
 	}
 	if(keyState[g_layoutPos] == 0) 	; キーリピートの抑止
@@ -354,7 +353,6 @@ keydownL:
 		g_SendTick := INFINITE
 	}
 	critical,off
-	sleep,-1
 	return  
 
 ;-----------------------------------------------------------------------
@@ -533,7 +531,11 @@ SubSend(vOut)
 		_stroke := _stroke . A_LoopField
 		StringLeft, _left2c, _stroke, 2
 		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
-			_scnt := _scnt + 1
+			if(instr(_stroke,"{Enter")>0) {
+				_scnt := _scnt + 4
+			} else {
+				_scnt := _scnt + 1
+			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
 				Send, {capslock}
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
@@ -542,8 +544,9 @@ SubSend(vOut)
 			Send, %_stroke%
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
-			if(_cnt != _len && mod(_scnt,4)==0) {
+			if(_cnt != _len && _scnt>=4) {
 				DllCall("kernel32.dll\Sleep", "UInt", 10)
+				_scnt := 0
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
 				Send, {capslock}
@@ -1134,7 +1137,6 @@ keydownM:
 			g_KeyInPtn := ""
 			g_prefixshift := ""
 			critical,off
-			sleep,-1
 			return
 		}
 		if(g_prefixshift <> "" )
@@ -1143,13 +1145,11 @@ keydownM:
 			g_SendTick := INFINTE
 			g_prefixshift := ""
 			critical,off
-			sleep,-1
 			return
 		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		g_SendTick := INFINTE
 		critical,off
-		sleep,-1
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
@@ -1164,14 +1164,12 @@ keydownM:
 			g_KeyInPtn := ""
 			g_prefixshift := ""
 			critical,off
-			sleep,-1
 			return
 		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		clearQueue()
 
 		critical,off
-		sleep,-1
 		return
 	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
@@ -1286,7 +1284,6 @@ keydownM:
 		g_SendTick := INFINITE
 		g_KeyInPtn := ""
 		critical,off
-		sleep,-1
 		return
 	}
 	Gosub,ChkIME
@@ -1370,7 +1367,6 @@ keydownM:
 		}
 	}
 	critical,off
-	sleep,-1
 	return
 ;----------------------------------------------------------------------
 ; 連続打鍵の判定
@@ -1459,7 +1455,6 @@ keydownX:
 		g_LastKey["状態"] := ""
 		g_prefixshift := ""
 		critical,off
-		sleep,-1
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
@@ -1471,7 +1466,6 @@ keydownX:
 	g_LastKey["状態"] := ""
 	g_KeyInPtn := ""
 	critical,off
-	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
@@ -1496,7 +1490,6 @@ keydownS:
 		g_KeyInPtn := ""
 	}
 	critical,off
-	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
@@ -1520,14 +1513,12 @@ keydown2:
 
 		g_prefixshift := ""
 		critical,off
-		sleep,-1
 		return
 	}
 	if(g_prefixshift == "")
 	{
 		g_prefixshift := g_metaKey
 		critical,off
-		sleep,-1
 		return
 	}
 	SendKey(g_Romaji . g_prefixshift . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
@@ -1535,7 +1526,6 @@ keydown2:
 
 	g_prefixshift := ""
 	critical,off
-	sleep,-1
 	return
 
 ;----------------------------------------------------------------------
