@@ -972,7 +972,10 @@ gFileSelect:
 		
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
-		if(_error <> "")
+		if(_error=="")
+		{
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
+		} else
 		{
 			msgbox, %_error%
 			

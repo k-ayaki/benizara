@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.712 .... 2021/6/29
+;	ver.0.1.4.713 .... 2021/7/1
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.712"
-	g_Date := "2021/6/29"
+	g_Ver := "ver.0.1.4.713"
+	g_Date := "2021/7/1"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -21,7 +21,6 @@
         ExitApp
 	}
     hMutex := DllCall("CreateMutex", Int, 0, Int, False, Str, MutexName)
-	
 	SetWorkingDir, %A_ScriptDir%
 
 	idxLogs := 0
@@ -157,6 +156,14 @@
 	g_OyaTick["R"] := _currentTick
 	g_OyaTick["L"] := _currentTick
 	VarSetCapacity(lpKeyState,256,0)
+	g_int10ctr := 0
+
+	g_process := Object()	; 反対側の親指キー
+	g_process["yamabuki_r"] := 0
+	g_process["yamabuki"] := 0
+	g_process["DvorakJ"] := 0
+	g_process["em1keypc"] := 0
+	g_process["姫踊子草2"] := 0
 	SetTimer,Interrupt10,10
 
 	SetHook("off")
@@ -1128,7 +1135,6 @@ keydownM:
 		keyState[g_sansPos] := 1
 	}
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
@@ -1153,7 +1159,6 @@ keydownM:
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
-		Gosub,ScanModifier
 		if(g_Modifier != 0)		; 修飾キーが押されている
 		{
 			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
@@ -1173,6 +1178,17 @@ keydownM:
 		return
 	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
+	if(g_Modifier != 0)		; 修飾キーが押されている
+	{
+		Gosub,ModeInitialize
+		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
+		clearQueue()
+		g_SendTick := INFINITE
+		g_KeyInPtn := ""
+		critical,off
+		return
+	}
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
 		; M2キー押下
@@ -1275,17 +1291,6 @@ keydownM:
 		}
 	}
 	SetKeyDelay, -1
-	Gosub,ScanModifier
-	if(g_Modifier != 0)		; 修飾キーが押されている
-	{
-		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-		clearQueue()
-		g_SendTick := INFINITE
-		g_KeyInPtn := ""
-		critical,off
-		return
-	}
 	Gosub,ChkIME
 
 	if(g_Oya=="N")
@@ -1501,8 +1506,6 @@ keydown2:
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
-
-	Gosub,ScanModifier
 	if(g_Modifier != 0)		; 修飾キーが押されている
 	{
 		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
@@ -1570,7 +1573,8 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
 		
 		; 保留キーがあれば先行出力（零遅延モード）
-		if(kst[_mode . _MojiOnHoldLast] == "" && strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
+		if((instr(kst[_mode . _MojiOnHoldLast],"Q")>0 || kst[_mode . _MojiOnHoldLast]=="")
+		&& strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
 			vOut := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHoldLast] := kup[_mode . _MojiOnHold]
 			_kLabel := kLabel[_mode . _MojiOnHold]
@@ -1821,7 +1825,9 @@ keyup2:
 ;----------------------------------------------------------------------
 Interrupt10:
 	critical
+	g_int10ctr := g_int10ctr + 1
 	Gosub,ScanModifier
+	Gosub,ScanPauseKey
 	;if(A_IsCompiled <> 1)
 	;{
 		;Tooltip, %g_Modifier%, 0, 0, 2 ; debug	
@@ -1882,6 +1888,46 @@ Interrupt10:
 	Gosub,Polling
 	critical,off
 	sleep,-1
+	if(mod(g_int10ctr,10)==0) {
+		Process,Exist,yamabuki_r.exe
+		_pid := ErrorLevel
+		if(_pid!=0 && g_process["yamabuki_r"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
+		}
+		g_process["yamabuki_r"] := _pid
+	}
+	if(mod(g_int10ctr,10)==2) {
+		Process,Exist,yamabuki.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["yamabuki"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
+		}
+		g_process["yamabuki"] := _pid
+	}
+	if(mod(g_int10ctr,10)==4) {
+		Process,Exist,DvorakJ.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["DvorakJ"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
+		}
+		g_process["DvorakJ"] := _pid
+	}
+	if(mod(g_int10ctr,10)==6) {
+		Process,Exist,em1keypc.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["em1keypc"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
+		}
+		g_process["em1keypc"] := _pid
+	}
+	if(mod(g_int10ctr,10)==8) {
+		Process,Exist,姫踊子草2.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
+		}
+		g_process["姫踊子草2"] := _pid
+	}
 	if(A_IsCompiled != 1)
 	{
 		vImeMode := IME_GET() & 32767
@@ -2003,7 +2049,13 @@ ScanModifier:
 	g_Modifier := g_Modifier >> 1			; 0x40
 	stAppsKey  := GetKeyStateWithLog(stAppsKey,93,"AppsKey")
 	g_Modifier := g_Modifier | stAppsKey	; 0x80
+	return
 	
+
+;----------------------------------------------------------------------
+; Pauseキー読み取り
+;----------------------------------------------------------------------
+ScanPauseKey:
 	stPause := GetKeyStateWithLog3(stPause,0x13,"Pause", _kDown)
 	if(_kDown == 1 && g_KeyPause == "Pause") {
 		Gosub,pauseKeyDown
@@ -2551,6 +2603,7 @@ gSC079:				; 変換キー（右）
 gLCTRL:
 gRCTRL:
 	critical
+	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
