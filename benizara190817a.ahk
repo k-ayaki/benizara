@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.713 .... 2021/7/1
+;	ver.0.1.4.714 .... 2021/7/4
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.713"
-	g_Date := "2021/7/1"
+	g_Ver := "ver.0.1.4.714"
+	g_Date := "2021/7/4"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -171,6 +171,7 @@
 	SetHookHenkan("off")
 	g_hookShift := "off"
 	SetHookShift("off")
+	SetHookFunction("off")
 	return
 
 
@@ -1135,16 +1136,16 @@ keydownM:
 		keyState[g_sansPos] := 1
 	}
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		if(g_Modifier != 0)		; 修飾キーが押されている
-		{
-			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-			g_SendTick := INFINTE
-			g_KeyInPtn := ""
-			g_prefixshift := ""
-			critical,off
-			return
-		}
+;		if(g_Modifier != 0)		; 修飾キーが押されている
+;		{
+;			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+;			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
+;			g_SendTick := INFINTE
+;			g_KeyInPtn := ""
+;			g_prefixshift := ""
+;			critical,off
+;			return
+;		}
 		if(g_prefixshift <> "" )
 		{
 			SendKey(g_Romaji . g_prefixshift . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
@@ -1159,18 +1160,18 @@ keydownM:
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
-		if(g_Modifier != 0)		; 修飾キーが押されている
-		{
-			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-			clearQueue()
-
-			g_SendTick := INFINITE
-			g_KeyInPtn := ""
-			g_prefixshift := ""
-			critical,off
-			return
-		}
+;		if(g_Modifier != 0)		; 修飾キーが押されている
+;		{
+;			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+;			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
+;			clearQueue()
+;
+;			g_SendTick := INFINITE
+;			g_KeyInPtn := ""
+;			g_prefixshift := ""
+;			critical,off
+;			return
+;		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		clearQueue()
 
@@ -1178,17 +1179,17 @@ keydownM:
 		return
 	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
-	if(g_Modifier != 0)		; 修飾キーが押されている
-	{
-		Gosub,ModeInitialize
-		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-		clearQueue()
-		g_SendTick := INFINITE
-		g_KeyInPtn := ""
-		critical,off
-		return
-	}
+;	if(g_Modifier != 0)		; 修飾キーが押されている
+;	{
+;		Gosub,ModeInitialize
+;		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+;		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
+;		clearQueue()
+;		g_SendTick := INFINITE
+;		g_KeyInPtn := ""
+;		critical,off
+;		return
+;	}
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
 		; M2キー押下
@@ -1406,12 +1407,14 @@ KoyubiOrSans(_Koyubi, _sans)
 ;----------------------------------------------------------------------
 ; 元の109レイアウトで出力
 ;----------------------------------------------------------------------
-SendAN(_mode,g_layoutPos)
+SendAN(_mode, _symbol, g_layoutPos)
 {
 	global mdn, mup, kup_save, g_LastKey
 	
-	vOut                  := mdn[_mode . g_layoutPos]
-	kup_save[g_layoutPos] := mup[_mode . g_layoutPos]
+	vOut                  := _symbol . mdn[_mode . g_layoutPos]
+	if(_symbol == "") {
+		kup_save[g_layoutPos] := mup[_mode . g_layoutPos]
+	}
 	SubSend(vOut)
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
@@ -1506,18 +1509,18 @@ keydown2:
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
-	if(g_Modifier != 0)		; 修飾キーが押されている
-	{
-		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-		clearQueue()
-		g_SendTick := INFINITE
-		g_KeyInPtn := ""
-
-		g_prefixshift := ""
-		critical,off
-		return
-	}
+;	if(g_Modifier != 0)		; 修飾キーが押されている
+;	{
+;		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+;		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
+;		clearQueue()
+;		g_SendTick := INFINITE
+;		g_KeyInPtn := ""
+;
+;		g_prefixshift := ""
+;		critical,off
+;		return
+;	}
 	if(g_prefixshift == "")
 	{
 		g_prefixshift := g_metaKey
@@ -1838,6 +1841,7 @@ Interrupt10:
 		SetHook("off")
 		SetHookSpace("off")
 		SetHookHenkan("on")
+		SetHookFunction("on")
 	} else
 	if(g_Pause==1) 
 	{
@@ -1845,6 +1849,7 @@ Interrupt10:
 		SetHook("off")
 		SetHookSpace("off")
 		SetHookHenkan("off")
+		SetHookFunction("off")
 	} else {
 		Gosub,ChkIME
 
@@ -1861,6 +1866,7 @@ Interrupt10:
 			SetHookSpace("off")
 		}
 		SetHookHenkan("on")
+		SetHookFunction("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -2229,6 +2235,31 @@ ChkIME:
 ;----------------------------------------------------------------------
 SetHookInit()
 {
+	hotkey,*sc03B,gSC03B		;F1
+	hotkey,*sc03B up,gSC03Bup
+	hotkey,*sc03C,gSC03C		;F2
+	hotkey,*sc03C up,gSC03Cup
+	hotkey,*sc03D,gSC03D		;F3
+	hotkey,*sc03D up,gSC03Dup
+	hotkey,*sc03E,gSC03E		;F4
+	hotkey,*sc03E up,gSC03Eup
+	hotkey,*sc03F,gSC03F		;F5
+	hotkey,*sc03F up,gSC03Fup
+	hotkey,*sc040,gSC040		;F6
+	hotkey,*sc040 up,gSC040up
+	hotkey,*sc041,gSC041		;F7
+	hotkey,*sc041 up,gSC041up
+	hotkey,*sc042,gSC042		;F8
+	hotkey,*sc042 up,gSC042up
+	hotkey,*sc043,gSC043		;F9
+	hotkey,*sc043 up,gSC043up
+	hotkey,*sc044,gSC044		;F10
+	hotkey,*sc044 up,gSC044up
+	hotkey,*sc057,gSC057		;F11
+	hotkey,*sc057 up,gSC057up
+	hotkey,*sc058,gSC058		;F12
+	hotkey,*sc058 up,gSC058up
+
 	hotkey,*sc002,gSC002		;1
 	hotkey,*sc002 up,gSC002up
 	hotkey,*sc003,gSC003		;2
@@ -2362,6 +2393,62 @@ SetHookInit()
 	Hotkey,*sc07B,gSC07B
 	Hotkey,*sc07B up,gSC07Bup
 	return
+}
+;----------------------------------------------------------------------
+; ファンクションキーをオン・オフする
+;----------------------------------------------------------------------
+SetHookFunction(flg)
+{
+	global keyAttribute3
+
+	if(keyAttribute3["RKF01"]!="" || flg=="off") {
+		hotkey,*sc03B,%flg%		;F1
+		hotkey,*sc03B up,%flg%
+	}
+	if(keyAttribute3["RKF02"]!="" || flg=="off") {
+		hotkey,*sc03C,%flg%		;F2
+		hotkey,*sc03C up,%flg%
+	}
+	if(keyAttribute3["RKF03"]!="" || flg=="off") {
+		hotkey,*sc03D,%flg%		;F3
+		hotkey,*sc03D up,%flg%
+	}
+	if(keyAttribute3["RKF04"]!="" || flg=="off") {
+		hotkey,*sc03E,%flg%		;F4
+		hotkey,*sc03E up,%flg%
+	}
+	if(keyAttribute3["RKF05"]!="" || flg=="off") {
+		hotkey,*sc03F,%flg%		;F5
+		hotkey,*sc03F up,%flg%
+	}
+	if(keyAttribute3["RKF06"]!="" || flg=="off") {
+		hotkey,*sc040,%flg%		;F6
+		hotkey,*sc040 up,%flg%
+	}
+	if(keyAttribute3["RKF07"]!="" || flg=="off") {
+		hotkey,*sc041,%flg%		;F7
+		hotkey,*sc041 up,%flg%
+	}
+	if(keyAttribute3["RKF08"]!="" || flg=="off") {
+		hotkey,*sc042,%flg%		;F8
+		hotkey,*sc042 up,%flg%
+	}
+	if(keyAttribute3["RKF09"]!="" || flg=="off") {
+		hotkey,*sc043,%flg%		;F9
+		hotkey,*sc043 up,%flg%
+	}
+	if(keyAttribute3["RKF10"]!="" || flg=="off") {
+		hotkey,*sc044,%flg%		;F10
+		hotkey,*sc044 up,%flg%
+	}
+	if(keyAttribute3["RKF11"]!="" || flg=="off") {
+		hotkey,*sc057,%flg%		;F11
+		hotkey,*sc057 up,%flg%
+	}
+	if(keyAttribute3["RKF12"]!="" || flg=="off") {
+		hotkey,*sc058,%flg%		;F12
+		hotkey,*sc058 up,%flg%
+	}
 }
 
 ;----------------------------------------------------------------------
@@ -2539,6 +2626,33 @@ gSC136up:
 	g_Koyubi := "N"
 	return
 
+;----------------------------------------------------------------------
+; キーオンのイベント
+;----------------------------------------------------------------------
+;　Ｆ段目
+gSC03B:		;F1
+gSC03C:		;F2
+gSC03D:		;F3
+gSC03E:		;F4
+gSC03F:		;F5
+gSC040:		;F6
+gSC041:		;F7
+gSC042:		;F8
+gSC043:		;F9
+gSC044:		;F10
+gSC057:		;F11
+gSC058:		;F12
+	critical
+	Gosub,ScanModifier
+	g_layoutPos := layoutPosHash[A_ThisHotkey]
+	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
+	kName := keyNameHash[g_layoutPos]
+	if(g_Modifier != 0) {
+		Gosub,ModeInitialize
+	}
+	goto, keydown%g_metaKey%
+
+;　Ｅ段目
 gSC002:	;1
 gSC003:	;2
 gSC004:	;3
@@ -2608,8 +2722,60 @@ gRCTRL:
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
+	if(g_Modifier != 0) {
+		Gosub,ModeInitialize
+		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
+		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), SetModifierSymbol(g_Modifier), g_layoutPos)
+		clearQueue()
+		g_SendTick := INFINITE
+		g_KeyInPtn := ""
+		g_prefixshift := ""
+		critical,off
+		return
+	}
 	goto, keydown%g_metaKey%
 
+;----------------------------------------------------------------------
+; 修飾シンボルの設定
+;----------------------------------------------------------------------
+SetModifierSymbol(_modifier) {
+	_symbol := ""
+	if((_modifier & 0x02)!=0) {
+		_symbol := "<^"
+	}
+	if((_modifier & 0x04)!=0) {
+		_symbol := ">^"
+	}
+	if((_modifier & 0x08)!=0) {
+		_symbol := "<!"
+	}
+	if((_modifier & 0x10)!=0) {
+		_symbol := ">!"
+	}
+	if((_modifier & 0x20)!=0) {
+		_symbol := "<#"
+	}
+	if((_modifier & 0x40)!=0) {
+		_symbol := ">#"
+	}
+	return _symbol
+}
+;----------------------------------------------------------------------
+; キーオフのイベント
+;----------------------------------------------------------------------
+; Ｆ段目
+gSC03Bup:
+gSC03Cup:
+gSC03Dup:
+gSC03Eup:
+gSC03Fup:
+gSC040up:
+gSC041up:
+gSC042up:
+gSC043up:
+gSC044up:
+gSC057up:
+gSC058up:
 ; Ｅ段目
 gSC002up:
 gSC003up:

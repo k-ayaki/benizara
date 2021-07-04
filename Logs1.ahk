@@ -9,7 +9,8 @@
 Logs:
 	IfWinExist,紅皿ログ
 	{
-		msgbox, 既に紅皿ログ・ダイアログは開いています。
+		;msgbox, 既に紅皿ログ・ダイアログは開いています。
+		WinActivate,紅皿ログ
 		return
 	}
 	Gui,3:Default	

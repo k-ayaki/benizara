@@ -104,7 +104,8 @@ Init:
 Settings:
 	IfWinExist,紅皿設定
 	{
-		msgbox, 既に紅皿設定ダイアログは開いています。
+		;msgbox, 既に紅皿設定ダイアログは開いています。
+		WinActivate,紅皿設定
 		return
 	}
 	vLayoutFile := g_LayoutFile
