@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.714 .... 2021/7/4
+;	ver.0.1.4.716 .... 2021/7/8
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.714"
-	g_Date := "2021/7/4"
+	g_Ver := "ver.0.1.4.716"
+	g_Date := "2021/7/8"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -694,7 +694,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . g_LastKey["表層"]
-		GenSendStr3(_aStr, _down, _up, _status)
+		GenSendStr3(_mode, _aStr, _down, _up, _status)
 		vOut                   := _down
 		kup_save[_MojiOnHoldLast]  := _up
 		_kLabel := g_LastKey["表層"]
@@ -1136,16 +1136,6 @@ keydownM:
 		keyState[g_sansPos] := 1
 	}
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-;		if(g_Modifier != 0)		; 修飾キーが押されている
-;		{
-;			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-;			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-;			g_SendTick := INFINTE
-;			g_KeyInPtn := ""
-;			g_prefixshift := ""
-;			critical,off
-;			return
-;		}
 		if(g_prefixshift <> "" )
 		{
 			SendKey(g_Romaji . g_prefixshift . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
@@ -1160,18 +1150,6 @@ keydownM:
 		return
 	}
 	if(ShiftMode[g_Romaji] == "小指シフト") {
-;		if(g_Modifier != 0)		; 修飾キーが押されている
-;		{
-;			; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-;			SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-;			clearQueue()
-;
-;			g_SendTick := INFINITE
-;			g_KeyInPtn := ""
-;			g_prefixshift := ""
-;			critical,off
-;			return
-;		}
 		SendKey(g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 		clearQueue()
 
@@ -1179,17 +1157,6 @@ keydownM:
 		return
 	}
 	; 親指シフトまたは文字同時打鍵の文字キーダウン
-;	if(g_Modifier != 0)		; 修飾キーが押されている
-;	{
-;		Gosub,ModeInitialize
-;		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-;		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-;		clearQueue()
-;		g_SendTick := INFINITE
-;		g_KeyInPtn := ""
-;		critical,off
-;		return
-;	}
 	if(g_KeyInPtn=="M")		;S5)O-Mオン状態
 	{
 		; M2キー押下
@@ -1407,14 +1374,12 @@ KoyubiOrSans(_Koyubi, _sans)
 ;----------------------------------------------------------------------
 ; 元の109レイアウトで出力
 ;----------------------------------------------------------------------
-SendAN(_mode, _symbol, g_layoutPos)
+SendModifier(_symbol, _kName)
 {
-	global mdn, mup, kup_save, g_LastKey
-	
-	vOut                  := _symbol . mdn[_mode . g_layoutPos]
-	if(_symbol == "") {
-		kup_save[g_layoutPos] := mup[_mode . g_layoutPos]
-	}
+	global kup_save, g_LastKey
+
+	vOut := _symbol . _kName
+	kup_save[g_layoutPos] := ""
 	SubSend(vOut)
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
@@ -1435,7 +1400,7 @@ SendKey(_mode, _MojiOnHold){
 	if(_nextKey != "") {
 		g_LastKey["表層"] := _nextKey
 		_aStr := "後" . g_LastKey["表層"]
-		GenSendStr3(_aStr, _down, _up, _status)
+		GenSendStr3(_mode, _aStr, _down, _up, _status)
 		vOut                  := _down
 		kup_save[_MojiOnHold] := _up
 		
@@ -1509,18 +1474,6 @@ keydown2:
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
-;	if(g_Modifier != 0)		; 修飾キーが押されている
-;	{
-;		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-;		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
-;		clearQueue()
-;		g_SendTick := INFINITE
-;		g_KeyInPtn := ""
-;
-;		g_prefixshift := ""
-;		critical,off
-;		return
-;	}
 	if(g_prefixshift == "")
 	{
 		g_prefixshift := g_metaKey
@@ -1576,7 +1529,7 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 		g_ZeroDelaySurface := kLabel[_mode . _MojiOnHold]
 		
 		; 保留キーがあれば先行出力（零遅延モード）
-		if((instr(kst[_mode . _MojiOnHoldLast],"Q")>0 || kst[_mode . _MojiOnHoldLast]=="")
+		if(kst[_mode . _MojiOnHoldLast]==""
 		&& strlen(g_ZeroDelaySurface)==1 && ctrlKeyHash[g_ZeroDelaySurface]=="") {
 			vOut := kdn[_mode . _MojiOnHold]
 			kup_save[_MojiOnHoldLast] := kup[_mode . _MojiOnHold]
@@ -1586,7 +1539,7 @@ SendZeroDelay(_mode, _MojiOnHold, g_ZeroDelay) {
 			_nextKey := nextDakuten(_mode,_MojiOnHold)
 			if(_nextKey!="") {
 				_aStr := "後" . _nextKey
-				GenSendStr3(_aStr, _down, _up, _status)
+				GenSendStr3(_mode, _aStr, _down, _up, _status)
 				vOut                  := _down
 				kup_save[_MojiOnHold] := _up
 				
@@ -1940,7 +1893,8 @@ Interrupt10:
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
-		g_debugout3 := ksc["RNND02"] . ":" . kst["RNND02"]
+		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
+		g_debugout3 := g_Modifier
 		g_debugout2 := GetPushedKeys()
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
@@ -2037,24 +1991,24 @@ ScanModifier:
 	g_Modifier := 0x00
 	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
 	g_Modifier := g_Modifier | stLCtrl
-	g_Modifier := g_Modifier >> 1			; 0x02
+	g_Modifier := g_Modifier >> 1			; 0x0200
 	stRCtrl := GetKeyStateWithLog(stRCtrl,163,"RCtrl")
 	g_Modifier := g_Modifier | stRCtrl
-	g_Modifier := g_Modifier >> 1			; 0x04
+	g_Modifier := g_Modifier >> 1			; 0x0400
 	stLAlt  := GetKeyStateWithLog(stLAlt,164,"LAlt")
 	g_Modifier := g_Modifier | stLAlt
-	g_Modifier := g_Modifier >> 1			; 0x08
+	g_Modifier := g_Modifier >> 1			; 0x0800
 	stRAlt  := GetKeyStateWithLog(stRAlt,165,"RAlt")
 	g_Modifier := g_Modifier | stRAlt
-	g_Modifier := g_Modifier >> 1			; 0x10
+	g_Modifier := g_Modifier >> 1			; 0x1000
 	stLWin  := GetKeyStateWithLog(stLWin,91,"LWin")
 	g_Modifier := g_Modifier | stLWin
-	g_Modifier := g_Modifier >> 1			; 0x20
+	g_Modifier := g_Modifier >> 1			; 0x2000
 	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
 	g_Modifier := g_Modifier | stRWin
-	g_Modifier := g_Modifier >> 1			; 0x40
+	g_Modifier := g_Modifier >> 1			; 0x4000
 	stAppsKey  := GetKeyStateWithLog(stAppsKey,93,"AppsKey")
-	g_Modifier := g_Modifier | stAppsKey	; 0x80
+	g_Modifier := g_Modifier | stAppsKey	; 0x8000
 	return
 	
 
@@ -2721,11 +2675,11 @@ gRCTRL:
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	if(g_Modifier != 0) {
+		RegLogs(kName . " down")
 		Gosub,ModeInitialize
-		; 修飾キー＋文字キーの同時押しのときは、英数レイアウトで出力
-		SendAN("AN" . KoyubiOrSans(g_Koyubi,g_sans), SetModifierSymbol(g_Modifier), g_layoutPos)
+		; 修飾キー＋文字キーの同時押しのときに
+		SendModifier(SetModifierSymbol(g_Modifier),kName)
 		clearQueue()
 		g_SendTick := INFINITE
 		g_KeyInPtn := ""
@@ -2733,6 +2687,7 @@ gRCTRL:
 		critical,off
 		return
 	}
+	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
 
 ;----------------------------------------------------------------------
@@ -2740,23 +2695,14 @@ gRCTRL:
 ;----------------------------------------------------------------------
 SetModifierSymbol(_modifier) {
 	_symbol := ""
-	if((_modifier & 0x02)!=0) {
-		_symbol := "<^"
+	if((_modifier & 0x6000)!=0){
+		_symbol := "#"
 	}
-	if((_modifier & 0x04)!=0) {
-		_symbol := ">^"
+	if((_modifier & 0x1800)!=0) {
+		_symbol := _symbol . "!"
 	}
-	if((_modifier & 0x08)!=0) {
-		_symbol := "<!"
-	}
-	if((_modifier & 0x10)!=0) {
-		_symbol := ">!"
-	}
-	if((_modifier & 0x20)!=0) {
-		_symbol := "<#"
-	}
-	if((_modifier & 0x40)!=0) {
-		_symbol := ">#"
+	if((_modifier & 0x0600)!=0) {
+		_symbol := _symbol . "^"
 	}
 	return _symbol
 }

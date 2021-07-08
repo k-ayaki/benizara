@@ -76,8 +76,6 @@ InitLayout2:
 	ksc := Object()	; 最大同時打鍵個数
 	kup := Object()	; keyup したときの Send形式
 	kdn := Object()	; keydown したときの Send形式
-	mup := Object()	; キーボードそのものを keyup したときの Send形式
-	mdn := Object()	; キーボードそのものを keydown したときの Send形式
 
 	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
 	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
@@ -98,7 +96,6 @@ InitLayout2:
 	GuiLayoutHash := MakeGuiLayoutHash()
 	code2SimulPos := MakeCode2SimulPos()
 	code2ContPos := MakeCode2ContPos()
-	;name2vkey := MakeName2vkeyHash()
 	ScanCodeHash := MakeScanCodeHash()
 	Chr2vkeyHash := MakeChr2vkeyHash()
 	ctrlKeyHash := MakeCtrlKeyHash()
@@ -516,8 +513,6 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_error <> "") 
 		return
-	if(g_mode == "ANN")
-		Gosub, SetAlphabet
 	
 	_col := "D"
 	org := SplitColumn(LF[g_mode . "D"])
@@ -529,8 +524,6 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(g_mode == "ANN")
-		Gosub, SetAlphabet
 	
 	_col := "C"
 	org := SplitColumn(LF[g_mode . "C"])
@@ -542,8 +535,6 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(g_mode == "ANN")
-		Gosub, SetAlphabet
 
 	_col := "B"
 	org := SplitColumn(LF[g_mode . "B"])
@@ -555,15 +546,11 @@ Mode2Key:
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(g_mode == "ANN")
-		Gosub, SetAlphabet
 	_col := "A"
 	org := SplitColumn(LF[g_mode . "A"])
 	Gosub, SetKeyTable
 	if(_error <> "")
 		return
-	if(g_mode == "ANN")
-		Gosub, SetAlphabet
 	return
 
 ;----------------------------------------------------------------------
@@ -618,7 +605,7 @@ Mode3Key:
 	org := SplitColumn(LF[g_mode . _spos . "E"])
 	if(CountObject(org) < 13 || CountObject(org) > 14)
 	{
-		_error := g_Section . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := _simulMode . "のE段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	if(CountObject(org) == 13) {
@@ -645,7 +632,7 @@ Mode3Key:
 	org := SplitColumn(LF[g_mode . _spos . "D"])
 	if(CountObject(org) <> 12)
 	{
-		_error := g_Section . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := _simulMode . "のD段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	_lpos := Object()
@@ -663,7 +650,7 @@ Mode3Key:
 	org := SplitColumn(LF[g_mode . _spos . "C"])
 	if(CountObject(org) <> 12)
 	{
-		_error := g_Section . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := _simulMode . "のC段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	_lpos := Object()
@@ -681,7 +668,7 @@ Mode3Key:
 	org := SplitColumn(LF[g_mode . _spos . "B"])
 	if(CountObject(org) <> 11)
 	{
-		_error := g_Section . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
+		_error := _simulMode . "のB段目にエラーがあります。要素数が" . CountObject(org) . "です。"
 		return
 	}
 	_lpos := Object()
@@ -963,7 +950,7 @@ SetKeyTable:
 			kup[g_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
 			continue
 		}
-		GenSendStr3(org[A_Index], _down, _up, _status)
+		GenSendStr3(g_mode, org[A_Index], _down, _up, _status)
 		if(_error <> "") {
 			_error := _lpos2 . ":" . _error
 			break
@@ -1023,7 +1010,7 @@ SetSimulKeyTable:
 			ksc[g_mode . _lpos[1] . _lpos[0]] := 2	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		GenSendStr3(org[A_Index], _down, _up, _status)
+		GenSendStr3(g_mode, org[A_Index], _down, _up, _status)
 		if(_error <> "") {
 			_error := _lpos[0] . ":" . _error
 			break
@@ -1139,7 +1126,7 @@ SetSimulKeyTable3:
 			ksc[g_mode . _lpos[2] . _lpos[0] . _lpos[1]] := 3	; 最大同時打鍵数を設定
 		}
 		; 送信形式に変換・・・なお、文字同時打鍵は小指シフトしない
-		GenSendStr3(org[A_Index], _down, _up, _status)
+		GenSendStr3(g_mode, org[A_Index], _down, _up, _status)
 		if(_error <> "") {
 			_error := _lpos[0] . ":" . _error
 			break
@@ -1228,20 +1215,6 @@ GetOnKeyPos(_pushedKeys)
 }
 
 ;----------------------------------------------------------------------
-;	修飾キー＋文字キーの出力の際に送信する内容を作成
-;----------------------------------------------------------------------
-SetAlphabet:
-	mdn[g_mode . "0"] := CountObject(org)
-	mup[g_mode . "0"] := mdn[g_mode . "0"] 
-	loop, % CountObject(org)
-	{
-		_row2 := _rowhash[A_Index]
-		mdn[g_mode . _col . _row2] := kdn[g_mode . _col . _row2]
-		mup[g_mode . _col . _row2] := kup[g_mode . _col . _row2]
-	}
-	return
-	
-;----------------------------------------------------------------------
 ;	カラム配列の複写
 ;----------------------------------------------------------------------
 CopyColumns(_mdsrc, _mddst)
@@ -1282,7 +1255,7 @@ Romaji2Kana(aStr)
 ; 引数　：aStr：対応するキー入力
 ; 戻り値：Sendの引数
 ;----------------------------------------------------------------------
-GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
+GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 {
 	global z2hHash, Chr2vkeyHash, modifierHash, roma3Hash, ctrlKeyHash
 	global _error
@@ -1308,13 +1281,18 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 	{
 		_a1 := substr(aStr,_idx,1)
 		_a2 := substr(aStr,_idx,2)
+		if(strlen(_a2) != 2) {
+			_a2 := ""
+		}
 		_a3 := substr(aStr,_idx,3)
-		
+		if(strlen(_a3) != 3) {
+			_a3 := ""
+		}
 		if(_c2 != "") {
 			_dn := _dn .  "{" . _c2 . " up}"
 			_c2 := ""
 		}
-		if(_a1 == "v" || _a1 == "V") {	; 仮想キーコードのマーク
+		if((_a1 == "v" || _a1 == "V") && strlen(_a3)==3) {	; 仮想キーコードのマーク
 			if(instr("0123456789ABCDEFabcdef",substr(_a3,2,1))==0
 			|| instr("0123456789ABCDEFabcdef",substr(_a3,3,1))==0) {
 				_error := "仮想キーコードの記載が誤っています"
@@ -1347,7 +1325,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 				{
 					_dn := _dn .  "{" . _c2 . " down}"
 				}
-				_status := _status . "c"		; 制御キーがあった
+				_status := _status . "c"		; 機10から機12 の制御キーがあった
 				_idx := _idx + strlen(_a3)
 			} else
 			if(ctrlKeyHash[_a2] != "") {
@@ -1356,7 +1334,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 				{
 					_dn := _dn .  "{" . _c2 . " down}"
 				}
-				_status := _status . "c"		; 制御キーがあった
+				_status := _status . "c"		; 機1から機9 の制御キーがあった
 				_idx := _idx + strlen(_a2)
 			} else
 			if(ctrlKeyHash[_a1] != "") {
@@ -1365,7 +1343,12 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 				{
 					_dn := _dn .  "{" . _c2 . " down}"
 				}
-				_status := _status . "c"		; 制御キーがあった
+				if(_a1=="入" && substr(_mode,1,1)=="R" 
+				&& (substr(_status,strlen(_status),1)=="Q" || substr(_status,strlen(_status),1)=="D")) {
+					;ローマ字モードで確定のエンターは制御キーとして扱わない
+				} else {
+					_status := _status . "c"		; 制御キーがあった
+				}
 				_idx := _idx + strlen(_a1)
 			}
 			else 
@@ -1393,6 +1376,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 						_dn := _dn .  "{" . _c2 . " down}"
 					}
 				}
+				_status := _status . "D"		; 通常の出力
 			}
 		}
 	}
@@ -1403,6 +1387,7 @@ GenSendStr3(aStr,BYREF _dn,BYREF _up, BYREF _status)
 	if(_quotation != "") {
 		_error := "引用符が閉じられていません"
 	}
+	_status := MergeStatus(_status)
 	return _dn
 }
 
@@ -1414,9 +1399,6 @@ MergeStatus(_status)
 	_status2 := ""
 	if(instr(_status,"S") > 0 ) {	; 無の指定時のスキャンコード
 		_status2 := _status2 . "S"
-	}
-	if(instr(_status,"Q") > 0 ) {	; 引用符
-		_status2 := _status2 . "Q"
 	}
 	if(instr(_status,"v") > 0 ) {	; 仮想キーコード
 		_status2 := _status2 . "v"
@@ -3750,40 +3732,6 @@ MakeCodeNameHash()
 	hash["sc058"] := "F12"
 	return hash
 }
-
-;----------------------------------------------------------------------
-;	キー名とvkeyの変換
-;----------------------------------------------------------------------
-;MakeName2vkeyHash()
-;{
-;	hash := Object()
-;	hash["Pause"]      := 0x13
-;	hash["ScrollLock"] := 0x91
-;	hash["Insert"]     := 0x2D
-;	
-;	hash["LShift"]     := 160
-;	hash["RShift"]     := 161
-;	hash["LCtrl"]      := 162
-;	hash["RCtrl"]      := 163
-;	hash["LAlt"]       := 164
-;	hash["RAlt"]       := 165
-;	hash["LWin"]       := 91
-;	hash["RWin"]       := 92
-;	hash["AppsKey"]    := 93
-;	hash["F1"] := 0x70
-;	hash["F2"] := 0x71
-;	hash["F3"] := 0x72
-;	hash["F4"] := 0x73
-;	hash["F5"] := 0x74
-;	hash["F6"] := 0x75
-;	hash["F7"] := 0x76
-;	hash["F8"] := 0x77
-;	hash["F9"] := 0x78
-;	hash["F10"] := 0x79
-;	hash["F11"] := 0x7A
-;	hash["F12"] := 0x7B
-;	return hash
-;}
 
 ;----------------------------------------------------------------------
 ;	文字名からvkeyへの変換
