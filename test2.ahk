@@ -1,24 +1,37 @@
-		hotkey,*sc07B,gSC07B		;
-		hotkey,*sc07B up,gSC07Bup
-		hotkey,*sc079,gSC079		;
-		hotkey,*sc079 up,gSC079up
-		hotkey,*sc07B,on
-		hotkey,*sc07B up,on
-		hotkey,*sc079,on
-		hotkey,*sc079 up,on
+		hotkey,*sc02A,gSC02A		;LShift
+		hotkey,*sc02A up,gSC02Aup		
+		hotkey,*sc02A,on
+		hotkey,*sc02A up,on
+		;hotkey,*sc136,gSC136		;RShift
+		;hotkey,*sc136 up,gSC136up
+		;hotkey,*sc136,off
+		;hotkey,*sc136 up,off
 
+		;hotkey,Backspace,gBACKSPACE	; \b
+		;hotkey,+Backspace,gBACKSPACE	; \b
+		;hotkey,Backspace up,gBACKSPACEup
+		;hotkey,+Backspace up,gBACKSPACEup
 		SetTimer,Interrupt10,10		
+		tmpKey := ""
+		IME_Set(1)
+		IME_SetConvMode(25)	
 		return
 #include IME.ahk
 
-gSC07B:
-gSC079:
-	return
-gSC07Bup:
-gSC079up:
+gSC02A:
+	_lShift := 1
 	return
 
-1::
+gSC02Aup:
+	_lShift := 0
+	return
+
+gSC136:
+	_rShift := 1
+	return
+	
+gSC136up:
+	_rShift := 0
 	return
 
 ;----------------------------------------------------------------------
@@ -27,9 +40,12 @@ gSC079up:
 Interrupt10:
 	;_tmpL := DllCall("GetKeyState", "UInt", 0x1D)
 	;_tmpR := DllCall("GetKeyState", "UInt", 0x1C)
-	_tmpL := GetKeyState("vk1D","P")
-	_tmpR := GetKeyState("vk1C","P")
-	vImeMode := IME_GET() & 32767
-	vImeConvMode :=IME_GetConvMode()
-	Tooltip, %vImeMode% %vImeConvMode%, 0, 0, 2 ; debug
+	_tmpL := GetKeyState("vkA0","P")
+	_tmpR := GetKeyState("vkA1","P")
+	_tmp2L := DllCall("GetAsyncKeyState", "UInt", 0xA0)
+	_tmp2R := DllCall("GetAsyncKeyState", "UInt", 0xA1)
+	tmpKey := _tmpL . _tmpR
+	;vImeMode := IME_GET() & 32767
+	;vImeConvMode :=IME_GetConvMode()
+	Tooltip, %tmpKey% : %_lShift% %_rShift%:%_tmp2L%%_tmp2R%, 0, 0, 2 ; debug
 	return

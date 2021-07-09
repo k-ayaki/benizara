@@ -1979,8 +1979,8 @@ Polling:
 ;----------------------------------------------------------------------
 ScanModifier:
 	if(g_hookShift == "off") {
-		stLShift := GetKeyStateWithLog(stLShift,160,"LShift")
-		stRShift := GetKeyStateWithLog(stRShift,161,"RShift")
+		stLShift := GetKeyStateWithLog4(stLShift,"LShift",_kDown)
+		stRShift := GetKeyStateWithLog4(stRShift,"RShift",_kDown)
 		if(stLShift!=0 || stRShift!=0)
 		{
 			g_Koyubi := "K"
@@ -1989,25 +1989,25 @@ ScanModifier:
 		}
 	}
 	g_Modifier := 0x00
-	stLCtrl := GetKeyStateWithLog(stLCtrl,162,"LCtrl")
+	stLCtrl := GetKeyStateWithLog4(stLCtrl,"LCtrl",_kDown)
 	g_Modifier := g_Modifier | stLCtrl
 	g_Modifier := g_Modifier >> 1			; 0x0200
-	stRCtrl := GetKeyStateWithLog(stRCtrl,163,"RCtrl")
+	stRCtrl := GetKeyStateWithLog4(stRCtrl,"RCtrl",_kDown)
 	g_Modifier := g_Modifier | stRCtrl
 	g_Modifier := g_Modifier >> 1			; 0x0400
-	stLAlt  := GetKeyStateWithLog(stLAlt,164,"LAlt")
+	stLAlt  := GetKeyStateWithLog4(stLAlt,"LAlt",_kDown)
 	g_Modifier := g_Modifier | stLAlt
 	g_Modifier := g_Modifier >> 1			; 0x0800
-	stRAlt  := GetKeyStateWithLog(stRAlt,165,"RAlt")
+	stRAlt  := GetKeyStateWithLog4(stRAlt,"RAlt",_kDown)
 	g_Modifier := g_Modifier | stRAlt
 	g_Modifier := g_Modifier >> 1			; 0x1000
-	stLWin  := GetKeyStateWithLog(stLWin,91,"LWin")
+	stLWin  := GetKeyStateWithLog4(stLWin,"LWin",_kDown)
 	g_Modifier := g_Modifier | stLWin
 	g_Modifier := g_Modifier >> 1			; 0x2000
-	stRWin  := GetKeyStateWithLog(stRWin,92,"RWin")
+	stRWin  := GetKeyStateWithLog4(stRWin,"RWin",_kDown)
 	g_Modifier := g_Modifier | stRWin
 	g_Modifier := g_Modifier >> 1			; 0x4000
-	stAppsKey  := GetKeyStateWithLog(stAppsKey,93,"AppsKey")
+	stAppsKey  := GetKeyStateWithLog4(stAppsKey,"AppsKey",_kDown)
 	g_Modifier := g_Modifier | stAppsKey	; 0x8000
 	return
 	
@@ -2016,11 +2016,11 @@ ScanModifier:
 ; Pauseキー読み取り
 ;----------------------------------------------------------------------
 ScanPauseKey:
-	stPause := GetKeyStateWithLog3(stPause,0x13,"Pause", _kDown)
+	stPause := GetKeyStateWithLog4(stPause,"Pause", _kDown)
 	if(_kDown == 1 && g_KeyPause == "Pause") {
 		Gosub,pauseKeyDown
 	}
-	stScrollLock := GetKeyStateWithLog3(stScrollLock,0x91,"ScrollLock",_kDown)
+	stScrollLock := GetKeyStateWithLog4(stScrollLock,"ScrollLock",_kDown)
 	if(_kDown == 1 && g_KeyPause == "ScrollLock") {
 		Gosub,pauseKeyDown
 	}
@@ -2084,26 +2084,13 @@ ModeInitialize:
 ;-----------------------------------------------------------------------
 ;	仮想キーの状態取得とログ
 ;-----------------------------------------------------------------------
-GetKeyStateWithLog(stLast, vkey0, kName) {
-	;stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
-	stCurr := DllCall("GetAsyncKeyState", "UInt", vkey0)
-	if(stCurr !=0 && stLast==0)	; keydown
-	{
-		RegLogs(kName . " down")
-	}
-	else if(stCurr==0 && stLast !=0)	; keyup
-	{
-		RegLogs(kName . " up")
-	}
-	return stCurr
-}
-;-----------------------------------------------------------------------
-;	仮想キーの状態取得とログ
-;-----------------------------------------------------------------------
-GetKeyStateWithLog3(stLast, vkey0, kName,byRef kDown) {
+GetKeyStateWithLog4(stLast, kName, byRef kDown) {
 	kDown := 0
-	;stCurr := DllCall("GetKeyState", "UInt", vkey0) & 128
-	stCurr := DllCall("GetAsyncKeyState", "UInt", vkey0)
+	stCurr := 0
+	_keyState := GetKeyState(kName,"P")
+	if(_keyState!=0) {
+		stCurr := 0x8000
+	}
 	if(stCurr != 0 && stLast == 0)	; keydown
 	{
 		kDown := 1
@@ -2128,7 +2115,8 @@ GetPushedKeys()
 	for index, element in layoutArys
 	{
 		if(keyState[element] == 1) {
-			_keyName := keyNameHash["C06"]
+			;_keyName := keyNameHash["C06"]
+			_keyName := keyNameHash[element]
 			if(GetKeyState(_keyName,"P")==0) {
 				keyState[element] := 0
 			}

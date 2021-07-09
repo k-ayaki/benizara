@@ -727,25 +727,25 @@ ReadKeyboardState:
 	loop, 14
 	{
 		_layoutPos := "E" . _rowhash[A_Index]
-		_vkey := vkeyHash[_layoutPos]
+		_vkey := vkeyStrHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
 		_layoutPos := "D" . _rowhash[A_Index]
-		_vkey := vkeyHash[_layoutPos]
+		_vkey := vkeyStrHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
 		_layoutPos := "C" . _rowhash[A_Index]
-		_vkey := vkeyHash[_layoutPos]
+		_vkey := vkeyStrHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 11
 	{
 		_layoutPos := "B" . _rowhash[A_Index]
-		_vkey := vkeyHash[_layoutPos]
+		_vkey := vkeyStrHash[_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 4
@@ -757,7 +757,8 @@ ReadKeyboardState:
 	return
 
 SetKeyGui2:
-	_keyState := DllCall("GetAsyncKeyState", "UInt", _vkey)
+	;_keyState := DllCall("GetAsyncKeyState", "UInt", _vkey)
+	_keyState := GetKeyState(_vkey,"P")
 	GuiControlGet,_val,,vkeyDN%_layoutPos%
 	if( _keyState!= 0 && _val != "□")
 	{
