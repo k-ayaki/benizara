@@ -13,10 +13,21 @@
 		;hotkey,+Backspace up,gBACKSPACEup
 		SetTimer,Interrupt10,10		
 		tmpKey := ""
-		IME_Set(1)
-		IME_SetConvMode(25)	
+		_lShift := 0
+		_rShift := 0
+		;IME_Set(1)
+		;IME_SetConvMode(25)	
 		return
 #include IME.ahk
+
+
+b::
+	if(_lShift==1) {
+		send,{b down}
+	} else {
+		send,^{a down}
+	}
+	return
 
 gSC02A:
 	_lShift := 1
@@ -47,5 +58,5 @@ Interrupt10:
 	tmpKey := _tmpL . _tmpR
 	;vImeMode := IME_GET() & 32767
 	;vImeConvMode :=IME_GetConvMode()
-	Tooltip, %tmpKey% : %_lShift% %_rShift%:%_tmp2L%%_tmp2R%, 0, 0, 2 ; debug
+	Tooltip, %_lShift%%_rShift%:%tmpKey%:%_tmp2L%%_tmp2R%, 0, 0, 2 ; debug
 	return

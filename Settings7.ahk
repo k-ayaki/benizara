@@ -522,8 +522,8 @@ G2PollingLayout:
 		if(s_Romaji != g_Romaji) 
 		{
 			s_Romaji := g_Romaji
-			_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
-			GuiControl,,vkeyLayoutName,%_ch%
+			s_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
+			GuiControl,,vkeyLayoutName,%s_ch%
 			Gosub,G2RefreshLayout
 			
 			Gosub,RefreshSimulKeyMenu
@@ -531,95 +531,84 @@ G2PollingLayout:
 		s_KeySingle := g_KeySingle
 		Gosub,RefreshLayoutA
 	}
-	if(ShiftMode[g_Romaji] == "" ) {
-		Gosub,ReadKeyboardState
-	} else {
-		_layoutPos := "A04"
-		Gosub,SetKeyGui2A
-		_layoutPos := "A03"
-		Gosub,SetKeyGui2A
-		_layoutPos := "A02"
-		Gosub,SetKeyGui2A
-		_layoutPos := "A01"
-		Gosub,SetKeyGui2A
-	}
+	Gosub,ReadKeyboardState
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：同時打鍵キーメニューの更新：英数ローマ字モードに応じて
+; 機能：同時打鍵キーメニューの更新：英数ローマ字モードに応じて（割込）
 ;-----------------------------------------------------------------------
 RefreshSimulKeyMenu:
-	_ddlist := "|…"
+	s_ddlist := "|…"
 	if(v == g_CurrSimulMode) {
-		_ddlist := _ddlist . "||"
+		s_ddlist := s_ddlist . "||"
 	} else {
-		_ddlist := _ddlist . "|"
+		s_ddlist := s_ddlist . "|"
 	}
 	enum := g_SimulMode._NewEnum()
 	while enum[k,v]
 	{
 		if(substr(v,1,1) == g_Romaji) {
 			if(v == g_CurrSimulMode) {
-				_ddlist := _ddlist . v . "||"
+				s_ddlist := s_ddlist . v . "||"
 			} else {
-				_ddlist := _ddlist . v . "|"
+				s_ddlist := s_ddlist . v . "|"
 			}
 		}
 	}
-	GuiControl,,vCurrSimulMode,%_ddlist%
+	GuiControl,,vCurrSimulMode,%s_ddlist%
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：キー配列表示の切り替え
+; 機能：キー配列表示の切り替え（割込）
 ;-----------------------------------------------------------------------
 RefreshLayoutA:
-	_layoutPos := "A01"
+	s_layoutPos := "A01"
 	Gosub,RefreshLayoutA1
-	_layoutPos := "A02"
+	s_layoutPos := "A02"
 	Gosub,RefreshLayoutA1
-	_layoutPos := "A03"
+	s_layoutPos := "A03"
 	Gosub,RefreshLayoutA1
-	_layoutPos := "A04"
+	s_layoutPos := "A04"
 	Gosub,RefreshLayoutA1
-	_layoutPos := "A00"
+	s_layoutPos := "A00"
 	Gosub,RefreshLayoutUsage
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：Ａ列のキー表示の更新
+; 機能：Ａ列のキー表示の更新（割込）
 ;-----------------------------------------------------------------------
 RefreshLayoutA1:
 	Gui, Submit, NoHide
-	GuiControl,-Redraw,vkeyDN%_layoutPos%
-	if(keyAttribute3[g_Romaji . "N" . _layoutPos] == "L")
+	GuiControl,-Redraw,vkeyDN%s_layoutPos%
+	if(keyAttribute3[g_Romaji . "N" . s_layoutPos] == "L")
 	{
 		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_layoutPos%
-		GuiControl,,vkeyFA%_layoutPos%,左親指
+		GuiControl,Font,vkeyFC%s_layoutPos%
+		GuiControl,,vkeyFA%s_layoutPos%,左親指
 	}
 	else
-	if(keyAttribute3[g_Romaji . "N" . _layoutPos] == "R")
+	if(keyAttribute3[g_Romaji . "N" . s_layoutPos] == "R")
 	{
 		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_layoutPos%
-		GuiControl,,vkeyFA%_layoutPos%,右親指
+		GuiControl,Font,vkeyFC%s_layoutPos%
+		GuiControl,,vkeyFA%s_layoutPos%,右親指
 	}
 	else
 	{
 		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%_layoutPos%
+		GuiControl,Font,vkeyFC%s_layoutPos%
 
 		Gui,Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFA%_layoutPos%,　　　
+		GuiControl,,vkeyFA%s_layoutPos%,　　　
 	}
-	_label := kLabel[_layoutPos]
-	GuiControl,,vkeyFB%_layoutPos%,%_label%
-	vkeyDN%_layoutPos% := "　"
-	GuiControl,2:,vkeyDN%_layoutPos%,　
-	GuiControl,+Redraw,vkeyDN%_layoutPos%
+	s_label := kLabel[s_layoutPos]
+	GuiControl,,vkeyFB%s_layoutPos%,%s_label%
+	vkeyDN%s_layoutPos% := "　"
+	GuiControl,2:,vkeyDN%s_layoutPos%,　
+	GuiControl,+Redraw,vkeyDN%s_layoutPos%
 	return
 ;-----------------------------------------------------------------------
-; 機能：凡例表示の更新
+; 機能：凡例表示の更新（割込）
 ;-----------------------------------------------------------------------
 RefreshLayoutUsage:
 	Gui, Submit, NoHide
@@ -635,7 +624,7 @@ RefreshLayoutUsage:
 	return
 
 ;-----------------------------------------------------------------------
-; 機能：キー配列表示の切り替え
+; 機能：キー配列表示の切り替え（割込）
 ;-----------------------------------------------------------------------
 G2RefreshLayout:
 	Gui, Submit, NoHide
@@ -649,45 +638,45 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRR%element%
 		
 		if(g_CurrSimulMode == "…") {
-			_st := kst[g_Romaji . "NK" . element]
+			s_st := kst[g_Romaji . "NK" . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%
-			_ch := kLabel[g_Romaji . "NK" . element]
-			GuiControl,,vkeyRK%element%,%_ch%
+			s_ch := kLabel[g_Romaji . "NK" . element]
+			GuiControl,,vkeyRK%element%,%s_ch%
 		} else {
-			_st := kst[g_CurrSimulMode . element]
+			s_st := kst[g_CurrSimulMode . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%
-			_ch := kLabel[g_CurrSimulMode . element]
-			GuiControl,,vkeyRK%element%,%_ch%
+			s_ch := kLabel[g_CurrSimulMode . element]
+			GuiControl,,vkeyRK%element%,%s_ch%
 		}
 
-		_st := kst[g_Romaji . "NN" . element]
+		s_st := kst[g_Romaji . "NN" . element]
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRN%element%
-		_ch := kLabel[g_Romaji . "NN" . element]
-		GuiControl,,vkeyRN%element%,%_ch%
+		s_ch := kLabel[g_Romaji . "NN" . element]
+		GuiControl,,vkeyRN%element%,%s_ch%
 		
 
-		_ch := kLabel[g_Romaji . "LN" . element]
-		_st := kst[g_Romaji . "LN" . element]
-		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "1N" . element]
-			_st := kst[g_Romaji . "1N" . element]
+		s_ch := kLabel[g_Romaji . "LN" . element]
+		s_st := kst[g_Romaji . "LN" . element]
+		if(s_ch == "") {
+			s_ch := kLabel[g_Romaji . "1N" . element]
+			s_st := kst[g_Romaji . "1N" . element]
 		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRL%element%
-		GuiControl,,vkeyRL%element%,%_ch%
+		GuiControl,,vkeyRL%element%,%s_ch%
 
-		_ch := kLabel[g_Romaji . "RN" . element]
-		_st := kst[g_Romaji . "RN" . element]
-		if(_ch == "") {
-			_ch := kLabel[g_Romaji . "2N" . element]
-			_st := kst[g_Romaji . "2N" . element]
+		s_ch := kLabel[g_Romaji . "RN" . element]
+		s_st := kst[g_Romaji . "RN" . element]
+		if(s_ch == "") {
+			s_ch := kLabel[g_Romaji . "2N" . element]
+			s_st := kst[g_Romaji . "2N" . element]
 		}
 		Gosub, SetFontColor
 		GuiControl,Font,vkeyRR%element%
-		GuiControl,,vkeyRR%element%,%_ch%
+		GuiControl,,vkeyRR%element%,%s_ch%
 
 		GuiControl,+Redraw,vkeyDN%element%
 		GuiControl,+Redraw,vkeyRK%element%
@@ -699,14 +688,14 @@ G2RefreshLayout:
 
 
 ;-----------------------------------------------------------------------
-; 機能：フォント色の設定
+; 機能：フォント色の設定（割込）
 ;-----------------------------------------------------------------------
 SetFontColor:
-	if(_st=="e") {			; 
+	if(s_st=="e") {			; 
 		Gui, Font,s10 cC00000 Norm,Meiryo UI
-	} else if(_st=="Q") {	; 引用符
+	} else if(s_st=="Q") {	; 引用符
 		Gui, Font,s10 c0000FF Norm,Meiryo UI
-	} else if(_st=="V") {	; 仮想キーコード
+	} else if(s_st=="V") {	; 仮想キーコード
 		Gui, Font,s10 c008000 Norm,Meiryo UI
 	} else {
 		Gui, Font,s10 c000000 Norm,Meiryo UI
@@ -717,70 +706,52 @@ SetFontColor:
 ; 機能：キーのオンオフ表示の更新
 ;-----------------------------------------------------------------------
 ReadKeyboardState:
-	;VarSetCapacity(stKtbl, cbSize:=512, 0)
-	;NumPut(cbSize, stKtbl,  0, "UChar")   ;	
-	;stCurr := DllCall("GetKeyboardState", "UPtr", &stKtbl)
-	;if(stCurr==0) 
-	;{
-	;	return
-	;}
 	loop, 14
 	{
-		_layoutPos := "E" . _rowhash[A_Index]
-		_vkey := vkeyStrHash[_layoutPos]
+		s_layoutPos := "E" . _rowhash[A_Index]
+		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		_layoutPos := "D" . _rowhash[A_Index]
-		_vkey := vkeyStrHash[_layoutPos]
+		s_layoutPos := "D" . _rowhash[A_Index]
+		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		_layoutPos := "C" . _rowhash[A_Index]
-		_vkey := vkeyStrHash[_layoutPos]
+		s_layoutPos := "C" . _rowhash[A_Index]
+		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 11
 	{
-		_layoutPos := "B" . _rowhash[A_Index]
-		_vkey := vkeyStrHash[_layoutPos]
+		s_layoutPos := "B" . _rowhash[A_Index]
+		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 4
 	{
-		_layoutPos := "A" . _rowhash[A_Index]
-		_vkey := vkeyHash[_layoutPos]
+		s_layoutPos := "A" . _rowhash[A_Index]
+		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	return
 
+;-----------------------------------------------------------------------
+; 機能：キー状態を反映
+;-----------------------------------------------------------------------
 SetKeyGui2:
-	;_keyState := DllCall("GetAsyncKeyState", "UInt", _vkey)
-	_keyState := GetKeyState(_vkey,"P")
-	GuiControlGet,_val,,vkeyDN%_layoutPos%
-	if( _keyState!= 0 && _val != "□")
+	s_keyState := GetKeyState(s_vkey,"P")
+	GuiControlGet,s_val,,vkeyDN%s_layoutPos%
+	if(s_keyState!= 0 && s_val != "□")
 	{
-		GuiControl,2:,vkeyDN%_layoutPos%,□
+		GuiControl,2:,vkeyDN%s_layoutPos%,□
 	}
 	else
-	if( _keyState == 0	&&  _val != "　")
+	if(s_keyState == 0	&&  s_val != "　")
 	{
-		GuiControl,2:,vkeyDN%_layoutPos%,　
-	}
-	return
-
-SetKeyGui2A:
-	GuiControlGet,_val,,vkeyDN%_layoutPos%
-	if( keyState[_layoutPos]!= 0 && _val != "□")
-	{
-		GuiControl,2:,vkeyDN%_layoutPos%,□
-	}
-	else
-	if( keyState[_layoutPos]== 0 && _val != "　")
-	{
-		GuiControl,2:,vkeyDN%_layoutPos%,　
+		GuiControl,2:,vkeyDN%s_layoutPos%,　
 	}
 	return
 
@@ -970,8 +941,7 @@ gFileSelect:
 		SetTimer,Interrupt10,off
 		SetHook("off")
 		SetHookHenkan("off")
-		SetHookSpace("off")
-		
+
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
 		if(_error=="")

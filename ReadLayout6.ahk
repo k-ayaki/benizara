@@ -20,13 +20,6 @@ ReadLayout:
 	g_colPushedHash["B"] := "2"
 	g_colPushedHash["A"] := "1"
 
-	_colkeyshash := Object()
-	_colkeyshash["E"] := 13
-	_colkeyshash["D"] := 12
-	_colkeyshash["C"] := 12
-	_colkeyshash["B"] := 11
-	_colkeyshash["A"] := 4
-	
 	_rowhash := Object()
 	_rowhash[0] := "00"
 	_rowhash[1] := "01"
@@ -83,6 +76,12 @@ InitLayout2:
 	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
 
 	g_Oya2Layout := Object()
+	g_Oya2Layout["L"] = "A01"
+	g_Oya2Layout["R"] = "A03"
+
+	g_Oya2kName := Object()
+	g_Oya2kName["L"] = "無変換"
+	g_Oya2kName["R"] = "変換"
 
 	roma3hash := MakeRoma3Hash()
 	layout2Hash := MakeLayout2Hash()
@@ -91,7 +90,12 @@ InitLayout2:
 	vkeyStrHash := MakeVkeyStrHash()
 	layoutPosHash := MakeLayoutPosHash()
 	fkeyPosHash := MakefkeyPosHash()
+	fkeyPosOrg := MakefkeyPosHash()
 	fkeyCodeHash := MakefkeyCodeHash()
+	fkeyCodeOrg := MakefkeyCodeHash()
+	fkeyVkeyHash := MakefkeyVkeyHash()
+	fkeyVkeyOrg := MakefkeyVkeyHash()
+	
 	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
@@ -410,17 +414,23 @@ ReadLayoutFile:
 				org := StrSplit(_line2,",")
 				if(CountObject(org) == 2)
 				{
-					_layoutPos := fkeyPosHash[org[1]]
-					_code := fkeyCodeHash[org[2]]
-					if(_layoutPos != "" && _code != "") {
-						keyNameHash[_layoutPos] := _code
-						kLabel[_layoutPos] := CodeNameHash[_code]
-						keyAttribute3["AN" . _layoutPos] := "X"
-						keyAttribute3["AK" . _layoutPos] := "X"
-						keyAttribute3["RN" . _layoutPos] := "X"
-						keyAttribute3["RK" . _layoutPos] := "X"
+					s_layoutPosDst := fkeyPosHash[org[1]]
+					s_layoutPosSrc := fkeyPosHash[org[2]]
+					s_code := fkeyCodeOrg[org[2]]
+					;s_vkey := fkeyVkeyHash[org[2]]
+					if(s_layoutPosDst!="" && s_layoutPosSrc!="" && s_code!="") {
+						fkeyPosHash[org[1]] := fkeyPosOrg[org[2]]
+						fkeyCodeHash[org[1]] := fkeyCodeOrg[org[2]]
+						fkeyVkeyHash[org[1]] := fkeyVkeyOrg[org[2]]
+						
+						keyNameHash[s_layoutPosDst] := s_code
+						kLabel[s_layoutPosDst] := org[2]
+						keyAttribute3["AN" . s_layoutPosDst] := "X"
+						keyAttribute3["AK" . s_layoutPosDst] := "X"
+						keyAttribute3["RN" . s_layoutPosDst] := "X"
+						keyAttribute3["RK" . s_layoutPosDst] := "X"
 						if(org[2] == "Space&Shift") {
-							g_sansPos := _layoutPos
+							g_sansPos := s_layoutPosDst
 						}
 					}
 				}
@@ -816,72 +826,53 @@ SetE2AKeyTables:
 ;	親指キー設定をキー属性配列に反映させる
 ;----------------------------------------------------------------------
 RemapOyaKey(_Romaji) {
-	global keyAttribute3, g_Oya2Layout, g_OyaKey, g_KeySingle
+	global keyAttribute3, g_Oya2Layout, g_OyaKey, g_KeySingle, ShiftMode
+	global g_Oya2kName, fkeyPosHash
 
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["無変換"]] := ""
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["Space"]] := "X"
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["変換"]] := ""
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["無変換"]] := ""
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["Space"]] := "X"
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["変換"]] := ""
+	if(ShiftMode[_Romaji] != "親指シフト") {
+		g_Oya2Layout["L"] := ""
+		g_Oya2Layout["R"] := ""
+		g_Oya2kName["L"] := ""
+		g_Oya2kName["R"] := ""
+		return
+	}
 	if(g_OyaKey == "無変換－空白") {
-		keyAttribute3[_Romaji . "NA01"] := "L"
-		keyAttribute3[_Romaji . "NA02"] := "R"
-		keyAttribute3[_Romaji . "NA03"] := "X"
-		keyAttribute3[_Romaji . "KA01"] := "L"
-		keyAttribute3[_Romaji . "KA02"] := "R"
-		keyAttribute3[_Romaji . "KA03"] := "X"		
-		g_Oya2Layout["L"] := "A01"
-		g_Oya2Layout["R"] := "A02"
+		g_Oya2kName["L"] := "無変換"
+		g_Oya2kName["R"] := "Space"
 	}
 	else if(g_OyaKey == "空白－変換") {
-		keyAttribute3[_Romaji . "NA01"] := "X"
-		keyAttribute3[_Romaji . "NA02"] := "L"
-		keyAttribute3[_Romaji . "NA03"] := "R"
-		keyAttribute3[_Romaji . "KA01"] := "X"
-		keyAttribute3[_Romaji . "KA02"] := "L"
-		keyAttribute3[_Romaji . "KA03"] := "R"
-		g_Oya2Layout["L"] := "A02"
-		g_Oya2Layout["R"] := "A03"
+		g_Oya2kName["L"] := "Space"
+		g_Oya2kName["R"] := "変換"
 	} else {
-		keyAttribute3[_Romaji . "NA01"] := "L"
-		keyAttribute3[_Romaji . "NA02"] := "X"
-		keyAttribute3[_Romaji . "NA03"] := "R"
-		keyAttribute3[_Romaji . "KA01"] := "L"
-		keyAttribute3[_Romaji . "KA02"] := "X"
-		keyAttribute3[_Romaji . "KA03"] := "R"
-
-		g_Oya2Layout["L"] := "A01"
-		g_Oya2Layout["R"] := "A03"
+		g_Oya2kName["L"] := "無変換"
+		g_Oya2kName["R"] := "変換"
 	}
+	g_Oya2Layout["L"] := fkeyPosHash[g_Oya2kName["L"]]
+	g_Oya2Layout["R"] := fkeyPosHash[g_Oya2kName["R"]]
+	keyAttribute3[_Romaji . "N" . g_Oya2Layout["L"]] := "L"
+	keyAttribute3[_Romaji . "K" . g_Oya2Layout["L"]] := "L"
+	keyAttribute3[_Romaji . "N" . g_Oya2Layout["R"]] := "R"
+	keyAttribute3[_Romaji . "K" . g_Oya2Layout["R"]] := "R"
 	if(_Romaji == "R") {
 		; ローマ字モードにて親指シフトモード、かつキー単独打鍵が無効ならば、
 		; 英数モードでも変換キーと無変換キーを無効化
+		keyAttribute3["AN" . fkeyPosHash["無変換"]] := ""
+		keyAttribute3["AN" . fkeyPosHash["Space"]] := "X"
+		keyAttribute3["AN" . fkeyPosHash["変換"]] := ""
+		keyAttribute3["AK" . fkeyPosHash["無変換"]] := ""
+		keyAttribute3["AK" . fkeyPosHash["Space"]] := "X"
+		keyAttribute3["AK" . fkeyPosHash["変換"]] := ""
 		if(g_KeySingle == "無効") {
-			if(g_OyaKey == "無変換－空白") {
-				keyAttribute3["ANA01"] := "L"
-				keyAttribute3["ANA02"] := "R"
-				keyAttribute3["ANA03"] := "X"
-				keyAttribute3["AKA01"] := "L"
-				keyAttribute3["AKA02"] := "R"
-				keyAttribute3["AKA03"] := "X"
-			}
-			else if(g_OyaKey == "空白－変換") {
-				keyAttribute3["ANA01"] := "X"
-				keyAttribute3["ANA02"] := "L"
-				keyAttribute3["ANA03"] := "R"
-				keyAttribute3["AKA01"] := "X"
-				keyAttribute3["AKA02"] := "L"
-				keyAttribute3["AKA03"] := "R"
-			} else {
-				keyAttribute3["ANA01"] := "L"
-				keyAttribute3["ANA02"] := "X"
-				keyAttribute3["ANA03"] := "R"
-				keyAttribute3["AKA01"] := "L"
-				keyAttribute3["AKA02"] := "X"
-				keyAttribute3["AKA03"] := "R"
-			}
-		} else {
-			keyAttribute3["ANA01"] := "X"
-			keyAttribute3["ANA02"] := "X"
-			keyAttribute3["ANA03"] := "X"
-			keyAttribute3["AKA01"] := "X"
-			keyAttribute3["AKA02"] := "X"
-			keyAttribute3["AKA03"] := "X"
+			keyAttribute3["AN" . g_Oya2Layout["L"]] := "L"
+			keyAttribute3["AK" . g_Oya2Layout["L"]] := "L"
+			keyAttribute3["AN" . g_Oya2Layout["R"]] := "R"
+			keyAttribute3["AK" . g_Oya2Layout["R"]] := "R"
 		}
 	}
 	return
@@ -893,12 +884,12 @@ InitOyakey(_Romaji)
 {
 	global keyAttribute3
 
-	keyAttribute3[_Romaji . "NA01"] := "X"
+	keyAttribute3[_Romaji . "NA01"] := ""
 	keyAttribute3[_Romaji . "NA02"] := "X"
-	keyAttribute3[_Romaji . "NA03"] := "X"
-	keyAttribute3[_Romaji . "KA01"] := "X"
+	keyAttribute3[_Romaji . "NA03"] := ""
+	keyAttribute3[_Romaji . "KA01"] := ""
 	keyAttribute3[_Romaji . "KA02"] := "X"
-	keyAttribute3[_Romaji . "KA03"] := "X"
+	keyAttribute3[_Romaji . "KA03"] := ""
 }
 ;----------------------------------------------------------------------
 ;	スペース＆シフトの設定
@@ -1579,7 +1570,7 @@ MakeGuiLayoutHash() {
 MakeZ2hHash() {
 	hash := Object()
 	hash["後"] := "BS"	;"Backspace"
-	hash["逃"] := "Esc"
+	hash["逃"] := "Esc"	;Escape
 	hash["入"] := "Enter"
 	hash["空"] := "Space"
 	hash["消"] := "Delete"
@@ -1602,8 +1593,8 @@ MakeZ2hHash() {
 	hash["半"] := ""
 	hash["拗"] := ""
 	hash["修"] := ""
-	hash[chr(65509)] := "\"
-	hash[chr(8220)]  := """"
+	hash[chr(65509)] := "\"up
+	hash[chr(8220)]  := """Ctrlf"
 	hash[chr(8221)]  := """"	; 二重引用符
 	hash[chr(8217)]  := "'"		; 一重引用符
 	hash[chr(8216)]  := "``"
@@ -2609,62 +2600,62 @@ MakeKanaHash()
 ;----------------------------------------------------------------------
 MakeKeyAttribute3Hash() {
 	keyAttribute3 := Object()
-	keyAttribute3["ANF00"] := ""	;Esc
-	keyAttribute3["AKF00"] := ""
-	keyAttribute3["RNF00"] := ""
-	keyAttribute3["RKF00"] := ""
-	keyAttribute3["ANF01"] := ""
-	keyAttribute3["AKF01"] := ""
-	keyAttribute3["RNF01"] := ""
-	keyAttribute3["RKF01"] := ""
-	keyAttribute3["ANF02"] := ""
-	keyAttribute3["AKF02"] := ""
-	keyAttribute3["RNF02"] := ""
-	keyAttribute3["RKF02"] := ""
-	keyAttribute3["ANF03"] := ""
-	keyAttribute3["AKF03"] := ""
-	keyAttribute3["RNF03"] := ""
-	keyAttribute3["RKF03"] := ""
-	keyAttribute3["ANF04"] := ""
-	keyAttribute3["AKF04"] := ""
-	keyAttribute3["RNF04"] := ""
-	keyAttribute3["RKF04"] := ""
-	keyAttribute3["ANF05"] := ""
-	keyAttribute3["AKF05"] := ""
-	keyAttribute3["RNF05"] := ""
-	keyAttribute3["RKF05"] := ""
-	keyAttribute3["ANF06"] := ""
-	keyAttribute3["AKF06"] := ""
-	keyAttribute3["RNF06"] := ""
-	keyAttribute3["RKF06"] := ""
-	keyAttribute3["ANF07"] := ""
-	keyAttribute3["AKF07"] := ""
-	keyAttribute3["RNF07"] := ""
-	keyAttribute3["RKF07"] := ""
-	keyAttribute3["ANF08"] := ""
-	keyAttribute3["AKF08"] := ""
-	keyAttribute3["RNF08"] := ""
-	keyAttribute3["RKF08"] := ""
-	keyAttribute3["ANF09"] := ""
-	keyAttribute3["AKF09"] := ""
-	keyAttribute3["RNF09"] := ""
-	keyAttribute3["RKF09"] := ""
-	keyAttribute3["ANF10"] := ""
-	keyAttribute3["AKF10"] := ""
-	keyAttribute3["RNF10"] := ""
-	keyAttribute3["RKF10"] := ""
-	keyAttribute3["ANF11"] := ""
-	keyAttribute3["AKF11"] := ""
-	keyAttribute3["RNF11"] := ""
-	keyAttribute3["RKF11"] := ""
-	keyAttribute3["ANF12"] := ""
-	keyAttribute3["AKF12"] := ""
-	keyAttribute3["RNF12"] := ""
+	keyAttribute3["ANF00"] := "X"	;Esc
+	keyAttribute3["AKF00"] := "X"
+	keyAttribute3["RNF00"] := "X"
+	keyAttribute3["RKF00"] := "X"
+	keyAttribute3["ANF01"] := "X"
+	keyAttribute3["AKF01"] := "X"
+	keyAttribute3["RNF01"] := "X"
+	keyAttribute3["RKF01"] := "X"
+	keyAttribute3["ANF02"] := "X"
+	keyAttribute3["AKF02"] := "X"
+	keyAttribute3["RNF02"] := "X"
+	keyAttribute3["RKF02"] := "X"
+	keyAttribute3["ANF03"] := "X"
+	keyAttribute3["AKF03"] := "X"
+	keyAttribute3["RNF03"] := "X"
+	keyAttribute3["RKF03"] := "X"
+	keyAttribute3["ANF04"] := "X"
+	keyAttribute3["AKF04"] := "X"
+	keyAttribute3["RNF04"] := "X"
+	keyAttribute3["RKF04"] := "X"
+	keyAttribute3["ANF05"] := "X"
+	keyAttribute3["AKF05"] := "X"
+	keyAttribute3["RNF05"] := "X"
+	keyAttribute3["RKF05"] := "X"
+	keyAttribute3["ANF06"] := "X"
+	keyAttribute3["AKF06"] := "X"
+	keyAttribute3["RNF06"] := "X"
+	keyAttribute3["RKF06"] := "X"
+	keyAttribute3["ANF07"] := "X"
+	keyAttribute3["AKF07"] := "X"
+	keyAttribute3["RNF07"] := "X"
+	keyAttribute3["RKF07"] := "X"
+	keyAttribute3["ANF08"] := "X"
+	keyAttribute3["AKF08"] := "X"
+	keyAttribute3["RNF08"] := "X"
+	keyAttribute3["RKF08"] := "X"
+	keyAttribute3["ANF09"] := "X"
+	keyAttribute3["AKF09"] := "X"
+	keyAttribute3["RNF09"] := "X"
+	keyAttribute3["RKF09"] := "X"
+	keyAttribute3["ANF10"] := "X"
+	keyAttribute3["AKF10"] := "X"
+	keyAttribute3["RNF10"] := "X"
+	keyAttribute3["RKF10"] := "X"
+	keyAttribute3["ANF11"] := "X"
+	keyAttribute3["AKF11"] := "X"
+	keyAttribute3["RNF11"] := "X"
+	keyAttribute3["RKF11"] := "X"
+	keyAttribute3["ANF12"] := "X"
+	keyAttribute3["AKF12"] := "X"
+	keyAttribute3["RNF12"] := "X"
 	
 	keyAttribute3["ANE00"] := "X"	; 半角/全角
-	keyAttribute3["AKE00"] := "X"	; 半角/全角
-	keyAttribute3["RNE00"] := "X"	; 半角/全角
-	keyAttribute3["RKE00"] := "X"	; 半角/全角
+	keyAttribute3["AKE00"] := "X"
+	keyAttribute3["RNE00"] := "X"
+	keyAttribute3["RKE00"] := "X"
 	keyAttribute3["ANE01"] := "M"
 	keyAttribute3["AKE01"] := "M"
 	keyAttribute3["RNE01"] := "M"
@@ -2825,6 +2816,7 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKC13"] := "X"	; Enter
 	keyAttribute3["RNC13"] := "X"	; Enter
 	keyAttribute3["RKC13"] := "X"	; Enter
+	
 	keyAttribute3["ANB01"] := "M"
 	keyAttribute3["AKB01"] := "M"
 	keyAttribute3["RNB01"] := "M"
@@ -2870,30 +2862,30 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["RNB11"] := "M"
 	keyAttribute3["RKB11"] := "M"
 
-	keyAttribute3["ANA00"] := "X"	; LCtrl
-	keyAttribute3["AKA00"] := "X"
-	keyAttribute3["RNA00"] := "X"
-	keyAttribute3["RKA00"] := "X"
-	keyAttribute3["ANA01"] := "X"
-	keyAttribute3["AKA01"] := "X"
-	keyAttribute3["RNA01"] := "X"
-	keyAttribute3["RKA01"] := "X"
+	keyAttribute3["ANA00"] := ""	; LCtrl
+	keyAttribute3["AKA00"] := ""
+	keyAttribute3["RNA00"] := ""
+	keyAttribute3["RKA00"] := ""
+	keyAttribute3["ANA01"] := ""
+	keyAttribute3["AKA01"] := ""
+	keyAttribute3["RNA01"] := ""
+	keyAttribute3["RKA01"] := ""
 	keyAttribute3["ANA02"] := "X"	; Space
 	keyAttribute3["AKA02"] := "X"
 	keyAttribute3["RNA02"] := "X"
 	keyAttribute3["RKA02"] := "X"
-	keyAttribute3["ANA03"] := "X"
-	keyAttribute3["AKA03"] := "X"
-	keyAttribute3["RNA03"] := "X"
-	keyAttribute3["RKA03"] := "X"
+	keyAttribute3["ANA03"] := ""
+	keyAttribute3["AKA03"] := ""
+	keyAttribute3["RNA03"] := ""
+	keyAttribute3["RKA03"] := ""
 	keyAttribute3["ANA04"] := "X"	; カタカナひらがな
 	keyAttribute3["AKA04"] := "X"
 	keyAttribute3["RNA04"] := "X"
 	keyAttribute3["RKA04"] := "X"
-	keyAttribute3["ANA05"] := "X"	; Rctrl
-	keyAttribute3["AKA05"] := "X"
-	keyAttribute3["RNA05"] := "X"
-	keyAttribute3["RKA05"] := "X"
+	keyAttribute3["ANA05"] := ""	; Rctrl
+	keyAttribute3["AKA05"] := ""
+	keyAttribute3["RNA05"] := ""
+	keyAttribute3["RKA05"] := ""
 	keyAttribute3["ANA06"] := ""	;左Shift
 	keyAttribute3["AKA06"] := ""
 	keyAttribute3["RNA06"] := ""
@@ -2930,6 +2922,7 @@ MakeKeyAttribute3Hash() {
 ;----------------------------------------------------------------------
 MakeKeyState() {
 	keyState := Object()
+	keyState["F00"] := 0
 	keyState["F01"] := 0
 	keyState["F02"] := 0
 	keyState["F03"] := 0
@@ -2995,12 +2988,20 @@ MakeKeyState() {
 	keyState["B09"] := 0
 	keyState["B10"] := 0
 	keyState["B11"] := 0
+	
 	keyState["A00"] := 0	;LCtrl
 	keyState["A01"] := 0
-	keyState["A02"] := 0	; Space
+	keyState["A02"] := 0	;Space
 	keyState["A03"] := 0
-	keyState["A04"] := 0	; カタカナひらがな
-	keyState["A05"] := 0	; RCtrl
+	keyState["A04"] := 0	;カタカナひらがな
+	keyState["A05"] := 0	;RCtrl
+	keyState["A06"] := 0	;左Shift
+	keyState["A07"] := 0	;左Win
+	keyState["A08"] := 0	;左Alt
+	keyState["A09"] := 0	;右Alt
+	keyState["A10"] := 0	;右Win
+	keyState["A11"] := 0	;Applications
+	keyState["A12"] := 0	;右Shift
 	return keyState
 }
 
@@ -3010,6 +3011,7 @@ MakeKeyState() {
 MakeVkeyHash()
 {
 	hash := Object()
+	hash["F00"] := 0x1B		;F1
 	hash["F01"] := 0x70		;F1
 	hash["F02"] := 0x71		;F2
 	hash["F03"] := 0x72		;F3
@@ -3085,6 +3087,13 @@ MakeVkeyHash()
 	hash["A03"] := 0x1C		;変換
 	hash["A04"] := 0xF2		;カタカナ/ひらがな
 	hash["A05"] := 0xA3		;RCtrl
+	hash["A06"] := 0xA0		;左Shift
+	hash["A07"] := 0x5B		;左Win
+	hash["A08"] := 0xA4		;左Alt
+	hash["A09"] := 0xA5		;右Alt
+	hash["A10"] := 0x5C		;右Win
+	hash["A11"] := 0x5D		;Applications
+	hash["A12"] := 0xA1		;右Shift
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -3093,6 +3102,7 @@ MakeVkeyHash()
 MakeVkeyStrHash()
 {
 	hash := Object()
+	hash["F00"] := "vk1B"	;Esc
 	hash["F01"] := "vk70"	;F1
 	hash["F02"] := "vk71"	;F2
 	hash["F03"] := "vk72"	;F3
@@ -3168,6 +3178,13 @@ MakeVkeyStrHash()
 	hash["A03"] := "vk1C"	;変換
 	hash["A04"] := "vkF2"	;カタカナ/ひらがな
 	hash["A05"] := "vkA3"	;RCtrl
+	hash["A06"] := "vkA0"	;左Shift
+	hash["A07"] := "vk5B"	;左Win
+	hash["A08"] := "vkA4"	;左Alt
+	hash["A09"] := "vkA5"	;右Alt
+	hash["A10"] := "vk5C"	;右Win
+	hash["A11"] := "vk5D"	;Applications
+	hash["A12"] := "vkA1"	;右Shift
 	return hash
 }
 
@@ -3401,6 +3418,7 @@ MakeCode2ContPos()
 MakekeyNameHash()
 {
 	hash := Object()
+	hash["F00"] := "sc001"		;Esc
 	hash["F01"] := "sc03B"
 	hash["F02"] := "sc03C"
 	hash["F03"] := "sc03D"
@@ -3470,12 +3488,19 @@ MakekeyNameHash()
 	hash["B10"] := "/"
 	hash["B11"] := "\"
 	
-	hash["A00"] := "LCtrl"
+	hash["A00"] := "sc01D"
 	hash["A01"] := "sc07B"	;無変換
 	hash["A02"] := "sc039"	;スペース
 	hash["A03"] := "sc079"	;変換
 	hash["A04"] := "sc070"	;カタカナ/ひらがな
-	hash["A05"] := "RCtrl"
+	hash["A05"] := "sc11D"
+	hash["A06"] := "sc02A"	;左Shift
+	hash["A07"] := "sc15B"	;左Win
+	hash["A08"] := "sc038"	;左Alt
+	hash["A09"] := "sc138"	;右Alt
+	hash["A10"] := "sc15C"	;右Win
+	hash["A11"] := "sc15D"	;Applications
+	hash["A12"] := "sc136"	;右Shift
 	return hash
 }
 
@@ -3497,6 +3522,7 @@ MakeKeyLabelHash()
 MakeLayoutPosHash()
 {
 	hash := Object()
+	hash["*sc001"]    := "F00"	;Esc
 	hash["*sc03B"]    := "F01"	;ファンクションキー
 	hash["*sc03C"]    := "F02"
 	hash["*sc03D"]    := "F03"
@@ -3566,13 +3592,22 @@ MakeLayoutPosHash()
 	hash["*sc035"]    := "B10"
 	hash["*sc073"]    := "B11"
 
-	hash["LCtrl"]     := "A00"
+	hash["*sc01D"]    := "A00"
 	hash["*sc07B"]    := "A01"
 	hash["*sc039"]    := "A02"
 	hash["*sc079"]    := "A03"
 	hash["*sc070"]    := "A04"	;カタカナ/ひらがな
-	hash["RCtrl"]     := "A05"
+	hash["*sc11D"]    := "A05"
 
+	hash["*sc02A"]    := "A06"	;左Shift
+	hash["*sc15B"]    := "A07"	;左Win
+	hash["*sc038"]    := "A08"	;左Alt
+	hash["*sc138"]    := "A09"	;右Alt
+	hash["*sc15C"]    := "A10"	;右Win
+	hash["*sc15D"]    := "A11"	;Applications
+	hash["*sc136"]    := "A12"	;右Shift
+
+	hash["*sc001 up"] := "F00"	;Esc
 	hash["*sc03B up"] := "F01"	;ファンクションキー
 	hash["*sc03C up"] := "F02"
 	hash["*sc03D up"] := "F03"
@@ -3642,12 +3677,20 @@ MakeLayoutPosHash()
 	hash["*sc035 up"] := "B10"
 	hash["*sc073 up"] := "B11"
 
-	hash["LCtrl up"]  := "A00"
+	hash["*sc01D up"] := "A00"
 	hash["*sc07B up"] := "A01"
 	hash["*sc039 up"] := "A02"
 	hash["*sc079 up"] := "A03"
 	hash["*sc070 up"] := "A04"
-	hash["RCtrl up"]  := "A05"
+	hash["*sc11D up"] := "A05"
+
+	hash["*sc02A up"] := "A06"	;左Shift
+	hash["*sc15B up"] := "A07"	;左Win
+	hash["*sc038 up"] := "A08"	;左Alt
+	hash["*sc138 up"] := "A09"	;右Alt
+	hash["*sc15C up"] := "A10"	;右Win
+	hash["*sc15D up"] := "A11"	;Applications
+	hash["*sc136 up"] := "A12"	;右Shift
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -3656,6 +3699,7 @@ MakeLayoutPosHash()
 MakeScanCodeHash()
 {
 	hash := Object()
+	hash["F00"] := "sc001"	;Esc
 	hash["F01"] := "sc03B"
 	hash["F02"] := "sc03C"
 	hash["F03"] := "sc03D"
@@ -3725,12 +3769,20 @@ MakeScanCodeHash()
 	hash["B10"] := "sc035"
 	hash["B11"] := "sc073"
 
-	hash["A00"] := "sc01D"
+	hash["A00"] := "sc01D"	;LCtrl
 	hash["A01"] := "sc07B"
 	hash["A02"] := "sc039"
 	hash["A03"] := "sc079"
 	hash["A04"] := "sc070"	;カタカナ/ひらがな
-	hash["A05"] := "sc11D"
+	hash["A05"] := "sc11D"	;RCtrl
+	
+	hash["A06"] := "sc02A"	;左Shift
+	hash["A07"] := "sc15B"	;左Win
+	hash["A08"] := "sc038"	;左Alt
+	hash["A09"] := "sc138"	;右Alt
+	hash["A10"] := "sc15C"	;右Win
+	hash["A11"] := "sc15D"	;Applications
+	hash["A12"] := "sc136"	;右Shift
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -3739,7 +3791,8 @@ MakeScanCodeHash()
 MakefkeyPosHash()
 {
 	hash := Object()
-	hash["半角/全角"] := "E00"		;半角／全角
+	hash["Escape"]    := "F00"
+	hash["半角/全角"] := "E00"
 	hash["Backspace"] := "E14"
 	hash["sc00E"]     := "E14"
 
@@ -3749,11 +3802,12 @@ MakefkeyPosHash()
 	hash["sc01C"]     := "C13"
 
 	hash["左Ctrl"] := "A00"
-	hash["無変換"] := "A01"	;無変換
+	hash["無変換"] := "A01"
 	hash["Space"]  := "A02"	;スペース
+	hash["Space&Shift"]  := "A02"	;スペース
 	hash["sc039"]  := "A02"	;スペース
-	hash["変換"]   := "A03"	;変換
-	hash["カタカナ/ひらがな"] := "A04"	;カタカナ/ひらがな
+	hash["変換"]   := "A03"
+	hash["カタカナ/ひらがな"] := "A04"
 	hash["右Ctrl"] := "A05"
 	
 	hash["左Shift"] := "A06"
@@ -3764,7 +3818,6 @@ MakefkeyPosHash()
 	hash["Applications"] := "A11"
 	hash["右Shift"] := "A12"
 	
-	hash["Esc"] := "F00"
 	hash["F1"]  := "F01"
 	hash["F2"]  := "F02"
 	hash["F3"]  := "F03"
@@ -3793,24 +3846,34 @@ MakefkeyPosHash()
 }
 
 ;----------------------------------------------------------------------
-;	機能キー名とコードの変換
+;	機能キー名とスキャンコードの変換
 ;----------------------------------------------------------------------
 MakefkeyCodeHash()
 {
 	hash := Object()
 	hash["半角/全角"] := "sc029"	;半角／全角
 	hash["Backspace"] := "sc00E"
+	hash["Escape"]    := "sc001"
 
 	hash["Tab"]       := "sc00F"
 	hash["Enter"]     := "sc039"
 
-	hash["左Ctrl"]    := "LCtrl"
+	hash["左Ctrl"]    := "sc01D"
 	hash["無変換"]    := "sc07B"	;無変換
 	hash["Space"]     := "sc039"	;スペース
 	hash["変換"]      := "sc079"	;変換
 	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
-	hash["右Ctrl"]    := "RCtrl"
+	hash["右Ctrl"]    := "sc11D"
 	hash["Space&Shift"] := "sc039"	;スペース＆シフト
+
+	hash["左Shift"] := "sc02A"
+	hash["左Win"]   := "sc15B"
+	hash["左Alt"]   := "sc038"
+	hash["右Alt"]   := "sc138"
+	hash["右Win"]   := "sc15C"
+	hash["Applications"] := "sc15D"
+	hash["右Shift"] := "sc136"
+	
 	hash["F1"]  := "sc03B"
 	hash["F2"]  := "sc03C"
 	hash["F3"]  := "sc03D"
@@ -3823,6 +3886,49 @@ MakefkeyCodeHash()
 	hash["F10"] := "sc044"
 	hash["F11"] := "sc057"
 	hash["F12"] := "sc058"
+	return hash
+}
+;----------------------------------------------------------------------
+;	機能キー名と仮想キーコードの変換
+;----------------------------------------------------------------------
+MakefkeyVkeyHash()
+{
+	hash := Object()
+	hash["半角/全角"] := "vkF3"	;半角／全角
+	hash["Backspace"] := "vk08"
+	hash["Escape"]    := "vk1B"
+
+	hash["Tab"]       := "vk09"
+	hash["Enter"]     := "vk0D"
+
+	hash["左Ctrl"]    := "vkA2"
+	hash["無変換"]    := "vk1D"	;無変換
+	hash["Space"]     := "vk20"	;スペース
+	hash["変換"]      := "vk1C"	;変換
+	hash["カタカナ/ひらがな"] := "vkF2"	;カタカナ/ひらがな
+	hash["右Ctrl"]    := "vkA3"
+	hash["Space&Shift"] := "vk20"	;スペース＆シフト
+
+	hash["左Shift"] := "vkA0"
+	hash["左Win"]   := "vk5B"
+	hash["左Alt"]   := "vkA4"
+	hash["右Alt"]   := "vkA5"
+	hash["右Win"]   := "vk5C"
+	hash["Applications"] := "vk5D"
+	hash["右Shift"] := "vkA1"
+	
+	hash["F1"]  := "vk70"
+	hash["F2"]  := "vk71"
+	hash["F3"]  := "vk72"
+	hash["F4"]  := "vk73"
+	hash["F5"]  := "vk74"
+	hash["F6"]  := "vk75"
+	hash["F7"]  := "vk76"
+	hash["F8"]  := "vk77"
+	hash["F9"]  := "vk78"
+	hash["F10"] := "vk79"
+	hash["F11"] := "vk7A"
+	hash["F12"] := "vk7B"
 	return hash
 }
 
@@ -3839,12 +3945,24 @@ MakeCodeNameHash()
 	hash["sc039"] := "Enter "
 
 	hash["LCtrl"] := "左Ctrl"
+	hash["sc01D"] := "左Ctrl"
 	hash["sc07B"] := "無変換"	;無変換
 	hash["Space"] := " 空白 "	;スペース
 	hash["sc039"] := " 空白 "	;スペース
 	hash["sc079"] := " 変換 "	;変換
 	hash["sc070"] := "カ/ひ"	;カタカナ/ひらがな
 	hash["RCtrl"] := "右Ctrl"
+	hash["sc11D"] := "右Ctrl"
+	
+	hash["sc02A"] := "左Shift"
+	hash["sc15B"] := "左Win"
+	hash["sc038"] := "左Alt"
+	hash["sc138"] := "右Alt"
+	hash["sc15C"] := "右Win"
+	hash["sc15D"] := "Applications"
+	hash["sc136"] := "右Shift"
+	
+	hash["sc001"] := "Escape"
 	hash["sc03B"] := "F1"
 	hash["sc03C"] := "F2"
 	hash["sc03D"] := "F3"
@@ -3867,6 +3985,7 @@ MakeCodeNameHash()
 MakeChr2vkeyHash()
 {
 	hash := Object()
+	hash["逃"]  := "vk1B"
 	hash["機1"] := "vk70"
 	hash["機2"] := "vk71"
 	hash["機3"] := "vk72"
@@ -3999,7 +4118,7 @@ MakeChr2vkeyHash()
 MakeCtrlKeyHash() {
 	hash := Object()
 	hash["後"] := "BS"	;"Backspace"
-	hash["逃"] := "Esc"
+	hash["逃"] := "Escape"
 	hash["入"] := "Enter"
 	hash["空"] := "Space"
 	hash["消"] := "Delete"
