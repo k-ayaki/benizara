@@ -939,8 +939,8 @@ gFileSelect:
 		GuiControl,, vFilePath, %vLayoutFile%
 
 		SetTimer,Interrupt10,off
-		SetHook("off")
-		SetHookHenkan("off")
+		SetHotkey("off")
+		SetHotkeyHenkan("off")
 
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile

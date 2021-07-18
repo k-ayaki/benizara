@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.717 .... 2021/7/12
+;	ver.0.1.4.718 .... 2021/7/16
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.717"
-	g_Date := "2021/7/12"
+	g_Ver := "ver.0.1.4.718"
+	g_Date := "2021/7/16"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -150,13 +150,12 @@
 	;	Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
 	;}
 	SetBatchLines, -1
-	SetHookInit()
+	SetHotkeyInit()
 	fPf := Pf_Init()
 	_currentTick := Pf_Count()	;A_TickCount
 	g_OyaTick["R"] := _currentTick
 	g_OyaTick["L"] := _currentTick
 	VarSetCapacity(lpKeyState,256,0)
-	g_int10ctr := 0
 
 	g_process := Object()	; 反対側の親指キー
 	g_process["yamabuki_r"] := 0
@@ -165,20 +164,21 @@
 	g_process["em1keypc"] := 0
 	g_process["姫踊子草2"] := 0
 	SetTimer,Interrupt10,10
+	SetTimer,Interrupt50,50
 
-	SetHook("off")
-	SetHookHenkan("off")
-	g_hookShift := "off"
-	SetHookFunction("off")
+	SetHotkey("off")
+	SetHotkeyHenkan("off")
+	SetHotkeyFunction("off")
 	return
 
 
 MenuExit:
 	SetTimer,Interrupt10,off
+	SetTimer,Interrupt50,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
-	SetHook("off")
-	SetHookHenkan("off")
-	SetHookFunction("off")
+	SetHotkey("off")
+	SetHotkeyHenkan("off")
+	SetHotkeyFunction("off")
 	exitapp
 
 ;-----------------------------------------------------------------------
@@ -1432,7 +1432,6 @@ keydownX:
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
-	;Gosub,ModeInitialize
 	SubSend(MnDown(kName))
 	keyState[g_layoutPos] := 1
 	g_LastKey["表層"] := ""
@@ -1451,7 +1450,6 @@ keydownS:
 	keyState[g_layoutPos] := 2
 
 	g_ModifierTick := keyTick[g_layoutPos]
-	;Gosub,ModeInitialize
 	if(g_sans == "K" && g_sansTick != INFINITE) {
 		SubSend(MnDown(kName) . MnUp(kName))
 	}
@@ -1468,8 +1466,16 @@ keydownS:
 ;----------------------------------------------------------------------
 ; 月配列等のプレフィックスシフトキー押下
 ;----------------------------------------------------------------------
+keydown0:
 keydown1:
 keydown2:
+keydown3:
+keydown4:
+keydown5:
+keydown6:
+keydown7:
+keydown8:
+keydown9:
 	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
@@ -1763,8 +1769,16 @@ keyupS:
 ;----------------------------------------------------------------------
 ; 月配列等のプレフィックスシフトキー押下終了
 ;----------------------------------------------------------------------
+keyup0:
 keyup1:
 keyup2:
+keyup3:
+keyup4:
+keyup5:
+keyup6:
+keyup7:
+keyup8:
+keyup9:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
@@ -1775,39 +1789,89 @@ keyup2:
 	sleep,-1
 	return
 
+;----------------------------------------------------------------------
+; 50[mSEC]ごとの割込処理
+;----------------------------------------------------------------------
+Interrupt50:
+	Process,Exist,yamabuki_r.exe
+	_pid := ErrorLevel
+	if(_pid!=0 && g_process["yamabuki_r"]==0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
+	}
+	g_process["yamabuki_r"] := _pid
+	Process,Exist,yamabuki.exe
+	_pid := ErrorLevel
+	if(_pid!=0 &&  g_process["yamabuki"]==0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
+	}
+	g_process["yamabuki"] := _pid
+	Process,Exist,DvorakJ.exe
+	_pid := ErrorLevel
+	if(_pid!=0 &&  g_process["DvorakJ"]==0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
+	}
+	g_process["DvorakJ"] := _pid
+	Process,Exist,em1keypc.exe
+	_pid := ErrorLevel
+	if(_pid!=0 &&  g_process["em1keypc"]==0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
+	}
+	g_process["em1keypc"] := _pid
+	Process,Exist,姫踊子草2.exe
+	_pid := ErrorLevel
+	if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
+	}
+	g_process["姫踊子草2"] := _pid
+	if(A_IsCompiled != 1)
+	{
+		vImeMode := IME_GET() & 32767
+		vImeConvMode := IME_GetConvMode()
+		szConverting := IME_GetConverting()
+		
+		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
+		g_debugout3 := g_Modifier
+		g_debugout2 := GetPushedKeys()
+		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
+		_mode := g_Romaji . g_Oya . g_Koyubi
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
+		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
+		Tooltip, %g_debugout%, 0, 0, 2 ; debug
+	}
+	sleep,-1
+	return
 
 ;----------------------------------------------------------------------
 ; 10[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
 Interrupt10:
 	critical
-	g_int10ctr := g_int10ctr + 1
 	Gosub,ScanModifier
 	Gosub,ScanPauseKey
 	if(g_Modifier!=0) 
 	{
 		Gosub,ModeInitialize
-		SetHook("off")
-		SetHookHenkan("on")
-		SetHookFunction("on")
+;		SetHotkey("off")
+;		SetHotkeyHenkan("on")
+;		SetHotkeyFunction("on")
 	} else
 	if(g_Pause==1) 
 	{
 		Gosub,ModeInitialize
-		SetHook("off")
-		SetHookHenkan("off")
-		SetHookFunction("off")
+		SetHotkey("off")
+		SetHotkeyHenkan("off")
+		SetHotkeyFunction("off")
 	} else {
 		Gosub,ChkIME
 
 		; 現在の配列面が定義されていればキーフック
 		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
-			SetHook("on")
+			SetHotkey("on")
 		} else {
-			SetHook("off")
+			SetHotkey("off")
 		}
-		SetHookHenkan("on")
-		SetHookFunction("on")
+		SetHotkeyHenkan("on")
+		SetHotkeyFunction("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1835,61 +1899,6 @@ Interrupt10:
 	Gosub,Polling
 	critical,off
 	sleep,-1
-	if(mod(g_int10ctr,10)==0) {
-		Process,Exist,yamabuki_r.exe
-		_pid := ErrorLevel
-		if(_pid!=0 && g_process["yamabuki_r"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
-		}
-		g_process["yamabuki_r"] := _pid
-	}
-	if(mod(g_int10ctr,10)==2) {
-		Process,Exist,yamabuki.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["yamabuki"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
-		}
-		g_process["yamabuki"] := _pid
-	}
-	if(mod(g_int10ctr,10)==4) {
-		Process,Exist,DvorakJ.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["DvorakJ"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
-		}
-		g_process["DvorakJ"] := _pid
-	}
-	if(mod(g_int10ctr,10)==6) {
-		Process,Exist,em1keypc.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["em1keypc"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
-		}
-		g_process["em1keypc"] := _pid
-	}
-	if(mod(g_int10ctr,10)==8) {
-		Process,Exist,姫踊子草2.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
-		}
-		g_process["姫踊子草2"] := _pid
-	}
-	if(A_IsCompiled != 1)
-	{
-		vImeMode := IME_GET() & 32767
-		vImeConvMode := IME_GetConvMode()
-		szConverting := IME_GetConverting()
-		
-		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
-		g_debugout3 := g_Modifier
-		g_debugout2 := GetPushedKeys()
-		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
-		_mode := g_Romaji . g_Oya . g_Koyubi
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
-		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
-		Tooltip, %g_debugout%, 0, 0, 2 ; debug
-	}
 	return
 	
 ;----------------------------------------------------------------------
@@ -1966,37 +1975,57 @@ Polling:
 ; 修飾キー状態読み取り
 ;----------------------------------------------------------------------
 ScanModifier:
-	if(g_hookShift == "off") {
-		stLShift := GetKeyStateWithLog4(stLShift,fkeyVkeyHash["左Shift"],_kDown)
-		stRShift := GetKeyStateWithLog4(stRShift,fkeyVkeyHash["右Shift"],_kDown)
-		if(stLShift!=0 || stRShift!=0)
-		{
-			g_Koyubi := "K"
-		} else {
-			g_Koyubi := "N"
-		}
+	GetKeyStateWithLog5("左Shift")
+	GetKeyStateWithLog5("右Shift")
+	if(keyState[fkeyPosHash["左Shift"]] !=0 || keyState[fkeyPosHash["右Shift"]]!=0)
+	{
+		g_Koyubi := "K"
+	} else {
+		g_Koyubi := "N"
 	}
-	g_Modifier := 0x00
-	stLCtrl := GetKeyStateWithLog4(stLCtrl,fkeyVkeyHash["左Ctrl"],_kDown)
-	g_Modifier := g_Modifier | stLCtrl
-	g_Modifier := g_Modifier >> 1			; 0x0200
-	stRCtrl := GetKeyStateWithLog4(stRCtrl,fkeyVkeyHash["右Ctrl"],_kDown)
-	g_Modifier := g_Modifier | stRCtrl
-	g_Modifier := g_Modifier >> 1			; 0x0400
-	stLAlt  := GetKeyStateWithLog4(stLAlt,fkeyVkeyHash["左Alt"],_kDown)
-	g_Modifier := g_Modifier | stLAlt
-	g_Modifier := g_Modifier >> 1			; 0x0800
-	stRAlt  := GetKeyStateWithLog4(stRAlt,fkeyVkeyHash["右Alt"],_kDown)
-	g_Modifier := g_Modifier | stRAlt
-	g_Modifier := g_Modifier >> 1			; 0x1000
-	stLWin  := GetKeyStateWithLog4(stLWin,fkeyVkeyHash["左Win"],_kDown)
-	g_Modifier := g_Modifier | stLWin
-	g_Modifier := g_Modifier >> 1			; 0x2000
-	stRWin  := GetKeyStateWithLog4(stRWin,fkeyVkeyHash["右Win"],_kDown)
-	g_Modifier := g_Modifier | stRWin
-	g_Modifier := g_Modifier >> 1			; 0x4000
-	stAppsKey  := GetKeyStateWithLog4(stAppsKey,fkeyVkeyHash["Applications"],_kDown)
-	g_Modifier := g_Modifier | stAppsKey	; 0x8000
+	GetKeyStateWithLog5("左Ctrl")
+	if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
+		g_Modifier := g_Modifier | 0x0200
+	} else {
+		g_Modifier := g_Modifier & (~0x0200)
+	}
+	GetKeyStateWithLog5("右Ctrl")	
+	if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
+		g_Modifier := g_Modifier | 0x0400
+	} else {
+		g_Modifier := g_Modifier & (~0x0400)
+	}
+	GetKeyStateWithLog5("左Alt")
+	if(keyState[fkeyPosHash["左Alt"]]!=0) {
+		g_Modifier := g_Modifier | 0x0800
+	} else {
+		g_Modifier := g_Modifier & (~0x0800)
+	}
+	GetKeyStateWithLog5("右Alt")
+	if(keyState[fkeyPosHash["右Alt"]]!=0) {
+		g_Modifier := g_Modifier | 0x1000
+	} else {
+		g_Modifier := g_Modifier & (~0x1000)
+	}
+	GetKeyStateWithLog5("左Win")
+	if(keyState[fkeyPosHash["左Win"]]!=0) {
+		g_Modifier := g_Modifier | 0x2000
+	} else {
+		g_Modifier := g_Modifier & (~0x2000)
+	}
+	GetKeyStateWithLog5("右Win")
+	if(keyState[fkeyPosHash["右Win"]]!=0) {
+		g_Modifier := g_Modifier | 0x4000
+	} else {
+		g_Modifier := g_Modifier & (~0x4000)
+	}
+	GetKeyStateWithLog5("Applications")
+	if(keyState[fkeyPosHash["Applications"]]!=0) {
+		g_Modifier := g_Modifier | 0x8000
+	} else {
+		g_Modifier := g_Modifier & (~0x8000)
+	}
+	g_Modifier := g_Modifier & 0xFE00
 	return
 	
 
@@ -2004,13 +2033,10 @@ ScanModifier:
 ; Pauseキー読み取り
 ;----------------------------------------------------------------------
 ScanPauseKey:
-	stPause := GetKeyStateWithLog4(stPause,"Pause", _kDown)
-	if(_kDown == 1 && g_KeyPause == "Pause") {
-		Gosub,pauseKeyDown
-	}
-	stScrollLock := GetKeyStateWithLog4(stScrollLock,"ScrollLock",_kDown)
-	if(_kDown == 1 && g_KeyPause == "ScrollLock") {
-		Gosub,pauseKeyDown
+	if(g_KeyPause != "") {
+		if(GetKeyStateWithLog5(g_KeyPause)==1) {
+			Gosub,pauseKeyDown
+		}
 	}
 	if(g_KeyPause == "無効")
 	{
@@ -2072,23 +2098,24 @@ ModeInitialize:
 ;-----------------------------------------------------------------------
 ;	仮想キーの状態取得とログ
 ;-----------------------------------------------------------------------
-GetKeyStateWithLog4(stLast, kName, byRef kDown) {
+GetKeyStateWithLog5(fName) {
+	global keyState, fkeyPosHash, fkeyVkeyHash
 	kDown := 0
-	stCurr := 0
-	_keyState := GetKeyState(kName,"P")
-	if(_keyState!=0) {
-		stCurr := 0x8000
+	_locationPos := fkeyPosHash[fName]
+	if(_locationPos != "") {
+		stCurr := GetKeyState(fkeyVkeyHash[fName],"P")
+		if(stCurr != 0 && keyState[_locationPos] == 0)	; keydown
+		{
+			kDown := 1
+			RegLogs(kName . " down")
+		}
+		else if(stCurr == 0 && keyState[_locationPos] != 0)	; keyup
+		{
+			RegLogs(kName . " up")
+		}
+		keyState[_locationPos] := stCurr
 	}
-	if(stCurr != 0 && stLast == 0)	; keydown
-	{
-		kDown := 1
-		RegLogs(kName . " down")
-	}
-	else if(stCurr == 0 && stLast != 0)	; keyup
-	{
-		RegLogs(kName . " up")
-	}
-	return stCurr
+	return 	kDown
 }
 
 ;-----------------------------------------------------------------------
@@ -2103,8 +2130,7 @@ GetPushedKeys()
 	for index, element in layoutArys
 	{
 		if(keyState[element] == 1) {
-			_keyName := keyNameHash[element]
-			if(GetKeyState(_keyName,"P")==0) {
+			if(GetKeyState(keyNameHash[element],"P")==0) {
 				keyState[element] := 0
 			}
 			_cont := g_colPushedHash[substr(element,1,1)] . substr(element,2,2)
@@ -2162,76 +2188,80 @@ ChkIME:
 ;----------------------------------------------------------------------
 ; キーを押下されたときに呼び出されるGotoラベルにフックする
 ;----------------------------------------------------------------------
-SetHookInit()
+SetHotkeyInit()
 {
-	SetHookInitOne("sc001")		;Esc
-	SetHookInitOne("sc03B")		;F1
-	SetHookInitOne("sc03C")		;F2
-	SetHookInitOne("sc03D")		;F3
-	SetHookInitOne("sc03E")		;F4
-	SetHookInitOne("sc03F")		;F5
-	SetHookInitOne("sc040")		;F6
-	SetHookInitOne("sc041")		;F7
-	SetHookInitOne("sc042")		;F8
-	SetHookInitOne("sc043")		;F9
-	SetHookInitOne("sc044")		;F10
-	SetHookInitOne("sc057")		;F11
-	SetHookInitOne("sc058")		;F12
-	SetHookInitOne("sc029")		;半角／全角
-	SetHookInitOne("sc002")		;1
-	SetHookInitOne("sc003")		;2
-	SetHookInitOne("sc004")		;3
-	SetHookInitOne("sc005")		;4
-	SetHookInitOne("sc006")		;5
-	SetHookInitOne("sc007")		;6
-	SetHookInitOne("sc008")		;7
-	SetHookInitOne("sc009")		;8
-	SetHookInitOne("sc00A")		;9
-	SetHookInitOne("sc00B")		;0
-	SetHookInitOne("sc00C")		;-
-	SetHookInitOne("sc00D")		;^
-	SetHookInitOne("sc07D")		;\
-	SetHookInitOne("sc00E")		;\b
-	
-	SetHookInitOne("sc00F")		;\t
-	SetHookInitOne("sc010")		;q
-	SetHookInitOne("sc011")		;w
-	SetHookInitOne("sc012")		;e
-	SetHookInitOne("sc013")		;r
-	SetHookInitOne("sc014")		;t
-	SetHookInitOne("sc015")		;y
-	SetHookInitOne("sc016")		;u
-	SetHookInitOne("sc017")		;i
-	SetHookInitOne("sc018")		;o
-	SetHookInitOne("sc019")		;p
-	SetHookInitOne("sc01A")		;@
-	SetHookInitOne("sc01B")		;[
+	SetHotkeyInitByPos("F00")		;Esc
+	SetHotkeyInitByPos("F01")		;F1
+	SetHotkeyInitByPos("F02")		;F2
+	SetHotkeyInitByPos("F03")		;F3
+	SetHotkeyInitByPos("F04")		;F4
+	SetHotkeyInitByPos("F05")		;F5
+	SetHotkeyInitByPos("F06")		;F6
+	SetHotkeyInitByPos("F07")		;F7
+	SetHotkeyInitByPos("F08")		;F8
+	SetHotkeyInitByPos("F09")		;F9
+	SetHotkeyInitByPos("F10")		;F10
+	SetHotkeyInitByPos("F11")		;F11
+	SetHotkeyInitByPos("F12")		;F12
+	SetHotkeyInitByPos("F13")		;PrintScreen
+	SetHotkeyInitByPos("F14")		;ScrollLock
+	SetHotkeyInitByPos("F15")		;Pause
 
-	SetHookInitOne("sc01E")		;a
-	SetHookInitOne("sc01F")		;s
-	SetHookInitOne("sc020")		;d
-	SetHookInitOne("sc021")		;f
-	SetHookInitOne("sc022")		;g
-	SetHookInitOne("sc023")		;h
-	SetHookInitOne("sc024")		;j
-	SetHookInitOne("sc025") 	;k
-	SetHookInitOne("sc026") 	;l
-	SetHookInitOne("sc027")		;';'
-	SetHookInitOne("sc028")		;'*'
-	SetHookInitOne("sc02B")		;']'
-	SetHookInitOne("sc01C")		;\r
+	SetHotkeyInitByPos("E00")		;半角／全角
+	SetHotkeyInitByPos("E01")		;1
+	SetHotkeyInitByPos("E02")		;2
+	SetHotkeyInitByPos("E03")		;3
+	SetHotkeyInitByPos("E04")		;4
+	SetHotkeyInitByPos("E05")		;5
+	SetHotkeyInitByPos("E06")		;6
+	SetHotkeyInitByPos("E07")		;7
+	SetHotkeyInitByPos("E08")		;8
+	SetHotkeyInitByPos("E09")		;9
+	SetHotkeyInitByPos("E10")		;0
+	SetHotkeyInitByPos("E11")		;-
+	SetHotkeyInitByPos("E12")		;^
+	SetHotkeyInitByPos("E13")		;\
+	SetHotkeyInitByPos("E14")		;\b
 	
-	SetHookInitOne("sc02C")		;z
-	SetHookInitOne("sc02D")		;x
-	SetHookInitOne("sc02E")		;c
-	SetHookInitOne("sc02F")		;v
-	SetHookInitOne("sc030")		;b
-	SetHookInitOne("sc031")		;n
-	SetHookInitOne("sc032")		;m
-	SetHookInitOne("sc033")		;,
-	SetHookInitOne("sc034")		;.
-	SetHookInitOne("sc035")		;/
-	SetHookInitOne("sc073")		;\
+	SetHotkeyInitByPos("D00")		;\t
+	SetHotkeyInitByPos("D01")		;q
+	SetHotkeyInitByPos("D02")		;w
+	SetHotkeyInitByPos("D03")		;e
+	SetHotkeyInitByPos("D04")		;r
+	SetHotkeyInitByPos("D05")		;t
+	SetHotkeyInitByPos("D06")		;y
+	SetHotkeyInitByPos("D07")		;u
+	SetHotkeyInitByPos("D08")		;i
+	SetHotkeyInitByPos("D09")		;o
+	SetHotkeyInitByPos("D10")		;p
+	SetHotkeyInitByPos("D11")		;@
+	SetHotkeyInitByPos("D12")		;[
+
+	SetHotkeyInitByPos("C01")		;a
+	SetHotkeyInitByPos("C02")		;s
+	SetHotkeyInitByPos("C03")		;d
+	SetHotkeyInitByPos("C04")		;f
+	SetHotkeyInitByPos("C05")		;g
+	SetHotkeyInitByPos("C06")		;h
+	SetHotkeyInitByPos("C07")		;j
+	SetHotkeyInitByPos("C08") 	;k
+	SetHotkeyInitByPos("C09") 	;l
+	SetHotkeyInitByPos("C10")		;';'
+	SetHotkeyInitByPos("C11")		;'*'
+	SetHotkeyInitByPos("C12")		;']'
+	SetHotkeyInitByPos("C13")		;\r
+	
+	SetHotkeyInitByPos("B01")		;z
+	SetHotkeyInitByPos("B02")		;x
+	SetHotkeyInitByPos("B03")		;c
+	SetHotkeyInitByPos("B04")		;v
+	SetHotkeyInitByPos("B05")		;b
+	SetHotkeyInitByPos("B06")		;n
+	SetHotkeyInitByPos("B07")		;m
+	SetHotkeyInitByPos("B08")		;,
+	SetHotkeyInitByPos("B09")		;.
+	SetHotkeyInitByPos("B10")		;/
+	SetHotkeyInitByPos("B11")		;\
 	;-----------------------------------------------------------------------
 	; 機能：モディファイアキー
 	;-----------------------------------------------------------------------
@@ -2241,76 +2271,82 @@ SetHookInit()
 	;但し、WindowsキーやAltキーを離したことを感知できないことに留意。
 	;ver.0.1.3 にて、GetKeyState でWindowsキーとAltキーとを監視
 	;ver.0.1.3.7 ... Ctrlはやはり必要なので戻す
-	SetHookInitOne("sc01D")		;LCtrl
-	SetHookInitOne("sc07B")		;無変換
-	SetHookInitOne("sc039")		;Space
-	SetHookInitOne("sc079")		;変換
-	SetHookInitOne("sc070")		;ひらがな／カタカナ
-	SetHookInitOne("sc11D")		;RCtrl
-	SetHookInitOne("sc02A")		;左Shift
-	SetHookInitOne("sc15B")		;左Win
-	SetHookInitOne("sc038")		;左Alt
-	SetHookInitOne("sc138")		;右Alt
-	SetHookInitOne("sc15C")		;右Win
-	SetHookInitOne("sc15D")		;Applications
-	SetHookInitOne("sc136")		;右Shift
+	SetHotkeyInitByPos("A00")		;LCtrl
+	SetHotkeyInitByPos("A01")		;無変換
+	SetHotkeyInitByPos("A02")		;Space
+	SetHotkeyInitByPos("A03")		;変換
+	SetHotkeyInitByPos("A04")		;ひらがな／カタカナ
+	SetHotkeyInitByPos("A05")		;RCtrl
+	SetHotkeyInitByPos("A06")		;左Shift
+	SetHotkeyInitByPos("A07")		;左Win
+	SetHotkeyInitByPos("A08")		;左Alt
+	SetHotkeyInitByPos("A09")		;右Alt
+	SetHotkeyInitByPos("A10")		;右Win
+	SetHotkeyInitByPos("A11")		;Applications
+	SetHotkeyInitByPos("A12")		;右Shift
 	return
 }
 ;----------------------------------------------------------------------
 ; 一つのキーを初期化する
 ;----------------------------------------------------------------------
-SetHookInitOne(sCode)
+SetHotkeyInitByPos(_pos)
 {
-	hotkey,*%sCode%,g%sCode%
-	hotkey,*%sCode%,off
-	hotkey,*%sCode% up,g%sCode%up
-	hotkey,*%sCode% up,off
+	global ScanCodeHash
+	
+	sCode := ScanCodeHash[_pos]
+	if(sCode!="") {
+		hotkey,*%sCode%,g%sCode%
+		hotkey,*%sCode%,off
+		hotkey,*%sCode% up,g%sCode%up
+		hotkey,*%sCode% up,off
+	}
 }
 
 ;----------------------------------------------------------------------
 ; ファンクションキーをオン・オフする
 ;----------------------------------------------------------------------
-SetHookFunction(flg)
+SetHotkeyFunction(flg)
 {
-	SetHookFunctionByName("Escape", flg)
-	SetHookFunctionByName("F1", flg)
-	SetHookFunctionByName("F2", flg)
-	SetHookFunctionByName("F3", flg)
-	SetHookFunctionByName("F4", flg)
-	SetHookFunctionByName("F5", flg)
-	SetHookFunctionByName("F6", flg)
-	SetHookFunctionByName("F7", flg)
-	SetHookFunctionByName("F8", flg)
-	SetHookFunctionByName("F9", flg)
-	SetHookFunctionByName("F10", flg)
-	SetHookFunctionByName("F11", flg)
-	SetHookFunctionByName("F12", flg)
-	SetHookFunctionByName("半角/全角", flg)
-	SetHookFunctionByName("左Ctrl", flg)
-	SetHookFunctionByName("カタカナ/ひらがな", flg)
-	SetHookFunctionByName("右Ctrl", flg)
-	SetHookFunctionByName("左Shift", flg)
-	SetHookFunctionByName("左Win", flg)
-	SetHookFunctionByName("左Alt", flg)
-	SetHookFunctionByName("右Alt", flg)
-	SetHookFunctionByName("右Win", flg)
-	SetHookFunctionByName("Applications", flg)
-	SetHookFunctionByName("右Shift", flg)
+	SetHotkeyFunctionByName("Escape", flg)
+	SetHotkeyFunctionByName("F1", flg)
+	SetHotkeyFunctionByName("F2", flg)
+	SetHotkeyFunctionByName("F3", flg)
+	SetHotkeyFunctionByName("F4", flg)
+	SetHotkeyFunctionByName("F5", flg)
+	SetHotkeyFunctionByName("F6", flg)
+	SetHotkeyFunctionByName("F7", flg)
+	SetHotkeyFunctionByName("F8", flg)
+	SetHotkeyFunctionByName("F9", flg)
+	SetHotkeyFunctionByName("F10", flg)
+	SetHotkeyFunctionByName("F11", flg)
+	SetHotkeyFunctionByName("F12", flg)
+	SetHotkeyFunctionByName("半角/全角", flg)
+	SetHotkeyFunctionByName("左Ctrl", flg)
+	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
+	SetHotkeyFunctionByName("右Ctrl", flg)
+	SetHotkeyFunctionByName("左Shift", flg)
+	SetHotkeyFunctionByName("左Win", flg)
+	SetHotkeyFunctionByName("左Alt", flg)
+	SetHotkeyFunctionByName("右Alt", flg)
+	SetHotkeyFunctionByName("右Win", flg)
+	SetHotkeyFunctionByName("Applications", flg)
+	SetHotkeyFunctionByName("右Shift", flg)
 }
 ;----------------------------------------------------------------------
 ; 指定された名称のキーのHotkeyをオン・オフする
 ;----------------------------------------------------------------------
-SetHookFunctionByName(kName, flg)
+SetHotkeyFunctionByName(kName, flg)
 {
 	global keyAttribute3, fkeyPosHash, fkeyCodeHash
-
+	global g_Romaji, g_Koyubi
+	
 	_pos := fkeyPosHash[kName]
 	_scode := fkeyCodeHash[kName]
 	if(_pos=="" || _scode=="") {
 		return
 	}
-	if(keyAttribute3["RK" . _pos]!="") {
-		hotkey,*%_scode%,%flg%		;Esc
+	if(keyAttribute3[g_Romaji . g_Koyubi . _pos]!="") {
+		hotkey,*%_scode%,%flg%
 		hotkey,*%_scode% up,%flg%
 	} else {
 		hotkey,*%_scode%,off
@@ -2321,7 +2357,7 @@ SetHookFunctionByName(kName, flg)
 ; 動的にホットキーをオン・オフする
 ; flg : 文字キーと機能キー
 ;----------------------------------------------------------------------
-SetHook(flg)
+SetHotkey(flg)
 {
 	hotkey,*sc002,%flg%		;1
 	hotkey,*sc002 up,%flg%
@@ -2428,17 +2464,17 @@ SetHook(flg)
 	hotkey,*sc035 up,%flg%
 	hotkey,*sc073,%flg%		;\
 	hotkey,*sc073 up,%flg%
-	SetHookFunctionByName("Space", flg)
+	SetHotkeyFunctionByName("Space", flg)
 	return
 }
 
 ;----------------------------------------------------------------------
 ; 動的に変換・無変換キーをオン・オフする
 ;----------------------------------------------------------------------
-SetHookHenkan(flg)
+SetHotkeyHenkan(flg)
 {
-	SetHookFunctionByName("無変換", flg)
-	SetHookFunctionByName("変換", flg)
+	SetHotkeyFunctionByName("無変換", flg)
+	SetHotkeyFunctionByName("変換", flg)
 }
 
 ;----------------------------------------------------------------------
@@ -2458,34 +2494,12 @@ gSC043:	;F9
 gSC044:	;F10
 gSC057:	;F11
 gSC058:	;F12
+gSC137:	;PrintScreen
+gSC046:	;ScreenLock
+gSC045:	;Pause
+
 ;　Ｅ段目
 gSC029:	;半角／全角
-;	Ａ段目
-gSC01D:	;LCtrl
-gSC11D:	;RCtrl
-
-gSC02A:	;左Shift
-gSC15B:	;左Win
-gSC038:	;左Alt
-gSC138:	;右Alt
-gSC15C:	;右Win
-gSC15D:	;Applications
-gSC136:	;右Shift
-	critical
-	Gosub,ScanModifier
-	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
-	kName := keyNameHash[g_layoutPos]
-	if(g_Modifier != 0) {
-		Gosub,ModeInitialize
-	}
-	if(kName=="sc02A" || kName=="sc136") {
-		g_Koyubi := "K"
-	}
-	goto, keydown%g_metaKey%
-
-;　Ｅ段目
-;gSC029:	;半角／全角
 gSC002:	;1
 gSC003:	;2
 gSC004:	;3
@@ -2541,25 +2555,56 @@ gSC034:	;.
 gSC035:	;/
 gSC073:	;\
 ;Ａ段目
-;gSC01D:	;LCtrl
+gSC01D:	;LCtrl
 gSC07B:	;無変換キー（左）
 gSC039:	;Space
 gSC079:	;変換キー（右）
 gSC070:	;ひらがな／カタカナ
-;gSC11D:	;RCtrl
+gSC11D:	;RCtrl
 
-;gSC02A: ;左Shift
-;gSC15B: ;左Win
-;gSC038: ;左Alt
-;gSC138: ;右Alt
-;gSC15C: ;右Win
-;gSC15D: ;Applications
-;gSC136: ;右Shift
+gSC02A: ;左Shift
+gSC15B: ;左Win
+gSC038: ;左Alt
+gSC138: ;右Alt
+gSC15C: ;右Win
+gSC15D: ;Applications
+gSC136: ;右Shift
 	critical
 	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
+	if(kName=="sc02A" || kName=="sc136") {
+		g_Koyubi := "K"
+	}
+	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
+	if(kName=="sc01D") {	;左Ctrl
+		g_Modifier := g_Modifier | 0x0200
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc11D") {	;右Ctrl
+		g_Modifier := g_Modifier | 0x0400
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc038") {	;左Alt
+		g_Modifier := g_Modifier | 0x0800
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc138") {	;右Alt
+		g_Modifier := g_Modifier | 0x1000
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc15B") {	;左Win
+		g_Modifier := g_Modifier | 0x2000
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc15C") {	;右Win
+		g_Modifier := g_Modifier | 0x4000
+		goto, keydown%g_metaKey%
+	}
+	if(kName=="sc15D") {	;Applications
+		g_Modifier := g_Modifier | 0x8000
+		goto, keydown%g_metaKey%
+	}
 	if(g_Modifier != 0) {
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
@@ -2581,13 +2626,13 @@ gSC070:	;ひらがな／カタカナ
 SetModifierSymbol(_modifier) {
 	_symbol := ""
 	if((_modifier & 0x6000)!=0){
-		_symbol := "#"
+		_symbol := "#"	; Win
 	}
 	if((_modifier & 0x1800)!=0) {
-		_symbol := _symbol . "!"
+		_symbol := _symbol . "!"	; Alt
 	}
 	if((_modifier & 0x0600)!=0) {
-		_symbol := _symbol . "^"
+		_symbol := _symbol . "^"	; Ctrl
 	}
 	return _symbol
 }
@@ -2608,6 +2653,9 @@ gSC043up:
 gSC044up:
 gSC057up:
 gSC058up:
+gSC137up:	;PrintScreen
+gSC046up:	;ScrollLock
+gSC045up:	;Pause
 ; Ｅ段目
 gSC029up:	;半角／全角
 gSC002up:
@@ -2685,6 +2733,27 @@ gSC136up:	;右Shift
 	kName := keyNameHash[g_layoutPos]
 	if(kName=="sc02A" || kName=="sc136") {
 		g_Koyubi := "N"
+	}
+	if(kName=="sc01D") {	;左Ctrl
+		g_Modifier := g_Modifier & (~0x0200)
+	}
+	if(kName=="sc11D") {	;右Ctrl
+		g_Modifier := g_Modifier & (~0x0400)
+	}
+	if(kName=="sc038") {	;左Alt
+		g_Modifier := g_Modifier & (~0x0800)
+	}
+	if(kName=="sc138") {	;右Alt
+		g_Modifier := g_Modifier & (~0x1000)
+	}
+	if(kName=="sc15B") {	;左Win
+		g_Modifier := g_Modifier & (~0x2000)
+	}
+	if(kName=="sc15C") {	;右Win
+		g_Modifier := g_Modifier & (~0x4000)
+	}
+	if(kName=="sc15D") {	;Applications
+		g_Modifier := g_Modifier & (~0x8000)
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	goto, keyup%g_metaKey%

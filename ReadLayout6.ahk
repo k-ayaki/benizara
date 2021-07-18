@@ -2651,7 +2651,20 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["ANF12"] := "X"
 	keyAttribute3["AKF12"] := "X"
 	keyAttribute3["RNF12"] := "X"
-	
+	keyAttribute3["RKF12"] := "X"
+	keyAttribute3["ANF13"] := ""
+	keyAttribute3["AKF13"] := ""
+	keyAttribute3["RNF13"] := ""
+	keyAttribute3["RKF13"] := ""
+	keyAttribute3["ANF14"] := ""
+	keyAttribute3["AKF14"] := ""
+	keyAttribute3["RNF14"] := ""
+	keyAttribute3["RKF14"] := ""
+	keyAttribute3["ANF15"] := ""
+	keyAttribute3["AKF15"] := ""
+	keyAttribute3["RNF15"] := ""
+	keyAttribute3["RKF15"] := ""
+
 	keyAttribute3["ANE00"] := "X"	; 半角/全角
 	keyAttribute3["AKE00"] := "X"
 	keyAttribute3["RNE00"] := "X"
@@ -2935,7 +2948,10 @@ MakeKeyState() {
 	keyState["F10"] := 0
 	keyState["F11"] := 0
 	keyState["F12"] := 0
-	
+	keyState["F13"] := 0
+	keyState["F14"] := 0	
+	keyState["F15"] := 0	
+
 	keyState["E00"] := 0	; 半角/全角
 	keyState["E01"] := 0
 	keyState["E02"] := 0
@@ -3011,7 +3027,7 @@ MakeKeyState() {
 MakeVkeyHash()
 {
 	hash := Object()
-	hash["F00"] := 0x1B		;F1
+	hash["F00"] := 0x1B		;Esc
 	hash["F01"] := 0x70		;F1
 	hash["F02"] := 0x71		;F2
 	hash["F03"] := 0x72		;F3
@@ -3024,6 +3040,9 @@ MakeVkeyHash()
 	hash["F10"] := 0x79		;F10
 	hash["F11"] := 0x7A		;F11
 	hash["F12"] := 0x7B		;F12
+	hash["F13"] := 0x2C		;PrintScreen
+	hash["F14"] := 0x91		;ScrollLock
+	hash["F15"] := 0x13		;Pause
 
 	hash["E00"] := 0xF3		;半角／全角
 	hash["E01"] := 0x31		;1
@@ -3115,7 +3134,10 @@ MakeVkeyStrHash()
 	hash["F10"] := "vk79"	;F10
 	hash["F11"] := "vk7A"	;F11
 	hash["F12"] := "vk7B"	;F12
-
+	hash["F13"] := "vk2C"	;PrintScreen
+	hash["F14"] := "vk91"	;ScrollLock
+	hash["F15"] := "vk13"	;Pause
+	
 	hash["E00"] := "vkF3"	;半角／全角
 	hash["E01"] := "vk31"	;1
 	hash["E02"] := "vk32"	;2
@@ -3431,6 +3453,9 @@ MakekeyNameHash()
 	hash["F10"] := "sc044"
 	hash["F11"] := "sc057"
 	hash["F12"] := "sc058"
+	hash["F13"] := "sc137"	; Print Screen
+	hash["F14"] := "sc046"	; Scroll Lock
+	hash["F15"] := "sc045"	; pause
 
 	hash["E00"] := "sc029"		;半角／全角
 	hash["E01"] := "1"
@@ -3535,7 +3560,10 @@ MakeLayoutPosHash()
 	hash["*sc044"]    := "F10"
 	hash["*sc057"]    := "F11"
 	hash["*sc058"]    := "F12"
-
+	hash["*sc137"]    := "F13"	; Print Screen
+	hash["*sc046"]    := "F14"	; Scroll Lock
+	hash["*sc045"]    := "F15"	; pause
+	
 	hash["*sc029"]    := "E00"	;半角／全角
 	hash["*sc002"]    := "E01"	;1
 	hash["*sc003"]    := "E02"
@@ -3620,6 +3648,9 @@ MakeLayoutPosHash()
 	hash["*sc044 up"] := "F10"
 	hash["*sc057 up"] := "F11"
 	hash["*sc058 up"] := "F12"
+	hash["*sc137 up"] := "F13"	; Print Screen
+	hash["*sc046 up"] := "F14"	; Scroll Lock
+	hash["*sc045 up"] := "F15"	; pause
 
 	hash["*sc029 up"] := "E00"	;半角／全角
 	hash["*sc002 up"] := "E01"	;1
@@ -3712,6 +3743,9 @@ MakeScanCodeHash()
 	hash["F10"] := "sc044"
 	hash["F11"] := "sc057"
 	hash["F12"] := "sc058"
+	hash["F13"] := "sc137"	; Print Screen
+	hash["F14"] := "sc046"	; Scroll Lock
+	hash["F15"] := "sc045"	; pause
 
 	hash["E00"] := "sc029"	;半角／全角
 	hash["E01"] := "sc002"	;1
@@ -3842,6 +3876,9 @@ MakefkeyPosHash()
 	hash["機10"] := "F10"
 	hash["機11"] := "F11"
 	hash["機12"] := "F12"
+	hash["PrintScreen"] := "F13"
+	hash["ScrollLock"] := "F14" 
+	hash["Pause"] := "F15"
 	return hash
 }
 
@@ -3886,6 +3923,9 @@ MakefkeyCodeHash()
 	hash["F10"] := "sc044"
 	hash["F11"] := "sc057"
 	hash["F12"] := "sc058"
+	hash["PrintScreen"] := "sc137"
+	hash["ScrollLock"] := "sc046" 
+	hash["Pause"] := "sc045"
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -3929,6 +3969,9 @@ MakefkeyVkeyHash()
 	hash["F10"] := "vk79"
 	hash["F11"] := "vk7A"
 	hash["F12"] := "vk7B"
+	hash["PrintScreen"] := "vk2C"
+	hash["ScrollLock"] := "vk91" 
+	hash["Pause"] := "vk13"
 	return hash
 }
 
@@ -3975,6 +4018,9 @@ MakeCodeNameHash()
 	hash["sc044"] := "F10"
 	hash["sc057"] := "F11"
 	hash["sc058"] := "F12"
+	hash["sc137"] := "PrintScreen"
+	hash["sc046"] := "ScrollLock" 
+	hash["sc045"] := "Pause"
 	return hash
 }
 
