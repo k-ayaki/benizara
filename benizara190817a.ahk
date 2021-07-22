@@ -546,11 +546,11 @@ SubSend(vOut)
 				_scnt := _scnt + 1
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
-				Send, {capslock}
+				Send, {blind}{capslock}
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
 			}
 			SetKeyDelay, -1
-			Send, %_stroke%
+			Send, {blind}%_stroke%
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
 			if(_cnt != _len && _scnt>=4) {
@@ -558,7 +558,7 @@ SubSend(vOut)
 				_scnt := 0
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
-				Send, {capslock}
+				Send, {blind}{capslock}
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
 			}
 			_sendch := ""
@@ -569,10 +569,26 @@ SubSend(vOut)
 	}
 	if(_stroke != "") {
 		SetKeyDelay, -1
-		Send, %_stroke%
+		Send, {blind}%_stroke%
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 	}
 }
+;----------------------------------------------------------------------
+; 元の109レイアウトで出力
+;----------------------------------------------------------------------
+SendStroke(_symbol, _kName)
+{
+	global kup_save, g_LastKey
+
+	vOut := _symbol . "{" . _kName . " down}"
+	kup_save[g_layoutPos] := _symbol . "{" . _kName . " up}"
+	SetKeyDelay, -1
+	Send, {blind}%vOut%
+	RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
+	g_LastKey["表層"] := ""
+	g_LastKey["状態"] := ""
+}
+
 ;----------------------------------------------------------------------
 ;	capslockが必要か
 ;----------------------------------------------------------------------
@@ -1373,19 +1389,6 @@ KoyubiOrSans(_Koyubi, _sans)
 }
 
 ;----------------------------------------------------------------------
-; 元の109レイアウトで出力
-;----------------------------------------------------------------------
-SendModifier(_symbol, _kName)
-{
-	global kup_save, g_LastKey
-
-	vOut := _symbol . "{" . _kName . "}"
-	kup_save[g_layoutPos] := ""
-	SubSend(vOut)
-	g_LastKey["表層"] := ""
-	g_LastKey["状態"] := ""
-}
-;----------------------------------------------------------------------
 ; キーをすぐさま出力
 ;----------------------------------------------------------------------
 SendKey(_mode, _MojiOnHold){
@@ -1423,7 +1426,8 @@ keydownX:
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		SubSend(MnDown(kName))
+		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
+		
 		keyState[g_layoutPos] := 1
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
@@ -1432,7 +1436,7 @@ keydownX:
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
-	SubSend(MnDown(kName))
+	SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
 	keyState[g_layoutPos] := 1
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
@@ -1451,7 +1455,7 @@ keydownS:
 
 	g_ModifierTick := keyTick[g_layoutPos]
 	if(g_sans == "K" && g_sansTick != INFINITE) {
-		SubSend(MnDown(kName) . MnUp(kName))
+		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
 	}
 	g_sans := "K"
 	g_sansTick := keyTick[g_layoutPos] + g_MaxTimeout
@@ -1743,8 +1747,9 @@ keyupX:
 
 	RegLogs(kName . " up")
 	keyState[g_layoutPos] := 0
-	vOut := MnUp(kName)
-	SubSend(vOut)
+	SubSend(kup_save[g_layoutPos])
+	kup_save[g_layoutPos] := ""
+	g_trigger := ""
 	critical,off
 	sleep,-1
 	return
@@ -1757,10 +1762,14 @@ keyupS:
 
 	RegLogs(kName . " up")
 	if(g_sansTick != INFINITE) {
-		SubSend(MnDown(kName) . MnUp(kName))
+		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
 		g_sansTick := INFINITE
 	}
 	keyState[g_layoutPos] := 0
+	SubSend(kup_save[g_layoutPos])
+	kup_save[g_layoutPos] := ""
+	g_trigger := ""
+
 	g_sans := "N"
 	critical,off
 	sleep,-1
@@ -2107,11 +2116,11 @@ GetKeyStateWithLog5(fName) {
 		if(stCurr != 0 && keyState[_locationPos] == 0)	; keydown
 		{
 			kDown := 1
-			RegLogs(kName . " down")
+			RegLogs(fkeyVkeyHash[fName] . " down")
 		}
 		else if(stCurr == 0 && keyState[_locationPos] != 0)	; keyup
 		{
-			RegLogs(kName . " up")
+			RegLogs(fkeyVkeyHash[fName] . " up")
 		}
 		keyState[_locationPos] := stCurr
 	}
@@ -2609,7 +2618,7 @@ gSC136: ;右Shift
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
-		SendModifier(SetModifierSymbol(g_Modifier),kName)
+		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
 		clearQueue()
 		g_SendTick := INFINITE
 		g_KeyInPtn := ""
@@ -2623,7 +2632,7 @@ gSC136: ;右Shift
 ;----------------------------------------------------------------------
 ; 修飾シンボルの設定
 ;----------------------------------------------------------------------
-SetModifierSymbol(_modifier) {
+SetModifierSymbol(_modifier,g_Koyubi) {
 	_symbol := ""
 	if((_modifier & 0x6000)!=0){
 		_symbol := "#"	; Win
@@ -2633,6 +2642,9 @@ SetModifierSymbol(_modifier) {
 	}
 	if((_modifier & 0x0600)!=0) {
 		_symbol := _symbol . "^"	; Ctrl
+	}
+	if(g_Koyubi == "K") {
+		_symbol := _symbol . "+"	; Shift
 	}
 	return _symbol
 }
