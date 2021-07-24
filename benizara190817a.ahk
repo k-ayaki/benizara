@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.718 .... 2021/7/16
+;	ver.0.1.4.719 .... 2021/7/22
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.718"
-	g_Date := "2021/7/16"
+	g_Ver := "ver.0.1.4.719"
+	g_Date := "2021/7/22"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -164,7 +164,7 @@
 	g_process["em1keypc"] := 0
 	g_process["姫踊子草2"] := 0
 	SetTimer,Interrupt10,10
-	SetTimer,Interrupt50,50
+	SetTimer,Interrupt3000,3000
 
 	SetHotkey("off")
 	SetHotkeyHenkan("off")
@@ -174,7 +174,7 @@
 
 MenuExit:
 	SetTimer,Interrupt10,off
-	SetTimer,Interrupt50,off
+	SetTimer,Interrupt3000,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
 	SetHotkey("off")
 	SetHotkeyHenkan("off")
@@ -214,6 +214,7 @@ DoResume:
 #include PfCount.ahk
 #include Logs1.ahk
 #include Path.ahk
+#include Objects.ahk
 
 ;-----------------------------------------------------------------------
 ; 親指シフトキー
@@ -487,7 +488,8 @@ CancelZeroDelayOut(g_ZeroDelay) {
 		_len := StrLen(g_ZeroDelaySurface)
 		loop, %_len%
 		{
-			SubSend(MnDown("BS") . MnUp("BS"))
+			SubSendOne(MnDown("BS"))
+			SubSendOne(MnUp("BS"))
 		}
 	}
 	g_ZeroDelaySurface := ""
@@ -574,19 +576,16 @@ SubSend(vOut)
 	}
 }
 ;----------------------------------------------------------------------
-; 元の109レイアウトで出力
+; 送信文字列の出力・１つだけ
 ;----------------------------------------------------------------------
-SendStroke(_symbol, _kName)
+SubSendOne(vOut)
 {
-	global kup_save, g_LastKey
-
-	vOut := _symbol . "{" . _kName . " down}"
-	kup_save[g_layoutPos] := _symbol . "{" . _kName . " up}"
+	global g_KeyInPtn, g_trigger
 	SetKeyDelay, -1
-	Send, {blind}%vOut%
-	RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
-	g_LastKey["表層"] := ""
-	g_LastKey["状態"] := ""
+	if(vOut!="") {
+		Send, {blind}%vOut%
+		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
+	}
 }
 
 ;----------------------------------------------------------------------
@@ -754,20 +753,27 @@ SetTimeout(_KeyInPtn)
 	global g_TDownOnHold, g_OnHoldIdx, g_Threshold, g_OverlapMO, g_OverlapOM, g_MaxTimeout, g_OnHoldIdx
 	global g_SimulMode, g_ThresholdSS, g_OverlapSS, INFINITE, g_Interval
 	global g_OyaTick, g_OyaUpTick, g_Oya, g_MojiCount
+	global ksc, g_RomajiOnHold, g_OyaOnHold, g_KoyubiOnHold, g_MojiOnHold
+
+	_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]	
 	
 	_SendTick := INFINITE
 	if(_KeyInPtn=="") {
 		_SendTick := INFINITE
 	} else 
 	if(_KeyInPtn=="M") {
-		_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
-		if(CountObject(g_SimulMode)!=0) {
-			; 文字同時打鍵があればタイムアウトの大きい方に合わせる
-			_SendTick := maximum(_SendTick, g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout))
+		if(ksc[_mode . g_MojiOnHold[1]]<=1) {
+			_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_Threshold*(100-g_OverlapMO))/g_OverlapMO),g_MaxTimeout)
+			if(CountObject(g_SimulMode)!=0) {
+				; 文字同時打鍵があればタイムアウトの大きい方に合わせる
+				_SendTick := maximum(_SendTick, g_TDownOnHold[g_OnHoldIdx] + minimum(floor((g_ThresholdSS*(100-g_OverlapSS))/g_OverlapSS),g_MaxTimeout))
+			}
 		}
 	} else
 	if(_KeyInPtn=="MM") {
-		_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
+		if(ksc[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]<=2) {
+			_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
+		}
 	} else
 	if(_KeyInPtn=="MMm") {
 		g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
@@ -1426,8 +1432,8 @@ keydownX:
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
-		
+		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		kup_save[g_layoutPos] := MnUp(kName)
 		keyState[g_layoutPos] := 1
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
@@ -1436,11 +1442,22 @@ keydownX:
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
-	SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
+	SubSendOne(SetModifierSymbol() . MnDown(kName))
+	kup_save[g_layoutPos] := MnUp(kName)
 	keyState[g_layoutPos] := 1
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
 	g_KeyInPtn := ""
+	critical,off
+	return
+;----------------------------------------------------------------------
+; 修飾キー押下
+;----------------------------------------------------------------------
+keydownN:
+	g_trigger := g_metaKey
+	keyTick[g_layoutPos] := Pf_Count()
+	RegLogs(kName . " down")
+	keyState[g_layoutPos] := 1
 	critical,off
 	return
 
@@ -1455,7 +1472,11 @@ keydownS:
 
 	g_ModifierTick := keyTick[g_layoutPos]
 	if(g_sans == "K" && g_sansTick != INFINITE) {
-		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
+		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		kup_save[g_layoutPos] := MnUp(kName)
+		keyState[g_layoutPos] := 1
+		g_LastKey["表層"] := ""
+		g_LastKey["状態"] := ""
 	}
 	g_sans := "K"
 	g_sansTick := keyTick[g_layoutPos] + g_MaxTimeout
@@ -1605,9 +1626,9 @@ keyupM:
 	keyState[g_layoutPos] := 0
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト" || ShiftMode[g_Romaji] == "小指シフト") {
-		vOut := kup_save[g_layoutPos]
-		SubSend(vOut)
+		SubSendOne(kup_save[g_layoutPos])
 		kup_save[g_layoutPos] := ""
+		keyState[g_layoutPos] := 0
 		critical,off
 		sleep,-1
 		return
@@ -1730,8 +1751,9 @@ keyupM:
 			}
 		}
 	}
-	SubSend(kup_save[g_layoutPos])
+	SubSendOne(kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
+	keyState[g_layoutPos] := 0
 	g_trigger := ""
 	critical,off
 	sleep,-1
@@ -1746,14 +1768,26 @@ keyupX:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
-	keyState[g_layoutPos] := 0
-	SubSend(kup_save[g_layoutPos])
+
+	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
+	keyState[g_layoutPos] := 0
 	g_trigger := ""
 	critical,off
 	sleep,-1
 	return
 
+;----------------------------------------------------------------------
+; 文字コード以外のキーアップ（押下終了）
+;----------------------------------------------------------------------
+keyupN:
+	g_trigger := g_metaKeyUp[g_metaKey]
+	RegLogs(kName . " up")
+	keyState[g_layoutPos] := 0
+	g_trigger := ""
+	critical,off
+	sleep,-1
+	return
 ;----------------------------------------------------------------------
 ; スペース＆シフトキー（押下終了）
 ;----------------------------------------------------------------------
@@ -1762,14 +1796,16 @@ keyupS:
 
 	RegLogs(kName . " up")
 	if(g_sansTick != INFINITE) {
-		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
+		SubSendOne(SetModifierSymbol() . MnDown(kName))
 		g_sansTick := INFINITE
+		kup_save[g_layoutPos] := MnUp(kName)
+		keyState[g_layoutPos] := 1
 	}
-	keyState[g_layoutPos] := 0
-	SubSend(kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
-	g_trigger := ""
+	keyState[g_layoutPos] := 0
 
+	g_trigger := ""
 	g_sans := "N"
 	critical,off
 	sleep,-1
@@ -1791,9 +1827,9 @@ keyup9:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
-	keyState[g_layoutPos] := 0
-	SubSend(kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
+	keyState[g_layoutPos] := 0
 	critical,off
 	sleep,-1
 	return
@@ -1801,7 +1837,7 @@ keyup9:
 ;----------------------------------------------------------------------
 ; 50[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
-Interrupt50:
+Interrupt3000:
 	Process,Exist,yamabuki_r.exe
 	_pid := ErrorLevel
 	if(_pid!=0 && g_process["yamabuki_r"]==0) {
@@ -1832,21 +1868,6 @@ Interrupt50:
 		Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
 	}
 	g_process["姫踊子草2"] := _pid
-	if(A_IsCompiled != 1)
-	{
-		vImeMode := IME_GET() & 32767
-		vImeConvMode := IME_GetConvMode()
-		szConverting := IME_GetConverting()
-		
-		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
-		g_debugout3 := g_Modifier
-		g_debugout2 := GetPushedKeys()
-		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
-		_mode := g_Romaji . g_Oya . g_Koyubi
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
-		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
-		Tooltip, %g_debugout%, 0, 0, 2 ; debug
-	}
 	sleep,-1
 	return
 
@@ -1898,8 +1919,10 @@ Interrupt10:
 		if(GetKeyState(keyNameHash[g_sansPos],"P") == 0) {
 			if(g_sansTick!=INFINITE)	; 未タイムアウト
 			{
-				SubSend(MnDown(keyNameHash[g_sansPos]) . MnUp(keyNameHash[g_sansPos]))
+				SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
+				SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
 				g_sansTick := INFINITE
+				kup_save[g_layoutPos] := ""
 				keyState[g_sansPos] := 0
 			}
 			g_sans := "N"
@@ -1907,6 +1930,21 @@ Interrupt10:
 	}
 	Gosub,Polling
 	critical,off
+	if(A_IsCompiled != 1)
+	{
+		vImeMode := IME_GET() & 32767
+		vImeConvMode := IME_GetConvMode()
+		szConverting := IME_GetConverting()
+		
+		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
+		g_debugout3 := g_Modifier
+		g_debugout2 := GetPushedKeys()
+		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
+		_mode := g_Romaji . g_Oya . g_Koyubi
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
+		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
+		Tooltip, %g_debugout%, 0, 0, 2 ; debug
+	}
 	sleep,-1
 	return
 	
@@ -1972,8 +2010,9 @@ Polling:
 		}
 		if(_TickCount > g_sansTick) 	; タイムアウト
 		{
-			SubSend(MnDown(keyNameHash[g_sansPos]) . MnUp(keyNameHash[g_sansPos]))
+			SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
 			g_sansTick := INFINITE
+			kup_save[g_layoutPos] := MnUp(keyNameHash[g_sansPos])
 			keyState[g_sansPos] := 1
 		}
 	}
@@ -2618,8 +2657,13 @@ gSC136: ;右Shift
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
-		SendStroke(SetModifierSymbol(g_Modifier,g_Koyubi),kName)
+		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		kup_save[g_layoutPos] := MnUp(kName)
+		keyState[g_sansPos] := 1
+		
 		clearQueue()
+		g_LastKey["表層"] := ""
+		g_LastKey["状態"] := ""
 		g_SendTick := INFINITE
 		g_KeyInPtn := ""
 		g_prefixshift := ""
@@ -2632,15 +2676,16 @@ gSC136: ;右Shift
 ;----------------------------------------------------------------------
 ; 修飾シンボルの設定
 ;----------------------------------------------------------------------
-SetModifierSymbol(_modifier,g_Koyubi) {
+SetModifierSymbol() {
+	global g_modifier,g_Koyubi
 	_symbol := ""
-	if((_modifier & 0x6000)!=0){
+	if((g_modifier & 0x6000)!=0){
 		_symbol := "#"	; Win
 	}
-	if((_modifier & 0x1800)!=0) {
+	if((g_modifier & 0x1800)!=0) {
 		_symbol := _symbol . "!"	; Alt
 	}
-	if((_modifier & 0x0600)!=0) {
+	if((g_modifier & 0x0600)!=0) {
 		_symbol := _symbol . "^"	; Ctrl
 	}
 	if(g_Koyubi == "K") {

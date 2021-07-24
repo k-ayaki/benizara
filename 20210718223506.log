@@ -1,0 +1,76 @@
+ver.0.1.4.718
+
+オーバラップ文字親指=70
+オーバラップ親指文字=35
+オーバラップ文字同時=35
+親指シフト同時打鍵間隔=210
+文字同時打鍵間隔=200
+連続モード=1
+零遅延モード=1
+親指キー単独打鍵=無効
+親指キーリピート=1
+TIME   INPUT  MD TG SEND
+     0            x   {Enter up}
+  5176 sc001 down
+     0            X   {sc001 down}
+   192 sc001 up
+     0            x   {sc001 up}
+ 60298  down
+   545 a down
+     2                ^{a}
+   127 a up
+    27  up
+  1099 Enter down
+     1            X   {Enter down}
+   123 Enter up
+     1            x   {Enter up}
+    66 Enter down
+     0            X   {Enter down}
+   118 Enter up
+     1            x   {Enter up}
+  1501 j down
+   125 j up
+     1        M   m   {a down}
+     1            m   {a up}
+  1168 j down
+    60 w down
+    79 j up
+     0        MM  m   {g down}
+     2        MM  m   {g up}
+     0        MM  m   {i down}
+     0            m   {i up}
+    49 w up
+  2023 Enter down
+     0            X   {Enter down}
+   101 Enter up
+     1            x   {Enter up}
+   641 Enter down
+     1            X   {Enter down}
+   128 Enter up
+     0            x   {Enter up}
+   682 j down
+    70 w down
+   100 w up
+     1        MM  m   {g down}
+     0        MM  m   {g up}
+     1        MM  m   {i down}
+   162 j up
+     0            m   {i up}
+  2105 j down
+    23 w down
+   164 w up
+     1        MM  m   {g down}
+     0        MM  m   {g up}
+     1        MM  m   {i down}
+  1890 w down
+   126 w up
+     1        M   m   {g down}
+     1        M   m   {g up}
+     1        M   m   {i down}
+     0            m   {i up}
+  1623 j up
+     0            m   {i up}
+  4777 sc001 down
+     0            X   {sc001 down}
+   160 sc001 up
+     0            x   {sc001 up}

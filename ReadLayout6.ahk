@@ -733,6 +733,9 @@ SetLayoutProperty:
 		ShiftMode["A"] := "小指シフト"
 		InitOyakey("A")
 	}
+	if(LF["ANK"]!="") {
+		InitShiftkey("A")
+	}
 	
 	ShiftMode["R"] := ""
 	if(LF["RNN"]!="" && LF["RRN"]!="" && LF["RLN"]!="")
@@ -763,13 +766,29 @@ SetLayoutProperty:
 		InitOyakey("R")
 	}
 	else
-	if(LF["RNN"]!="" LF["RNK"]!="")
+	if(LF["RNN"]!="" && LF["RNK"]!="")
 	{
 		ShiftMode["R"] := "小指シフト"
 		InitOyakey("R")
 	}
+	if(LF["RNK"]!="") {
+		InitShiftkey("R")
+	}
 	SetSansKey(g_sansPos)
 	return
+
+;----------------------------------------------------------------------
+;	キー属性配列を初期化する
+;----------------------------------------------------------------------
+InitShiftkey(_Romaji)
+{
+	global keyAttribute3
+
+	keyAttribute3[_Romaji . "NA06"] := "N"	;左Shift
+	keyAttribute3[_Romaji . "KA06"] := "N"
+	keyAttribute3[_Romaji . "NA12"] := "N"	;右Shift
+	keyAttribute3[_Romaji . "KA12"] := "N"
+}
 
 ;----------------------------------------------------------------------
 ;	プレフィックスシフト
@@ -1402,56 +1421,6 @@ MergeStatus(_status)
 		_status2 := _status2 . "m"
 	}
 	return _status2
-}
-;----------------------------------------------------------------------
-;	オブジェクトの要素数を数える
-;----------------------------------------------------------------------
-CountObject(_obj)
-{
-	_cnt := 0
-	enum := _obj._NewEnum()
-	While enum[k, v]
-	{
-		_cnt := _cnt + 1
-	}
-	return _cnt
-}
-;----------------------------------------------------------------------
-;	オブジェクトの要素を削除
-;----------------------------------------------------------------------
-RemoveObject(_obj)
-{
-	if(isObject(_obj)) {
-		loop
-		{
-			_cnt := 0
-			enum := _obj._NewEnum()
-			While enum[k, v]
-			{
-				_obj.Remove(k,k)
-				_cnt := _cnt + 1
-			}
-			if(_cnt == 0)
-				break
-		}
-	}
-}
-;----------------------------------------------------------------------
-;	オブジェクトの要素リストを返す
-;----------------------------------------------------------------------
-listSimulMode(_Romaji)
-{
-	global g_SimulMode
-	
-	_ddlist := ""
-	enum := g_SimulMode._NewEnum()
-	While enum[k, v]
-	{
-		if(substr(v,1,1)==_Romaji) {
-			_ddlist := ddlist . v . "|"
-		}
-	}
-	return _ddlist
 }
 ;----------------------------------------------------------------------
 ;	レイアウト名からモード名に変換

@@ -23,9 +23,9 @@
 
 b::
 	if(_lShift==1) {
-		send,{b down}
+		send,^{sc01D}
 	} else {
-		send,^{a down}
+		send,{blind}^{a}
 	}
 	return
 
