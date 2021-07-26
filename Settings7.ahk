@@ -13,6 +13,7 @@
 
 #include ReadLayout6.ahk
 #include Path.ahk
+#include Objects.ahk
 
 ;-----------------------------------------------------------------------
 ; Iniファイルの読み込み

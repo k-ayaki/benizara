@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.719 .... 2021/7/22
+;	ver.0.1.4.720 .... 2021/7/26
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,8 +12,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.719"
-	g_Date := "2021/7/22"
+	g_Ver := "ver.0.1.4.720"
+	g_Date := "2021/7/26"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -59,12 +59,17 @@
 	g_Continue := 1
 	g_Threshold := 100	; 
 	RegRead,_keyboardDelayIdx,HKEY_CURRENT_USER\Control Panel\Keyboard,KeyboardDelay
-	g_keyboardDelay := Object()
-	g_keyboardDelay[0] := 250
-	g_keyboardDelay[1] := 500
-	g_keyboardDelay[2] := 750
-	g_keyboardDelay[3] := 1000
-	g_MaxTimeout := g_keyboardDelay[_keyboardDelayIdx]
+	;g_keyboardDelay := Object()
+	;g_keyboardDelay[0] := 250
+	;g_keyboardDelay[1] := 500
+	;g_keyboardDelay[2] := 750
+	;g_keyboardDelay[3] := 1000
+	;g_MaxTimeout := g_keyboardDelay[_keyboardDelayIdx]
+	g_MaxTimeout := ( 0 = _keyboardDelayIdx) ? 250
+				  : ( 1 = _keyboardDelayIdx) ? 500
+				  : ( 2 = _keyboardDelayIdx) ? 750
+				  : ( 3 = _keyboardDelayIdx) ? 1000
+				  : 1000
 	if(g_MaxTimeout == 0) {
 		g_MaxTimeout := 500
 	}
@@ -163,8 +168,9 @@
 	g_process["DvorakJ"] := 0
 	g_process["em1keypc"] := 0
 	g_process["姫踊子草2"] := 0
+	g_intproc := 0
 	SetTimer,Interrupt10,10
-	SetTimer,Interrupt3000,3000
+	SetTimer,InterruptProcessPolling,600
 
 	SetHotkey("off")
 	SetHotkeyHenkan("off")
@@ -174,7 +180,7 @@
 
 MenuExit:
 	SetTimer,Interrupt10,off
-	SetTimer,Interrupt3000,off
+	SetTimer,InterruptProcessPolling,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
 	SetHotkey("off")
 	SetHotkeyHenkan("off")
@@ -1422,6 +1428,13 @@ SendKey(_mode, _MojiOnHold){
 	}
 	SubSend(vOut)
 }
+
+
+;----------------------------------------------------------------------
+; テンキー押下
+;----------------------------------------------------------------------
+keydownT:
+	kName := TenkeyHash[GetKeyState("NumLock", "T")  . kName]
 ;----------------------------------------------------------------------
 ; 修飾キー押下
 ;----------------------------------------------------------------------
@@ -1765,6 +1778,7 @@ keyupM:
 ;----------------------------------------------------------------------
 keyup:
 keyupX:
+keyupT:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
@@ -1835,39 +1849,50 @@ keyup9:
 	return
 
 ;----------------------------------------------------------------------
-; 50[mSEC]ごとの割込処理
+; プロセス監視割込処理
 ;----------------------------------------------------------------------
-Interrupt3000:
-	Process,Exist,yamabuki_r.exe
-	_pid := ErrorLevel
-	if(_pid!=0 && g_process["yamabuki_r"]==0) {
-		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
+InterruptProcessPolling:
+	g_intproc := g_intproc + 1
+	if(mod(g_intproc,5)==0) {
+		Process,Exist,yamabuki_r.exe
+		_pid := ErrorLevel
+		if(_pid!=0 && g_process["yamabuki_r"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
+		}
+		g_process["yamabuki_r"] := _pid
 	}
-	g_process["yamabuki_r"] := _pid
-	Process,Exist,yamabuki.exe
-	_pid := ErrorLevel
-	if(_pid!=0 &&  g_process["yamabuki"]==0) {
-		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
+	if(mod(g_intproc,5)==1) {
+		Process,Exist,yamabuki.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["yamabuki"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
+		}
+		g_process["yamabuki"] := _pid
 	}
-	g_process["yamabuki"] := _pid
-	Process,Exist,DvorakJ.exe
-	_pid := ErrorLevel
-	if(_pid!=0 &&  g_process["DvorakJ"]==0) {
-		Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
+	if(mod(g_intproc,5)==2) {
+		Process,Exist,DvorakJ.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["DvorakJ"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
+		}
+		g_process["DvorakJ"] := _pid
 	}
-	g_process["DvorakJ"] := _pid
-	Process,Exist,em1keypc.exe
-	_pid := ErrorLevel
-	if(_pid!=0 &&  g_process["em1keypc"]==0) {
-		Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
+	if(mod(g_intproc,5)==3) {
+		Process,Exist,em1keypc.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["em1keypc"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
+		}
+		g_process["em1keypc"] := _pid
 	}
-	g_process["em1keypc"] := _pid
-	Process,Exist,姫踊子草2.exe
-	_pid := ErrorLevel
-	if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
-		Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
+	if(mod(g_intproc,5)==4) {
+		Process,Exist,姫踊子草2.exe
+		_pid := ErrorLevel
+		if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
+			Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
+		}
+		g_process["姫踊子草2"] := _pid
 	}
-	g_process["姫踊子草2"] := _pid
 	sleep,-1
 	return
 
@@ -2075,7 +2100,6 @@ ScanModifier:
 	}
 	g_Modifier := g_Modifier & 0xFE00
 	return
-	
 
 ;----------------------------------------------------------------------
 ; Pauseキー読み取り
@@ -2238,6 +2262,37 @@ ChkIME:
 ;----------------------------------------------------------------------
 SetHotkeyInit()
 {
+	SetHotkeyInitByPos("H01")
+	SetHotkeyInitByPos("H02")
+	SetHotkeyInitByPos("H03")
+	SetHotkeyInitByPos("H04")
+	SetHotkeyInitByPos("H05")
+	SetHotkeyInitByPos("H06")
+	SetHotkeyInitByPos("H07")
+	SetHotkeyInitByPos("H08")
+	SetHotkeyInitByPos("H09")
+	SetHotkeyInitByPos("H10")
+	SetHotkeyInitByPos("H11")
+	SetHotkeyInitByPos("H12")
+	SetHotkeyInitByPos("H13")
+	SetHotkeyInitByPos("H14")
+	SetHotkeyInitByPos("H15")
+	SetHotkeyInitByPos("H16")
+
+	SetHotkeyInitByPos("G01")		;PrintScreen
+	SetHotkeyInitByPos("G02")		;ScrollLock
+	SetHotkeyInitByPos("G03")		;Pause
+	SetHotkeyInitByPos("G04")
+	SetHotkeyInitByPos("G05")
+	SetHotkeyInitByPos("G06")
+	SetHotkeyInitByPos("G07")
+	SetHotkeyInitByPos("G08")
+	SetHotkeyInitByPos("G09")
+	SetHotkeyInitByPos("G10")
+	SetHotkeyInitByPos("G11")
+	SetHotkeyInitByPos("G12")
+	SetHotkeyInitByPos("G13")
+
 	SetHotkeyInitByPos("F00")		;Esc
 	SetHotkeyInitByPos("F01")		;F1
 	SetHotkeyInitByPos("F02")		;F2
@@ -2251,9 +2306,6 @@ SetHotkeyInit()
 	SetHotkeyInitByPos("F10")		;F10
 	SetHotkeyInitByPos("F11")		;F11
 	SetHotkeyInitByPos("F12")		;F12
-	SetHotkeyInitByPos("F13")		;PrintScreen
-	SetHotkeyInitByPos("F14")		;ScrollLock
-	SetHotkeyInitByPos("F15")		;Pause
 
 	SetHotkeyInitByPos("E00")		;半角／全角
 	SetHotkeyInitByPos("E01")		;1
@@ -2349,7 +2401,6 @@ SetHotkeyInitByPos(_pos)
 		hotkey,*%sCode% up,off
 	}
 }
-
 ;----------------------------------------------------------------------
 ; ファンクションキーをオン・オフする
 ;----------------------------------------------------------------------
@@ -2379,6 +2430,37 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("右Win", flg)
 	SetHotkeyFunctionByName("Applications", flg)
 	SetHotkeyFunctionByName("右Shift", flg)
+
+	SetHotkeyFunctionByName("PrintScreen", flg)
+	;SetHotkeyFunctionByName("ScrollLock", flg)
+	;SetHotkeyFunctionByName("Pause", flg)
+	SetHotkeyFunctionByName("挿", flg)
+	SetHotkeyFunctionByName("家", flg)
+	SetHotkeyFunctionByName("前", flg)
+	SetHotkeyFunctionByName("消", flg)
+	SetHotkeyFunctionByName("終", flg)
+	SetHotkeyFunctionByName("次", flg)
+	SetHotkeyFunctionByName("上", flg)
+	SetHotkeyFunctionByName("左", flg)
+	SetHotkeyFunctionByName("下", flg)
+	SetHotkeyFunctionByName("右", flg)
+
+	SetHotkeyFunctionByName("NumpadDiv", flg)
+	SetHotkeyFunctionByName("NumpadMult", flg)
+	SetHotkeyFunctionByName("NumpadAdd", flg)
+	SetHotkeyFunctionByName("NumpadSub", flg)
+	SetHotkeyFunctionByName("HNumpadEnter", flg)
+	SetHotkeyFunctionByName("Numpad0", flg)
+	SetHotkeyFunctionByName("Numpad1", flg)
+	SetHotkeyFunctionByName("Numpad2", flg)
+	SetHotkeyFunctionByName("Numpad3", flg)
+	SetHotkeyFunctionByName("Numpad4", flg)
+	SetHotkeyFunctionByName("Numpad5", flg)
+	SetHotkeyFunctionByName("Numpad6", flg)
+	SetHotkeyFunctionByName("Numpad7", flg)
+	SetHotkeyFunctionByName("Numpad8", flg)
+	SetHotkeyFunctionByName("Numpad9", flg)
+	SetHotkeyFunctionByName("NumpadDot", flg)
 }
 ;----------------------------------------------------------------------
 ; 指定された名称のキーのHotkeyをオン・オフする
@@ -2528,6 +2610,37 @@ SetHotkeyHenkan(flg)
 ;----------------------------------------------------------------------
 ; キーオンのイベント
 ;----------------------------------------------------------------------
+;　Ｈ段目
+gSC135:
+gSC037:
+gSC04E:
+gSC04A:
+gSC11C:
+gSC052:
+gSC04F:
+gSC050:
+gSC051:
+gSC04B:
+gSC04C:
+gSC04D:
+gSC047:
+gSC048:
+gSC049:
+gSC053:
+;　Ｇ段目
+gSC137:	;PrintScreen
+gSC046:	;ScreenLock
+gSC045:	;Pause
+gSC152:
+gSC147:
+gSC149:
+gSC153:
+gSC14F:
+gSC151:
+gSC148:
+gSC14B:
+gSC150:
+gSC14D:
 ;　Ｆ段目
 gSC001:	;Esc
 gSC03B:	;F1
@@ -2542,10 +2655,6 @@ gSC043:	;F9
 gSC044:	;F10
 gSC057:	;F11
 gSC058:	;F12
-gSC137:	;PrintScreen
-gSC046:	;ScreenLock
-gSC045:	;Pause
-
 ;　Ｅ段目
 gSC029:	;半角／全角
 gSC002:	;1
@@ -2696,6 +2805,37 @@ SetModifierSymbol() {
 ;----------------------------------------------------------------------
 ; キーオフのイベント
 ;----------------------------------------------------------------------
+;　Ｈ段目
+gSC135up:
+gSC037up:
+gSC04Eup:
+gSC04Aup:
+gSC11Cup:
+gSC052up:
+gSC04Fup:
+gSC050up:
+gSC051up:
+gSC04Bup:
+gSC04Cup:
+gSC04Dup:
+gSC047up:
+gSC048up:
+gSC049up:
+gSC053up:
+; Ｇ段目
+gSC137up:	;PrintScreen
+gSC046up:	;ScrollLock
+gSC045up:	;Pause
+gSC152up:
+gSC147up:
+gSC149up:
+gSC153up:
+gSC14Fup:
+gSC151up:
+gSC148up:
+gSC14Bup:
+gSC150up:
+gSC14Dup:
 ; Ｆ段目
 gSC001up:
 gSC03Bup:
@@ -2710,9 +2850,6 @@ gSC043up:
 gSC044up:
 gSC057up:
 gSC058up:
-gSC137up:	;PrintScreen
-gSC046up:	;ScrollLock
-gSC045up:	;Pause
 ; Ｅ段目
 gSC029up:	;半角／全角
 gSC002up:
