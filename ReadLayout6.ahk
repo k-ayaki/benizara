@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：ReadLayout6.ahk
 ;	機能：紅皿のキーレイアウトファイルの読み込み
-;	ver.0.1.4.710 .... 2021/6/27
+;	ver.0.1.4.720 .... 2021/7/27
 ;-----------------------------------------------------------------------
 ReadLayout:
 
@@ -99,17 +99,17 @@ InitLayout2:
 	layoutPosHash := MakeLayoutPosHash(ScanCodeHash)
 	fkeyPosHash := MakefkeyPosHash()
 	fkeyPosOrg := MakefkeyPosHash()
-	fkeyCodeHash := MakefkeyCodeHash()
-	fkeyCodeOrg := MakefkeyCodeHash()
-	fkeyVkeyHash := MakefkeyVkeyHash()
-	fkeyVkeyOrg := MakefkeyVkeyHash()
+
+	fkey2NameHash := Makefkey2NameHash()
+	fkeyCodeHash := MakefkeyCodeHash(fkey2NameHash)
+	fkeyCodeOrg := MakefkeyCodeHash(fkey2NameHash)
+	fkeyVkeyHash := MakefkeyVkeyHash(fkey2NameHash)
+	fkeyVkeyOrg := MakefkeyVkeyHash(fkey2NameHash)
 	
-	CodeNameHash := MakeCodeNameHash()
 	kanaHash := MakeKanaHash()
 	GuiLayoutHash := MakeGuiLayoutHash()
 	code2SimulPos := MakeCode2SimulPos()
 	code2ContPos := MakeCode2ContPos()
-	Chr2vkeyHash := MakeChr2vkeyHash()
 	ctrlKeyHash := MakeCtrlKeyHash()
 	modifierHash := MakeModifierHash()
 
@@ -1272,7 +1272,7 @@ Romaji2Kana(aStr)
 ;----------------------------------------------------------------------
 GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 {
-	global z2hHash, Chr2vkeyHash, modifierHash, roma3Hash, ctrlKeyHash
+	global z2hHash, modifierHash, roma3Hash, ctrlKeyHash
 	global _error
 	
 	_error := ""
@@ -3694,29 +3694,24 @@ MakefkeyPosHash()
 	hash["Escape"]    := "F00"
 	hash["半角/全角"] := "E00"
 	hash["Backspace"] := "E14"
-	hash["sc00E"]     := "E14"
-
 	hash["Tab"]       := "D00"
-	hash["sc00F"]     := "D00"
 	hash["Enter"]     := "C13"
-	hash["sc01C"]     := "C13"
 
-	hash["左Ctrl"] := "A00"
+	hash["LCtrl"] := "A00"
 	hash["無変換"] := "A01"
 	hash["Space"]  := "A02"	;スペース
 	hash["Space&Shift"]  := "A02"	;スペース
-	hash["sc039"]  := "A02"	;スペース
 	hash["変換"]   := "A03"
 	hash["カタカナ/ひらがな"] := "A04"
-	hash["右Ctrl"] := "A05"
+	hash["RCtrl"] := "A05"
 	
-	hash["左Shift"] := "A06"
-	hash["左Win"]   := "A07"
-	hash["左Alt"]   := "A08"
-	hash["右Alt"]   := "A09"
-	hash["右Win"]   := "A10"
-	hash["Applications"] := "A11"
-	hash["右Shift"] := "A12"
+	hash["LShift"]  := "A06"
+	hash["LWin"]    := "A07"
+	hash["LAlt"]    := "A08"
+	hash["RAlt"]    := "A09"
+	hash["RWin"]    := "A10"
+	hash["AppsKey"] := "A11"
+	hash["RShift"]  := "A12"
 	
 	hash["F1"]  := "F01"
 	hash["F2"]  := "F02"
@@ -3730,31 +3725,19 @@ MakefkeyPosHash()
 	hash["F10"] := "F10"
 	hash["F11"] := "F11"
 	hash["F12"] := "F12"
-	hash["機1"]  := "F01"
-	hash["機2"]  := "F02"
-	hash["機3"]  := "F03"
-	hash["機4"]  := "F04"
-	hash["機5"]  := "F05"
-	hash["機6"]  := "F06"
-	hash["機7"]  := "F07"
-	hash["機8"]  := "F08"
-	hash["機9"]  := "F09"
-	hash["機10"] := "F10"
-	hash["機11"] := "F11"
-	hash["機12"] := "F12"
 	hash["PrintScreen"] := "G01"
 	hash["ScrollLock"] := "G02" 
 	hash["Pause"]  := "G03"
-	hash["挿"] := "G04"
-	hash["家"] := "G05"
-	hash["前"] := "G06"
-	hash["消"] := "G07"
-	hash["終"] := "G08"
-	hash["次"] := "G09"
-	hash["上"] := "G10"
-	hash["左"] := "G11"
-	hash["下"] := "G12"
-	hash["右"] := "G13"
+	hash["Insert"] := "G04"
+	hash["Home"] := "G05"
+	hash["PgUp"] := "G06"
+	hash["Delete"] := "G07"
+	hash["End"] := "G08"
+	hash["PgDn"] := "G09"
+	hash["Up"] := "G10"
+	hash["Left"] := "G11"
+	hash["Down"] := "G12"
+	hash["Right"] := "G13"
 
 	hash["NumpadDiv"]   := "H01"
 	hash["NumpadMult"]  := "H02"
@@ -3774,226 +3757,102 @@ MakefkeyPosHash()
 	hash["NumpadDot"] := "H16"
 	return hash
 }
+;----------------------------------------------------------------------
+;	機能キー名とAutohotkeyのキー名の変換
+;----------------------------------------------------------------------
+Makefkey2NameHash()
+{
+	hash := Object()
+	hash["半角/全角"] := "sc029"	;半角／全角
+	hash["Backspace"] := "Backspace"
+	hash["Escape"]    := "Escape"
+	hash["Tab"]       := "Tab"
+	hash["Enter"]     := "Enter"
+	hash["LCtrl"]     := "LCtrl"
+	hash["無変換"]    := "sc07B"	;無変換
+	hash["Space"]     := "Space"	;スペース
+	hash["変換"]      := "sc079"	;変換
+	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
+	hash["RCtrl"]     := "RCtrl"
+	hash["Space&Shift"] := "Space"	;スペース＆シフト
+
+	hash["LShift"]  := "LShift"
+	hash["LWin"]    := "LWin"
+	hash["LAlt"]    := "LAlt"
+	hash["RAlt"]    := "RAlt"
+	hash["RWin"]    := "RWin"
+	hash["AppsKey"] := "AppsKey"
+	hash["RShift"]  := "RShift"
+
+	hash["F1"] := "F1"
+	hash["F2"] := "F2"
+	hash["F3"] := "F3"
+	hash["F4"] := "F4"
+	hash["F5"] := "F5"
+	hash["F6"] := "F6"
+	hash["F7"] := "F7"
+	hash["F8"] := "F8"
+	hash["F9"] := "F9"
+	hash["F10"] := "F10"
+	hash["F11"] := "F11"
+	hash["F12"] := "F12"
+	hash["PrintScreen"] := "PrintScreen"
+	hash["ScrollLock"]  := "ScrollLock"
+	hash["Pause"]       := "Pause"
+	hash["Insert"] := "Insert"
+	hash["Home"] := "Home"
+	hash["PgUp"] := "PgUp"
+	hash["Delete"] := "Delete"
+	hash["End"] := "End"
+	hash["PgDn"] := "PgDn"
+	hash["Up"] := "Up"
+	hash["Left"] := "Left"
+	hash["Down"] := "Down"
+	hash["Right"] := "Right"
+
+	hash["NumpadDiv"]   := "NumpadDiv"
+	hash["NumpadMult"]  := "NumpadMult"
+	hash["NumpadAdd"]   := "NumpadAdd"
+	hash["NumpadSub"]   := "NumpadSub"
+	hash["NumpadEnter"] := "NumpadEnter"
+	hash["Numpad0"] := "Numpad0"
+	hash["Numpad1"] := "Numpad1"
+	hash["Numpad2"] := "Numpad2"
+	hash["Numpad3"] := "Numpad3"
+	hash["Numpad4"] := "Numpad4"
+	hash["Numpad5"] := "Numpad5"
+	hash["Numpad6"] := "Numpad6"
+	hash["Numpad7"] := "Numpad7"
+	hash["Numpad8"] := "Numpad8"
+	hash["Numpad9"] := "Numpad9"
+	hash["NumpadDot"] := "NumpadDot"
+	return hash
+}
 
 ;----------------------------------------------------------------------
 ;	機能キー名とスキャンコードの変換
 ;----------------------------------------------------------------------
-MakefkeyCodeHash()
+MakefkeyCodeHash(fkey2Name)
 {
 	hash := Object()
-	hash["半角/全角"] := "sc029"	;半角／全角
-	hash["Backspace"] := sc2scstr(GetKeySC("Backspace"))
-	hash["Escape"]    := sc2scstr(GetKeySC("Escape"))
-
-	hash["Tab"]       := sc2scstr(GetKeySC("Tab"))
-	hash["Enter"]     := sc2scstr(GetKeySC("Enter"))
-
-	hash["左Ctrl"]    := sc2scstr(GetKeySC("LCtrl"))
-	hash["無変換"]    := "sc07B"	;無変換
-	hash["Space"]     := sc2scstr(GetKeySC("Space"))	;スペース
-	hash["変換"]      := "sc079"	;変換
-	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
-	hash["右Ctrl"]    := sc2scstr(GetKeySC("RCtrl"))
-	hash["Space&Shift"] := sc2scstr(GetKeySC("Space"))	;スペース＆シフト
-
-	hash["左Shift"] := sc2scstr(GetKeySC("LShift"))
-	hash["左Win"]   := sc2scstr(GetKeySC("LWin"))
-	hash["左Alt"]   := sc2scstr(GetKeySC("LAlt"))
-	hash["右Alt"]   := sc2scstr(GetKeySC("Ralt"))
-	hash["右Win"]   := sc2scstr(GetKeySC("RWin"))
-	hash["Applications"] := sc2scstr(GetKeySC("AppsKey"))
-	hash["右Shift"] := sc2scstr(GetKeySC("RShift"))
-	
-	hash["F1"] := sc2scstr(GetKeySC("F1"))
-	hash["F2"] := sc2scstr(GetKeySC("F2"))
-	hash["F3"] := sc2scstr(GetKeySC("F3"))
-	hash["F4"] := sc2scstr(GetKeySC("F4"))
-	hash["F5"] := sc2scstr(GetKeySC("F5"))
-	hash["F6"] := sc2scstr(GetKeySC("F6"))
-	hash["F7"] := sc2scstr(GetKeySC("F7"))
-	hash["F8"] := sc2scstr(GetKeySC("F8"))
-	hash["F9"] := sc2scstr(GetKeySC("F9"))
-	hash["F10"] := sc2scstr(GetKeySC("F10"))
-	hash["F11"] := sc2scstr(GetKeySC("F11"))
-	hash["F12"] := sc2scstr(GetKeySC("F12"))
-	hash["PrintScreen"] := sc2scstr(GetKeySC("PrintScreen"))
-	hash["ScrollLock"]  := sc2scstr(GetKeySC("ScrollLock"))
-	hash["Pause"]       := sc2scstr(GetKeySC("Pause"))
-	hash["挿"] := sc2scstr(GetKeySC("Insert"))
-	hash["家"] := sc2scstr(GetKeySC("Home"))
-	hash["前"] := sc2scstr(GetKeySC("PgUp"))
-	hash["消"] := sc2scstr(GetKeySC("Delete"))
-	hash["終"] := sc2scstr(GetKeySC("End"))
-	hash["次"] := sc2scstr(GetKeySC("PgDn"))
-	hash["上"] := sc2scstr(GetKeySC("Up"))
-	hash["左"] := sc2scstr(GetKeySC("Left"))
-	hash["右"] := sc2scstr(GetKeySC("Down"))
-	hash["下"] := sc2scstr(GetKeySC("Right"))
-
-	hash["NumpadDiv"]   := sc2scstr(GetKeySC("NumpadDiv"))
-	hash["NumpadMult"]  := sc2scstr(GetKeySC("NumpadMult"))
-	hash["NumpadAdd"]   := sc2scstr(GetKeySC("NumpadAdd"))
-	hash["NumpadSub"]   := sc2scstr(GetKeySC("NumpadSub"))
-	hash["NumpadEnter"] := sc2scstr(GetKeySC("NumpadEnter"))
-	hash["Numpad0"] := sc2scstr(GetKeySC("Numpad0"))
-	hash["Numpad1"] := sc2scstr(GetKeySC("Numpad1"))
-	hash["Numpad2"] := sc2scstr(GetKeySC("Numpad2"))
-	hash["Numpad3"] := sc2scstr(GetKeySC("Numpad3"))
-	hash["Numpad4"] := sc2scstr(GetKeySC("Numpad4"))
-	hash["Numpad5"] := sc2scstr(GetKeySC("Numpad5"))
-	hash["Numpad6"] := sc2scstr(GetKeySC("Numpad6"))
-	hash["Numpad7"] := sc2scstr(GetKeySC("Numpad7"))
-	hash["Numpad8"] := sc2scstr(GetKeySC("Numpad8"))
-	hash["Numpad9"] := sc2scstr(GetKeySC("Numpad9"))
-	hash["NumpadDot"] := sc2scstr(GetKeySC("NumpadDot"))
+	enum := fkey2Name._NewEnum()
+	While enum[k, v]
+	{
+		hash[k] := sc2scstr(GetKeySC(v))
+	}
 	return hash
 }
 ;----------------------------------------------------------------------
 ;	機能キー名と仮想キーコードの変換
 ;----------------------------------------------------------------------
-MakefkeyVkeyHash()
+MakefkeyVkeyHash(fkey2Name)
 {
 	hash := Object()
-	hash["半角/全角"] := "vkF3"	;半角／全角
-	hash["Backspace"] := "vk08"
-	hash["Escape"]    := "vk1B"
-
-	hash["Tab"]       := "vk09"
-	hash["Enter"]     := "vk0D"
-
-	hash["左Ctrl"]    := "vkA2"
-	hash["無変換"]    := "vk1D"	;無変換
-	hash["Space"]     := "vk20"	;スペース
-	hash["変換"]      := "vk1C"	;変換
-	hash["カタカナ/ひらがな"] := "vkF2"	;カタカナ/ひらがな
-	hash["右Ctrl"]    := "vkA3"
-	hash["Space&Shift"] := "vk20"	;スペース＆シフト
-
-	hash["左Shift"] := "vkA0"
-	hash["左Win"]   := "vk5B"
-	hash["左Alt"]   := "vkA4"
-	hash["右Alt"]   := "vkA5"
-	hash["右Win"]   := "vk5C"
-	hash["Applications"] := "vk5D"
-	hash["右Shift"] := "vkA1"
-	
-	hash["F1"]  := "vk70"
-	hash["F2"]  := "vk71"
-	hash["F3"]  := "vk72"
-	hash["F4"]  := "vk73"
-	hash["F5"]  := "vk74"
-	hash["F6"]  := "vk75"
-	hash["F7"]  := "vk76"
-	hash["F8"]  := "vk77"
-	hash["F9"]  := "vk78"
-	hash["F10"] := "vk79"
-	hash["F11"] := "vk7A"
-	hash["F12"] := "vk7B"
-	hash["PrintScreen"] := "vk2C"
-	hash["ScrollLock"] := "vk91" 
-	hash["Pause"] := "vk13"
-	hash["挿"] := vk2vkstr(GetKeyVK("Insert"))
-	hash["家"] := vk2vkstr(GetKeyVK("Home"))
-	hash["前"] := vk2vkstr(GetKeyVK("PgUp"))
-	hash["消"] := vk2vkstr(GetKeyVK("Delete"))
-	hash["終"] := vk2vkstr(GetKeyVK("End"))
-	hash["次"] := vk2vkstr(GetKeyVK("PgDn"))
-	hash["上"] := vk2vkstr(GetKeyVK("Up"))
-	hash["左"] := vk2vkstr(GetKeyVK("Left"))
-	hash["右"] := vk2vkstr(GetKeyVK("Down"))
-	hash["下"] := vk2vkstr(GetKeyVK("Right"))
-
-	hash["NumpadDiv"]   := vk2vkstr(GetKeyVK("NumpadDiv"))
-	hash["NumpadMult"]  := vk2vkstr(GetKeyVK("NumpadMult"))
-	hash["NumpadAdd"]   := vk2vkstr(GetKeyVK("NumpadAdd"))
-	hash["NumpadSub"]   := vk2vkstr(GetKeyVK("NumpadSub"))
-	hash["NumpadEnter"] := vk2vkstr(GetKeyVK("NumpadEnter"))
-	hash["Numpad0"] := vk2vkstr(GetKeyVK("Numpad0"))
-	hash["Numpad1"] := vk2vkstr(GetKeyVK("Numpad1"))
-	hash["Numpad2"] := vk2vkstr(GetKeyVK("Numpad2"))
-	hash["Numpad3"] := vk2vkstr(GetKeyVK("Numpad3"))
-	hash["Numpad4"] := vk2vkstr(GetKeyVK("Numpad4"))
-	hash["Numpad5"] := vk2vkstr(GetKeyVK("Numpad5"))
-	hash["Numpad6"] := vk2vkstr(GetKeyVK("Numpad6"))
-	hash["Numpad7"] := vk2vkstr(GetKeyVK("Numpad7"))
-	hash["Numpad8"] := vk2vkstr(GetKeyVK("Numpad8"))
-	hash["Numpad9"] := vk2vkstr(GetKeyVK("Numpad9"))
-	hash["NumpadDot"] := vk2vkstr(GetKeyVK("NumpadDot"))
-	return hash
-}
-
-;----------------------------------------------------------------------
-;	機能キー名と表示名の変換
-;----------------------------------------------------------------------
-MakeCodeNameHash()
-{
-	hash := Object()
-	hash["sc029"] := "半/全 "	;半角／全角
-	hash["sc00E"] := "Backsp"
-
-	hash["sc00F"] := " Tab  "
-	hash["sc039"] := "Enter "
-
-	hash["LCtrl"] := "左Ctrl"
-	hash["sc01D"] := "左Ctrl"
-	hash["sc07B"] := "無変換"	;無変換
-	hash["Space"] := " 空白 "	;スペース
-	hash["sc039"] := " 空白 "	;スペース
-	hash["sc079"] := " 変換 "	;変換
-	hash["sc070"] := "カ/ひ"	;カタカナ/ひらがな
-	hash["RCtrl"] := "右Ctrl"
-	hash["sc11D"] := "右Ctrl"
-	
-	hash["sc02A"] := "左Shift"
-	hash["sc15B"] := "左Win"
-	hash["sc038"] := "左Alt"
-	hash["sc138"] := "右Alt"
-	hash["sc15C"] := "右Win"
-	hash["sc15D"] := "Applications"
-	hash["sc136"] := "右Shift"
-	
-	hash["sc001"] := "Escape"
-	hash["sc03B"] := "F1"
-	hash["sc03C"] := "F2"
-	hash["sc03D"] := "F3"
-	hash["sc03E"] := "F4"
-	hash["sc03F"] := "F5"
-	hash["sc040"] := "F6"
-	hash["sc041"] := "F7"
-	hash["sc042"] := "F8"
-	hash["sc043"] := "F9"
-	hash["sc044"] := "F10"
-	hash["sc057"] := "F11"
-	hash["sc058"] := "F12"
-	hash["sc137"] := "PrintScreen"
-	hash["sc046"] := "ScrollLock" 
-	hash["sc045"] := "Pause"
-	hash["sc152"] := "挿" 	;Insert
-	hash["sc147"] := "家" 	;Home
-	hash["sc149"] := "前"	;Pageup
-	hash["sc153"] := "消" 	;Delete
-	hash["sc14F"] := "終"	;End
-	hash["sc151"] := "次"	;Pagedown
-	hash["sc148"] := "上" 	;↑
-	hash["sc14B"] := "左" 	;←
-	hash["sc150"] := "下" 	;↓
-	hash["sc14D"] := "右"	;→
-	hash[sc2scstr(GetKeySC("NumpadDiv"))]   := "NumpadDiv"
-	hash[sc2scstr(GetKeySC("NumpadMult"))]  := "NumpadMult"
-	hash[sc2scstr(GetKeySC("NumpadAdd"))]   := "NumpadAdd"
-	hash[sc2scstr(GetKeySC("NumpadSub"))]   := "NumpadSub"
-	hash[sc2scstr(GetKeySC("NumpadEnter"))] := "HNumpadEnter"
-	hash[sc2scstr(GetKeySC("Numpad0"))] := "Numpad0"
-	hash[sc2scstr(GetKeySC("Numpad1"))] := "Numpad1"
-	hash[sc2scstr(GetKeySC("Numpad2"))] := "Numpad2"
-	hash[sc2scstr(GetKeySC("Numpad3"))] := "Numpad3"
-	hash[sc2scstr(GetKeySC("Numpad4"))] := "Numpad4"
-	hash[sc2scstr(GetKeySC("Numpad5"))] := "Numpad5"
-	hash[sc2scstr(GetKeySC("Numpad6"))] := "Numpad6"
-	hash[sc2scstr(GetKeySC("Numpad7"))] := "Numpad7"
-	hash[sc2scstr(GetKeySC("Numpad8"))] := "Numpad8"
-	hash[sc2scstr(GetKeySC("Numpad9"))] := "Numpad9"
-	hash[sc2scstr(GetKeySC("NumpadDot"))] := "NumpadDot"
+	enum := fkey2Name._NewEnum()
+	While enum[k, v]
+	{
+		hash[k] := vk2vkstr(GetKeyVK(v))
+	}
 	return hash
 }
 

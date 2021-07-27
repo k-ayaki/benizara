@@ -1962,7 +1962,7 @@ Interrupt10:
 		szConverting := IME_GetConverting()
 		
 		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
-		g_debugout3 := g_Modifier
+		g_debugout3 := keyState[fkeyPosHash["LShift"]]	;g_Modifier
 		g_debugout2 := GetPushedKeys()
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
@@ -2048,52 +2048,52 @@ Polling:
 ; 修飾キー状態読み取り
 ;----------------------------------------------------------------------
 ScanModifier:
-	GetKeyStateWithLog5("左Shift")
-	GetKeyStateWithLog5("右Shift")
-	if(keyState[fkeyPosHash["左Shift"]] !=0 || keyState[fkeyPosHash["右Shift"]]!=0)
+	GetKeyStateWithLog5("LShift")
+	GetKeyStateWithLog5("RShift")
+	if(keyState[fkeyPosHash["LShift"]]!=0 || keyState[fkeyPosHash["RShift"]]!=0)
 	{
 		g_Koyubi := "K"
 	} else {
 		g_Koyubi := "N"
 	}
-	GetKeyStateWithLog5("左Ctrl")
-	if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
+	GetKeyStateWithLog5("LCtrl")
+	if(keyState[fkeyPosHash["LCtrl"]]!=0) {
 		g_Modifier := g_Modifier | 0x0200
 	} else {
 		g_Modifier := g_Modifier & (~0x0200)
 	}
-	GetKeyStateWithLog5("右Ctrl")	
-	if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
+	GetKeyStateWithLog5("RCtrl")	
+	if(keyState[fkeyPosHash["RCtrl"]]!=0) {
 		g_Modifier := g_Modifier | 0x0400
 	} else {
 		g_Modifier := g_Modifier & (~0x0400)
 	}
-	GetKeyStateWithLog5("左Alt")
-	if(keyState[fkeyPosHash["左Alt"]]!=0) {
+	GetKeyStateWithLog5("LAlt")
+	if(keyState[fkeyPosHash["LAlt"]]!=0) {
 		g_Modifier := g_Modifier | 0x0800
 	} else {
 		g_Modifier := g_Modifier & (~0x0800)
 	}
-	GetKeyStateWithLog5("右Alt")
-	if(keyState[fkeyPosHash["右Alt"]]!=0) {
+	GetKeyStateWithLog5("RAlt")
+	if(keyState[fkeyPosHash["RAlt"]]!=0) {
 		g_Modifier := g_Modifier | 0x1000
 	} else {
 		g_Modifier := g_Modifier & (~0x1000)
 	}
-	GetKeyStateWithLog5("左Win")
-	if(keyState[fkeyPosHash["左Win"]]!=0) {
+	GetKeyStateWithLog5("LWin")
+	if(keyState[fkeyPosHash["LWin"]]!=0) {
 		g_Modifier := g_Modifier | 0x2000
 	} else {
 		g_Modifier := g_Modifier & (~0x2000)
 	}
-	GetKeyStateWithLog5("右Win")
-	if(keyState[fkeyPosHash["右Win"]]!=0) {
+	GetKeyStateWithLog5("RWin")
+	if(keyState[fkeyPosHash["RWin"]]!=0) {
 		g_Modifier := g_Modifier | 0x4000
 	} else {
 		g_Modifier := g_Modifier & (~0x4000)
 	}
-	GetKeyStateWithLog5("Applications")
-	if(keyState[fkeyPosHash["Applications"]]!=0) {
+	GetKeyStateWithLog5("AppsKey")
+	if(keyState[fkeyPosHash["AppsKey"]]!=0) {
 		g_Modifier := g_Modifier | 0x8000
 	} else {
 		g_Modifier := g_Modifier & (~0x8000)
@@ -2172,9 +2172,11 @@ ModeInitialize:
 ;-----------------------------------------------------------------------
 GetKeyStateWithLog5(fName) {
 	global keyState, fkeyPosHash, fkeyVkeyHash
+	global keyAttribute3, g_Romaji, g_Oya, g_Koyubi
+
 	kDown := 0
 	_locationPos := fkeyPosHash[fName]
-	if(_locationPos != "") {
+	if(_locationPos != "" && keyAttribute3[g_Romaji . g_Oya . g_Koyubi . _locationPos]=="") {
 		stCurr := GetKeyState(fkeyVkeyHash[fName],"P")
 		if(stCurr != 0 && keyState[_locationPos] == 0)	; keydown
 		{
@@ -2420,30 +2422,30 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("F11", flg)
 	SetHotkeyFunctionByName("F12", flg)
 	SetHotkeyFunctionByName("半角/全角", flg)
-	SetHotkeyFunctionByName("左Ctrl", flg)
+	SetHotkeyFunctionByName("LCtrl", flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
-	SetHotkeyFunctionByName("右Ctrl", flg)
-	SetHotkeyFunctionByName("左Shift", flg)
-	SetHotkeyFunctionByName("左Win", flg)
-	SetHotkeyFunctionByName("左Alt", flg)
-	SetHotkeyFunctionByName("右Alt", flg)
-	SetHotkeyFunctionByName("右Win", flg)
-	SetHotkeyFunctionByName("Applications", flg)
-	SetHotkeyFunctionByName("右Shift", flg)
+	SetHotkeyFunctionByName("RCtrl", flg)
+	SetHotkeyFunctionByName("LShift", flg)
+	SetHotkeyFunctionByName("LWin", flg)
+	SetHotkeyFunctionByName("LAlt", flg)
+	SetHotkeyFunctionByName("RAlt", flg)
+	SetHotkeyFunctionByName("RWin", flg)
+	SetHotkeyFunctionByName("AppsKey", flg)
+	SetHotkeyFunctionByName("RShift", flg)
 
 	SetHotkeyFunctionByName("PrintScreen", flg)
-	;SetHotkeyFunctionByName("ScrollLock", flg)
-	;SetHotkeyFunctionByName("Pause", flg)
-	SetHotkeyFunctionByName("挿", flg)
-	SetHotkeyFunctionByName("家", flg)
-	SetHotkeyFunctionByName("前", flg)
-	SetHotkeyFunctionByName("消", flg)
-	SetHotkeyFunctionByName("終", flg)
-	SetHotkeyFunctionByName("次", flg)
-	SetHotkeyFunctionByName("上", flg)
-	SetHotkeyFunctionByName("左", flg)
-	SetHotkeyFunctionByName("下", flg)
-	SetHotkeyFunctionByName("右", flg)
+	SetHotkeyFunctionByName("ScrollLock", flg)
+	SetHotkeyFunctionByName("Pause", flg)
+	SetHotkeyFunctionByName("Insert", flg)
+	SetHotkeyFunctionByName("Home", flg)
+	SetHotkeyFunctionByName("PgUp", flg)
+	SetHotkeyFunctionByName("Delete", flg)
+	SetHotkeyFunctionByName("End", flg)
+	SetHotkeyFunctionByName("PgDn", flg)
+	SetHotkeyFunctionByName("Up", flg)
+	SetHotkeyFunctionByName("Left", flg)
+	SetHotkeyFunctionByName("Down", flg)
+	SetHotkeyFunctionByName("Right", flg)
 
 	SetHotkeyFunctionByName("NumpadDiv", flg)
 	SetHotkeyFunctionByName("NumpadMult", flg)
@@ -2730,35 +2732,35 @@ gSC136: ;右Shift
 	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	kName := keyNameHash[g_layoutPos]
-	if(kName=="sc02A" || kName=="sc136") {
+	if(kName=="LShift" || kName=="RShift") {
 		g_Koyubi := "K"
 	}
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
-	if(kName=="sc01D") {	;左Ctrl
-		g_Modifier := g_Modifier | 0x0200
+	if(kName=="LCtrl") {	;左Ctrl
+		g_Modifier := g_Modifier | 0x0200A
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc11D") {	;右Ctrl
+	if(kName=="RCtrl") {	;右Ctrl
 		g_Modifier := g_Modifier | 0x0400
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc038") {	;左Alt
+	if(kName=="LAlt") {	;左Alt
 		g_Modifier := g_Modifier | 0x0800
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc138") {	;右Alt
+	if(kName=="RAlt") {	;右Alt
 		g_Modifier := g_Modifier | 0x1000
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc15B") {	;左Win
+	if(kName=="LWin") {	;左Win
 		g_Modifier := g_Modifier | 0x2000
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc15C") {	;右Win
+	if(kName=="RWin") {	;右Win
 		g_Modifier := g_Modifier | 0x4000
 		goto, keydown%g_metaKey%
 	}
-	if(kName=="sc15D") {	;Applications
+	if(kName=="AppsKey") {	;Applications
 		g_Modifier := g_Modifier | 0x8000
 		goto, keydown%g_metaKey%
 	}
@@ -2925,28 +2927,28 @@ gSC136up:	;右Shift
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
-	if(kName=="sc02A" || kName=="sc136") {
+	if(kName=="LShift" || kName=="RShift") {
 		g_Koyubi := "N"
 	}
-	if(kName=="sc01D") {	;左Ctrl
+	if(kName=="LCtrl") {	;左Ctrl
 		g_Modifier := g_Modifier & (~0x0200)
 	}
-	if(kName=="sc11D") {	;右Ctrl
+	if(kName=="RCtrl") {	;右Ctrl
 		g_Modifier := g_Modifier & (~0x0400)
 	}
-	if(kName=="sc038") {	;左Alt
+	if(kName=="LAlt") {	;左Alt
 		g_Modifier := g_Modifier & (~0x0800)
 	}
-	if(kName=="sc138") {	;右Alt
+	if(kName=="RAlt") {	;右Alt
 		g_Modifier := g_Modifier & (~0x1000)
 	}
-	if(kName=="sc15B") {	;左Win
+	if(kName=="LWin") {	;左Win
 		g_Modifier := g_Modifier & (~0x2000)
 	}
-	if(kName=="sc15C") {	;右Win
+	if(kName=="RWin") {	;右Win
 		g_Modifier := g_Modifier & (~0x4000)
 	}
-	if(kName=="sc15D") {	;Applications
+	if(kName=="AppsKey") {	;Applications
 		g_Modifier := g_Modifier & (~0x8000)
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
