@@ -1566,8 +1566,8 @@ MakeZ2hHash() {
 	hash["半"] := ""
 	hash["拗"] := ""
 	hash["修"] := ""
-	hash[chr(65509)] := "\"up
-	hash[chr(8220)]  := """Ctrlf"
+	hash[chr(65509)] := "\"
+	hash[chr(8220)]  := """"
 	hash[chr(8221)]  := """"	; 二重引用符
 	hash[chr(8217)]  := "'"		; 一重引用符
 	hash[chr(8216)]  := "``"
@@ -2644,14 +2644,14 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKG01"] := "X"
 	keyAttribute3["RNG01"] := "X"
 	keyAttribute3["RKG01"] := "X"
-	keyAttribute3["ANG02"] := ""
-	keyAttribute3["AKG02"] := ""
-	keyAttribute3["RNG02"] := ""
-	keyAttribute3["RKG02"] := ""
-	keyAttribute3["ANG03"] := ""
-	keyAttribute3["AKG03"] := ""
-	keyAttribute3["RNG03"] := ""
-	keyAttribute3["RKG03"] := ""
+	keyAttribute3["ANG02"] := "X"
+	keyAttribute3["AKG02"] := "X"
+	keyAttribute3["RNG02"] := "X"
+	keyAttribute3["RKG02"] := "X"
+	keyAttribute3["ANG03"] := "X"
+	keyAttribute3["AKG03"] := "X"
+	keyAttribute3["RNG03"] := "X"
+	keyAttribute3["RKG03"] := "X"
 	keyAttribute3["ANG04"] := "X"
 	keyAttribute3["AKG04"] := "X"
 	keyAttribute3["RNG04"] := "X"
@@ -3136,11 +3136,11 @@ MakeKeyState() {
 MakekeyNameHash()
 {
 	hash := Object()
-	hash["H01"] := "NumpadDiv"
-	hash["H02"] := "NumpadMult"
-	hash["H03"] := "NumpadAdd"
-	hash["H04"] := "NumpadSub"
-	hash["H05"] := "NumpadEnter"
+	hash["H01"] := sc2scstr(GetKeySC("NumpadDiv"))
+	hash["H02"] := sc2scstr(GetKeySC("NumpadMult"))
+	hash["H03"] := sc2scstr(GetKeySC("NumpadAdd"))
+	hash["H04"] := sc2scstr(GetKeySC("NumpadSub"))
+	hash["H05"] := sc2scstr(GetKeySC("NumpadEnter"))
 	hash["H06"] := sc2scstr(GetKeySC("Numpad0"))
 	hash["H07"] := sc2scstr(GetKeySC("Numpad1"))
 	hash["H08"] := sc2scstr(GetKeySC("Numpad2"))
@@ -3687,31 +3687,41 @@ MakeLayoutPosHash(scHash)
 }
 ;----------------------------------------------------------------------
 ;	機能キー名とレイアウト位置の変換
+;	
+;Esc, Tab, 無変換, Space, 変換, Enter, BackSpace, Delete, Insert,
+;左Shift, 右Shift, 左Ctrl, 右Ctrl, 左Alt, 右Alt, CapsLock/英数,
+;半角/全角, カタカナ/ひらがな, 左Win, 右Win, Applications,
+;Capsロック, かなロック,
+;F1, F2, F3, F4, F5, F6, F7, F8,
+;F9, F10, F11, F12, F13, F14, F15, F16,
+;F17, F18, F19, F20, F21, F22, F23, F24,
+;上, 左, 右, 下, Home, End, PageUp, PageDown,
+;拡張1, 拡張2, 拡張3, 拡張4
 ;----------------------------------------------------------------------
 MakefkeyPosHash()
 {
 	hash := Object()
-	hash["Escape"]    := "F00"
+	hash["Esc"]    := "F00"
 	hash["半角/全角"] := "E00"
-	hash["Backspace"] := "E14"
+	hash["BackSpace"] := "E14"
 	hash["Tab"]       := "D00"
 	hash["Enter"]     := "C13"
 
-	hash["LCtrl"] := "A00"
+	hash["左Ctrl"] := "A00"
 	hash["無変換"] := "A01"
 	hash["Space"]  := "A02"	;スペース
-	hash["Space&Shift"]  := "A02"	;スペース
+	hash["Space&Shift"] := "A02"	;スペース
 	hash["変換"]   := "A03"
 	hash["カタカナ/ひらがな"] := "A04"
-	hash["RCtrl"] := "A05"
+	hash["右Ctrl"] := "A05"
 	
-	hash["LShift"]  := "A06"
-	hash["LWin"]    := "A07"
-	hash["LAlt"]    := "A08"
-	hash["RAlt"]    := "A09"
-	hash["RWin"]    := "A10"
-	hash["AppsKey"] := "A11"
-	hash["RShift"]  := "A12"
+	hash["左Shift"] := "A06"
+	hash["左Win"] := "A07"
+	hash["左Alt"] := "A08"
+	hash["右Alt"] := "A09"
+	hash["右Win"] := "A10"
+	hash["Applications"] := "A11"
+	hash["右Shift"] := "A12"
 	
 	hash["F1"]  := "F01"
 	hash["F2"]  := "F02"
@@ -3727,17 +3737,17 @@ MakefkeyPosHash()
 	hash["F12"] := "F12"
 	hash["PrintScreen"] := "G01"
 	hash["ScrollLock"] := "G02" 
-	hash["Pause"]  := "G03"
+	hash["Pause"] := "G03"
 	hash["Insert"] := "G04"
 	hash["Home"] := "G05"
-	hash["PgUp"] := "G06"
+	hash["PageUp"] := "G06"
 	hash["Delete"] := "G07"
 	hash["End"] := "G08"
-	hash["PgDn"] := "G09"
-	hash["Up"] := "G10"
-	hash["Left"] := "G11"
-	hash["Down"] := "G12"
-	hash["Right"] := "G13"
+	hash["PageDown"] := "G09"
+	hash["上"] := "G10"
+	hash["左"] := "G11"
+	hash["下"] := "G12"
+	hash["右"] := "G13"
 
 	hash["NumpadDiv"]   := "H01"
 	hash["NumpadMult"]  := "H02"
@@ -3755,6 +3765,18 @@ MakefkeyPosHash()
 	hash["Numpad8"] := "H14"
 	hash["Numpad9"] := "H15"
 	hash["NumpadDot"] := "H16"
+
+	hash["NumpadIns"]   := "H06"
+	hash["NumpadEnd"]   := "H07"
+	hash["NumpadDown"]  := "H08"
+	hash["NumpadPgUp"]  := "H09"
+	hash["NumpadLeft"]  := "H10"
+	hash["NumpadClear"] := "H11"
+	hash["NumpadRight"] := "H12"
+	hash["NumpadHome"]  := "H13"
+	hash["NumpadUp"]    := "H14"
+	hash["NumpadPgUp"]  := "H15"
+	hash["NumpadDel"]   := "H16"
 	return hash
 }
 ;----------------------------------------------------------------------
@@ -3763,26 +3785,27 @@ MakefkeyPosHash()
 Makefkey2NameHash()
 {
 	hash := Object()
+	hash["Esc"]       := "Escape"
 	hash["半角/全角"] := "sc029"	;半角／全角
-	hash["Backspace"] := "Backspace"
-	hash["Escape"]    := "Escape"
+	hash["BackSpace"] := "Backspace"
 	hash["Tab"]       := "Tab"
 	hash["Enter"]     := "Enter"
-	hash["LCtrl"]     := "LCtrl"
-	hash["無変換"]    := "sc07B"	;無変換
-	hash["Space"]     := "Space"	;スペース
-	hash["変換"]      := "sc079"	;変換
-	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
-	hash["RCtrl"]     := "RCtrl"
-	hash["Space&Shift"] := "Space"	;スペース＆シフト
 
-	hash["LShift"]  := "LShift"
-	hash["LWin"]    := "LWin"
-	hash["LAlt"]    := "LAlt"
-	hash["RAlt"]    := "RAlt"
-	hash["RWin"]    := "RWin"
-	hash["AppsKey"] := "AppsKey"
-	hash["RShift"]  := "RShift"
+	hash["左Ctrl"] := "LCtrl"
+	hash["無変換"] := "sc07B"	;無変換
+	hash["Space"]  := "Space"	;スペース
+	hash["Space&Shift"] := "Space"	;スペース＆シフト
+	hash["変換"]   := "sc079"	;変換
+	hash["カタカナ/ひらがな"] := "sc070"	;カタカナ/ひらがな
+	hash["右Ctrl"] := "RCtrl"
+
+	hash["左Shift"] := "LShift"
+	hash["左Win"] := "LWin"
+	hash["左Alt"] := "LAlt"
+	hash["右Alt"] := "RAlt"
+	hash["右Win"] := "RWin"
+	hash["Applications"] := "AppsKey"
+	hash["右Shift"] := "RShift"
 
 	hash["F1"] := "F1"
 	hash["F2"] := "F2"
@@ -3801,14 +3824,14 @@ Makefkey2NameHash()
 	hash["Pause"]       := "Pause"
 	hash["Insert"] := "Insert"
 	hash["Home"] := "Home"
-	hash["PgUp"] := "PgUp"
+	hash["PageUp"] := "PgUp"
 	hash["Delete"] := "Delete"
 	hash["End"] := "End"
-	hash["PgDn"] := "PgDn"
-	hash["Up"] := "Up"
-	hash["Left"] := "Left"
-	hash["Down"] := "Down"
-	hash["Right"] := "Right"
+	hash["PageDown"] := "PgDn"
+	hash["上"] := "Up"
+	hash["左"] := "Left"
+	hash["下"] := "Down"
+	hash["右"] := "Right"
 
 	hash["NumpadDiv"]   := "NumpadDiv"
 	hash["NumpadMult"]  := "NumpadMult"
@@ -3826,6 +3849,18 @@ Makefkey2NameHash()
 	hash["Numpad8"] := "Numpad8"
 	hash["Numpad9"] := "Numpad9"
 	hash["NumpadDot"] := "NumpadDot"
+
+	hash["NumpadIns"]   := "NumpadIns"
+	hash["NumpadEnd"]   := "NumpadEnd"
+	hash["NumpadDown"]  := "NumpadDown"
+	hash["NumpadPgUp"]  := "NumpadPgUp"
+	hash["NumpadLeft"]  := "NumpadLeft"
+	hash["NumpadClear"] := "NumpadClear"
+	hash["NumpadRight"] := "NumpadRight"
+	hash["NumpadHome"]  := "NumpadHome"
+	hash["NumpadUp"]    := "NumpadUp"
+	hash["NumpadPgUp"]  := "NumpadPgUp"
+	hash["NumpadDel"]   := "NumpadDel"
 	return hash
 }
 

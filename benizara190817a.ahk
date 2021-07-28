@@ -2,18 +2,17 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.720 .... 2021/7/26
+;	ver.0.1.4.720 .... 2021/7/28
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
 	#MaxhotkeysPerInterval 400
-	#MaxThreads 64
 	#KeyHistory
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
 	g_Ver := "ver.0.1.4.720"
-	g_Date := "2021/7/26"
+	g_Date := "2021/7/28"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -1443,6 +1442,10 @@ keydownX:
 	g_trigger := g_metaKey
 	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
+
+	if(g_KeyPause==kName) {
+		Gosub,pauseKeyDown
+	}
 	keyState[g_layoutPos] := 2
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSendOne(SetModifierSymbol() . MnDown(kName))
@@ -1546,8 +1549,6 @@ SendZeroDelayMO:
 		}
 	}
 	return
-	
-	
 
 ;----------------------------------------------------------------------
 ; 親指シフトと同時打鍵の零遅延モードの先行出力
@@ -1962,7 +1963,7 @@ Interrupt10:
 		szConverting := IME_GetConverting()
 		
 		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
-		g_debugout3 := keyState[fkeyPosHash["LShift"]]	;g_Modifier
+		g_debugout3 := g_Modifier
 		g_debugout2 := GetPushedKeys()
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . g_Koyubi
@@ -2048,52 +2049,52 @@ Polling:
 ; 修飾キー状態読み取り
 ;----------------------------------------------------------------------
 ScanModifier:
-	GetKeyStateWithLog5("LShift")
-	GetKeyStateWithLog5("RShift")
-	if(keyState[fkeyPosHash["LShift"]]!=0 || keyState[fkeyPosHash["RShift"]]!=0)
+	GetKeyStateWithLog5("左Shift")
+	GetKeyStateWithLog5("右Shift")
+	if(keyState[fkeyPosHash["左Shift"]]!=0 || keyState[fkeyPosHash["右Shift"]]!=0)
 	{
 		g_Koyubi := "K"
 	} else {
 		g_Koyubi := "N"
 	}
-	GetKeyStateWithLog5("LCtrl")
-	if(keyState[fkeyPosHash["LCtrl"]]!=0) {
+	GetKeyStateWithLog5("左Ctrl")
+	if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
 		g_Modifier := g_Modifier | 0x0200
 	} else {
 		g_Modifier := g_Modifier & (~0x0200)
 	}
-	GetKeyStateWithLog5("RCtrl")	
-	if(keyState[fkeyPosHash["RCtrl"]]!=0) {
+	GetKeyStateWithLog5("右Ctrl")	
+	if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
 		g_Modifier := g_Modifier | 0x0400
 	} else {
 		g_Modifier := g_Modifier & (~0x0400)
 	}
-	GetKeyStateWithLog5("LAlt")
-	if(keyState[fkeyPosHash["LAlt"]]!=0) {
+	GetKeyStateWithLog5("左Alt")
+	if(keyState[fkeyPosHash["左Alt"]]!=0) {
 		g_Modifier := g_Modifier | 0x0800
 	} else {
 		g_Modifier := g_Modifier & (~0x0800)
 	}
-	GetKeyStateWithLog5("RAlt")
-	if(keyState[fkeyPosHash["RAlt"]]!=0) {
+	GetKeyStateWithLog5("右Alt")
+	if(keyState[fkeyPosHash["右Alt"]]!=0) {
 		g_Modifier := g_Modifier | 0x1000
 	} else {
 		g_Modifier := g_Modifier & (~0x1000)
 	}
-	GetKeyStateWithLog5("LWin")
-	if(keyState[fkeyPosHash["LWin"]]!=0) {
+	GetKeyStateWithLog5("左Win")
+	if(keyState[fkeyPosHash["左Win"]]!=0) {
 		g_Modifier := g_Modifier | 0x2000
 	} else {
 		g_Modifier := g_Modifier & (~0x2000)
 	}
-	GetKeyStateWithLog5("RWin")
-	if(keyState[fkeyPosHash["RWin"]]!=0) {
+	GetKeyStateWithLog5("右Win")
+	if(keyState[fkeyPosHash["右Win"]]!=0) {
 		g_Modifier := g_Modifier | 0x4000
 	} else {
 		g_Modifier := g_Modifier & (~0x4000)
 	}
-	GetKeyStateWithLog5("AppsKey")
-	if(keyState[fkeyPosHash["AppsKey"]]!=0) {
+	GetKeyStateWithLog5("Applications")
+	if(keyState[fkeyPosHash["Applications"]]!=0) {
 		g_Modifier := g_Modifier | 0x8000
 	} else {
 		g_Modifier := g_Modifier & (~0x8000)
@@ -2408,7 +2409,7 @@ SetHotkeyInitByPos(_pos)
 ;----------------------------------------------------------------------
 SetHotkeyFunction(flg)
 {
-	SetHotkeyFunctionByName("Escape", flg)
+	SetHotkeyFunctionByName("Esc", flg)
 	SetHotkeyFunctionByName("F1", flg)
 	SetHotkeyFunctionByName("F2", flg)
 	SetHotkeyFunctionByName("F3", flg)
@@ -2422,30 +2423,30 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("F11", flg)
 	SetHotkeyFunctionByName("F12", flg)
 	SetHotkeyFunctionByName("半角/全角", flg)
-	SetHotkeyFunctionByName("LCtrl", flg)
+	SetHotkeyFunctionByName("左Ctrl", flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
-	SetHotkeyFunctionByName("RCtrl", flg)
-	SetHotkeyFunctionByName("LShift", flg)
-	SetHotkeyFunctionByName("LWin", flg)
-	SetHotkeyFunctionByName("LAlt", flg)
-	SetHotkeyFunctionByName("RAlt", flg)
-	SetHotkeyFunctionByName("RWin", flg)
-	SetHotkeyFunctionByName("AppsKey", flg)
-	SetHotkeyFunctionByName("RShift", flg)
+	SetHotkeyFunctionByName("右Ctrl", flg)
+	SetHotkeyFunctionByName("左Shift", flg)
+	SetHotkeyFunctionByName("左Win", flg)
+	SetHotkeyFunctionByName("左Alt", flg)
+	SetHotkeyFunctionByName("右Alt", flg)
+	SetHotkeyFunctionByName("右Win", flg)
+	SetHotkeyFunctionByName("Applications", flg)
+	SetHotkeyFunctionByName("右Shift", flg)
 
 	SetHotkeyFunctionByName("PrintScreen", flg)
 	SetHotkeyFunctionByName("ScrollLock", flg)
 	SetHotkeyFunctionByName("Pause", flg)
 	SetHotkeyFunctionByName("Insert", flg)
 	SetHotkeyFunctionByName("Home", flg)
-	SetHotkeyFunctionByName("PgUp", flg)
+	SetHotkeyFunctionByName("PageUp", flg)
 	SetHotkeyFunctionByName("Delete", flg)
 	SetHotkeyFunctionByName("End", flg)
-	SetHotkeyFunctionByName("PgDn", flg)
-	SetHotkeyFunctionByName("Up", flg)
-	SetHotkeyFunctionByName("Left", flg)
-	SetHotkeyFunctionByName("Down", flg)
-	SetHotkeyFunctionByName("Right", flg)
+	SetHotkeyFunctionByName("PageDown", flg)
+	SetHotkeyFunctionByName("上", flg)
+	SetHotkeyFunctionByName("左", flg)
+	SetHotkeyFunctionByName("右", flg)
+	SetHotkeyFunctionByName("下", flg)
 
 	SetHotkeyFunctionByName("NumpadDiv", flg)
 	SetHotkeyFunctionByName("NumpadMult", flg)
