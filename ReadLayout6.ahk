@@ -727,19 +727,16 @@ SetLayoutProperty:
 	if(LF["ANN"]!="" && isPrefixShift("A"))
 	{
 		ShiftMode["A"] := "プレフィックスシフト"
-		InitOyakey("A")
 	}
 	else
 	if(LF["ANN"]!="" && listSimulMode("A")!="")
 	{
 		ShiftMode["A"] := "文字同時打鍵"
-		InitOyakey("A")
 	}
 	else
 	if(LF["ANN"]!="" && LF["ANK"]!="")
 	{
 		ShiftMode["A"] := "小指シフト"
-		InitOyakey("A")
 	}
 	ShiftMode["R"] := ""
 	if(LF["RNN"]!="" && LF["RRN"]!="" && LF["RLN"]!="")
@@ -761,19 +758,16 @@ SetLayoutProperty:
 	if(LF["RNN"]!="" && isPrefixShift("R"))
 	{
 		ShiftMode["R"] := "プレフィックスシフト"
-		InitOyakey("R")
 	}
 	else
 	if(LF["RNN"]!="" && listSimulMode("R")!="")
 	{
 		ShiftMode["R"] := "文字同時打鍵"
-		InitOyakey("R")
 	}
 	else
 	if(LF["RNN"]!="" && LF["RNK"]!="")
 	{
 		ShiftMode["R"] := "小指シフト"
-		InitOyakey("R")
 	}
 	if(LF["RNK"]!="") {
 		InitShiftkey("R")
@@ -838,7 +832,6 @@ SetE2AKeyTables:
 	if(_error <> "") 
 		return
 	_col := "A"
-	;org := StrSplit("換,空,変,日",",")
 	org := StrSplit(LF[g_mode . "A"],",")
 	Gosub, SetKeyTable
 	if(_error <> "") 
@@ -852,17 +845,17 @@ RemapOyaKey(_Romaji) {
 	global keyAttribute3, g_Oya2Layout, g_OyaKey, g_KeySingle, ShiftMode
 	global g_Oya2kName, fkeyPosHash
 
-	keyAttribute3[_Romaji . "N" . fkeyPosHash["無変換"]] := ""
-	keyAttribute3[_Romaji . "N" . fkeyPosHash["Space"]] := "X"
-	keyAttribute3[_Romaji . "N" . fkeyPosHash["変換"]] := ""
-	keyAttribute3[_Romaji . "K" . fkeyPosHash["無変換"]] := ""
-	keyAttribute3[_Romaji . "K" . fkeyPosHash["Space"]] := "X"
-	keyAttribute3[_Romaji . "K" . fkeyPosHash["変換"]] := ""
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["無変換"]] := "X"
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["Space"]]  := "X"
+	keyAttribute3[_Romaji . "N" . fkeyPosHash["変換"]]   := "X"
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["無変換"]] := "X"
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["Space"]]  := "X"
+	keyAttribute3[_Romaji . "K" . fkeyPosHash["変換"]]   := "X"
 	if(ShiftMode[_Romaji] != "親指シフト") {
 		g_Oya2Layout["L"] := ""
 		g_Oya2Layout["R"] := ""
-		g_Oya2kName["L"] := ""
-		g_Oya2kName["R"] := ""
+		g_Oya2kName["L"]  := ""
+		g_Oya2kName["R"]  := ""
 		return
 	}
 	if(g_OyaKey == "無変換－空白") {
@@ -882,37 +875,24 @@ RemapOyaKey(_Romaji) {
 	keyAttribute3[_Romaji . "K" . g_Oya2Layout["L"]] := "L"
 	keyAttribute3[_Romaji . "N" . g_Oya2Layout["R"]] := "R"
 	keyAttribute3[_Romaji . "K" . g_Oya2Layout["R"]] := "R"
-	if(_Romaji == "R") {
-		; ローマ字モードにて親指シフトモード、かつキー単独打鍵が無効ならば、
-		; 英数モードでも変換キーと無変換キーを無効化
-		keyAttribute3["AN" . fkeyPosHash["無変換"]] := ""
-		keyAttribute3["AN" . fkeyPosHash["Space"]] := "X"
-		keyAttribute3["AN" . fkeyPosHash["変換"]] := ""
-		keyAttribute3["AK" . fkeyPosHash["無変換"]] := ""
-		keyAttribute3["AK" . fkeyPosHash["Space"]] := "X"
-		keyAttribute3["AK" . fkeyPosHash["変換"]] := ""
-		if(g_KeySingle == "無効") {
-			keyAttribute3["AN" . g_Oya2Layout["L"]] := "L"
-			keyAttribute3["AK" . g_Oya2Layout["L"]] := "L"
-			keyAttribute3["AN" . g_Oya2Layout["R"]] := "R"
-			keyAttribute3["AK" . g_Oya2Layout["R"]] := "R"
-		}
-	}
+	; 副作用があるので、この機能は切る 21/7/29
+;	if(_Romaji == "R") {
+;		; ローマ字モードにて親指シフトモード、かつキー単独打鍵が無効ならば、
+;		; 英数モードでも変換キーと無変換キーを無効化
+;		keyAttribute3["AN" . fkeyPosHash["無変換"]] := "X"
+;		keyAttribute3["AN" . fkeyPosHash["Space"]]  := "X"
+;		keyAttribute3["AN" . fkeyPosHash["変換"]]   := "X"
+;		keyAttribute3["AK" . fkeyPosHash["無変換"]] := "X"
+;		keyAttribute3["AK" . fkeyPosHash["Space"]]  := "X"
+;		keyAttribute3["AK" . fkeyPosHash["変換"]]   := "X"
+;		if(g_KeySingle == "無効") {
+;			keyAttribute3["AN" . g_Oya2Layout["L"]] := "L"
+;			keyAttribute3["AK" . g_Oya2Layout["L"]] := "L"
+;			keyAttribute3["AN" . g_Oya2Layout["R"]] := "R"
+;			keyAttribute3["AK" . g_Oya2Layout["R"]] := "R"
+;		}
+;	}
 	return
-}
-;----------------------------------------------------------------------
-;	キー属性配列を初期化する
-;----------------------------------------------------------------------
-InitOyakey(_Romaji)
-{
-	global keyAttribute3
-
-	keyAttribute3[_Romaji . "NA01"] := ""
-	keyAttribute3[_Romaji . "NA02"] := "X"
-	keyAttribute3[_Romaji . "NA03"] := ""
-	keyAttribute3[_Romaji . "KA01"] := ""
-	keyAttribute3[_Romaji . "KA02"] := "X"
-	keyAttribute3[_Romaji . "KA03"] := ""
 }
 ;----------------------------------------------------------------------
 ;	スペース＆シフトの設定
@@ -2960,18 +2940,18 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKA00"] := ""
 	keyAttribute3["RNA00"] := ""
 	keyAttribute3["RKA00"] := ""
-	keyAttribute3["ANA01"] := ""
-	keyAttribute3["AKA01"] := ""
-	keyAttribute3["RNA01"] := ""
-	keyAttribute3["RKA01"] := ""
+	keyAttribute3["ANA01"] := "X"	; 無変換
+	keyAttribute3["AKA01"] := "X"
+	keyAttribute3["RNA01"] := "X"
+	keyAttribute3["RKA01"] := "X"
 	keyAttribute3["ANA02"] := "X"	; Space
 	keyAttribute3["AKA02"] := "X"
 	keyAttribute3["RNA02"] := "X"
 	keyAttribute3["RKA02"] := "X"
-	keyAttribute3["ANA03"] := ""
-	keyAttribute3["AKA03"] := ""
-	keyAttribute3["RNA03"] := ""
-	keyAttribute3["RKA03"] := ""
+	keyAttribute3["ANA03"] := "X"	; 変換
+	keyAttribute3["AKA03"] := "X"
+	keyAttribute3["RNA03"] := "X"
+	keyAttribute3["RKA03"] := "X"
 	keyAttribute3["ANA04"] := "X"	; カタカナひらがな
 	keyAttribute3["AKA04"] := "X"
 	keyAttribute3["RNA04"] := "X"

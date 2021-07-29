@@ -1923,11 +1923,12 @@ Interrupt10:
 		; 現在の配列面が定義されていればキーフック
 		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
 			SetHotkey("on")
+			SetHotkeyFunction("on")
 		} else {
 			SetHotkey("off")
+			SetHotkeyFunction("off")
 		}
 		SetHotkeyHenkan("on")
-		SetHotkeyFunction("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1973,7 +1974,8 @@ Interrupt10:
 	}
 	sleep,-1
 	return
-	
+
+
 ;----------------------------------------------------------------------
 ; 10mSECなどのポーリング
 ;----------------------------------------------------------------------
@@ -2239,10 +2241,10 @@ ChkIME:
 		vImeMode := IME_GET() & 32767
 		if(vImeMode==0)
 		{
-			vImeConvMode :=IME_GetConvMode()
+			vImeConvMode :=IME_GetConvMode2()
 			g_Romaji := "A"
 		} else {
-			vImeConvMode :=IME_GetConvMode()
+			vImeConvMode :=IME_GetConvMode2()
 			if( vImeConvMode & 0x01==1) ;半角カナ・全角平仮名・全角カタカナ
 			{
 				g_Romaji := "R"
@@ -2259,6 +2261,18 @@ ChkIME:
 		;Tooltip, %g_Romaji% %vImeConvMode%, 0, 0, 2 ; debug
 	;}
 	return
+
+;----------------------------------------------------------------------
+; IMEの変換モード取得のラッパ
+;----------------------------------------------------------------------
+IME_GetConvMode2()
+{
+	
+	if(WinExist("ahk_class #32768")!=0) {	; IMEメニュー表示中
+		return 0
+	}
+	return IME_GetConvMode()
+}
 
 ;----------------------------------------------------------------------
 ; キーを押下されたときに呼び出されるGotoラベルにフックする
@@ -2422,8 +2436,11 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("F10", flg)
 	SetHotkeyFunctionByName("F11", flg)
 	SetHotkeyFunctionByName("F12", flg)
+
 	SetHotkeyFunctionByName("半角/全角", flg)
+
 	SetHotkeyFunctionByName("左Ctrl", flg)
+	SetHotkeyFunctionByName("Space", flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
 	SetHotkeyFunctionByName("右Ctrl", flg)
 	SetHotkeyFunctionByName("左Shift", flg)
@@ -2464,6 +2481,9 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("Numpad8", flg)
 	SetHotkeyFunctionByName("Numpad9", flg)
 	SetHotkeyFunctionByName("NumpadDot", flg)
+
+	SetHotkeyFunctionByName("Tab", flg)
+	SetHotkeyFunctionByName("Enter", flg)
 }
 ;----------------------------------------------------------------------
 ; 指定された名称のキーのHotkeyをオン・オフする
@@ -2492,113 +2512,79 @@ SetHotkeyFunctionByName(kName, flg)
 ;----------------------------------------------------------------------
 SetHotkey(flg)
 {
-	hotkey,*sc002,%flg%		;1
-	hotkey,*sc002 up,%flg%
-	hotkey,*sc003,%flg%		;2
-	hotkey,*sc003 up,%flg%
-	hotkey,*sc004,%flg%		;3
-	hotkey,*sc004 up,%flg%
-	hotkey,*sc005,%flg%		;4
-	hotkey,*sc005 up,%flg%
-	hotkey,*sc006,%flg%		;5
-	hotkey,*sc006 up,%flg%
-	hotkey,*sc007,%flg%		;6
-	hotkey,*sc007 up,%flg%
-	hotkey,*sc008,%flg%		;7
-	hotkey,*sc008 up,%flg%
-	hotkey,*sc009,%flg%		;8
-	hotkey,*sc009 up,%flg%
-	hotkey,*sc00A,%flg%		;9
-	hotkey,*sc00A up,%flg%
-	hotkey,*sc00B,%flg%		;0
-	hotkey,*sc00B up,%flg%
-	hotkey,*sc00C,%flg%		;-
-	hotkey,*sc00C up,%flg%
-	hotkey,*sc00D,%flg%		;^
-	hotkey,*sc00D up,%flg%
-	hotkey,*sc07D,%flg%		;\
-	hotkey,*sc07D up,%flg%
-	hotkey,*sc00E,%flg%		;\b
-	hotkey,*sc00E up,%flg%
+	SetHotkeyByPos("E01",flg)	;1
+	SetHotkeyByPos("E02",flg)	;2
+	SetHotkeyByPos("E03",flg)	;3
+	SetHotkeyByPos("E04",flg)	;4
+	SetHotkeyByPos("E05",flg)	;5
+	SetHotkeyByPos("E06",flg)	;6
+	SetHotkeyByPos("E07",flg)	;7
+	SetHotkeyByPos("E08",flg)	;8
+	SetHotkeyByPos("E09",flg)	;9
+	SetHotkeyByPos("E10",flg)	;0
+	SetHotkeyByPos("E11",flg)	;-
+	SetHotkeyByPos("E12",flg)	;^
+	SetHotkeyByPos("E13",flg)	;\
+	SetHotkeyByPos("E14",flg)	;\b
 	
-	hotkey,*sc00F,%flg%		;\t
-	hotkey,*sc00F up,%flg%
-	hotkey,*sc010,%flg%		;q
-	hotkey,*sc010 up,%flg%
-	hotkey,*sc011,%flg%		;w
-	hotkey,*sc011 up,%flg%
-	hotkey,*sc012,%flg%		;e
-	hotkey,*sc012 up,%flg%
-	hotkey,*sc013,%flg%		;r
-	hotkey,*sc013 up,%flg%
-	hotkey,*sc014,%flg%		;t
-	hotkey,*sc014 up,%flg%
-	hotkey,*sc015,%flg%		;y
-	hotkey,*sc015 up,%flg%
-	hotkey,*sc016,%flg%		;u
-	hotkey,*sc016 up,%flg%
-	hotkey,*sc017,%flg%		;i
-	hotkey,*sc017 up,%flg%
-	hotkey,*sc018,%flg%		;o
-	hotkey,*sc018 up,%flg%
-	hotkey,*sc019,%flg%		;p
-	hotkey,*sc019 up,%flg%
-	hotkey,*sc01A,%flg%		;@
-	hotkey,*sc01A up,%flg%
-	hotkey,*sc01B,%flg%		;[
-	hotkey,*sc01B up,%flg%
+	SetHotkeyByPos("D01",flg)	;q
+	SetHotkeyByPos("D02",flg)	;w
+	SetHotkeyByPos("D03",flg)	;e
+	SetHotkeyByPos("D04",flg)	;r
+	SetHotkeyByPos("D05",flg)	;t
+	SetHotkeyByPos("D06",flg)	;y
+	SetHotkeyByPos("D07",flg)	;u
+	SetHotkeyByPos("D08",flg)	;i
+	SetHotkeyByPos("D09",flg)	;o
+	SetHotkeyByPos("D10",flg)	;p
+	SetHotkeyByPos("D11",flg)	;@
+	SetHotkeyByPos("D12",flg)	;[
 	
-	hotkey,*sc01E,%flg%		;a
-	hotkey,*sc01E up,%flg%
-	hotkey,*sc01F,%flg%		;s
-	hotkey,*sc01F up,%flg%
-	hotkey,*sc020,%flg%		;d
-	hotkey,*sc020 up,%flg%
-	hotkey,*sc021,%flg%		;f
-	hotkey,*sc021 up,%flg%
-	hotkey,*sc022,%flg%		;g
-	hotkey,*sc022 up,%flg%
-	hotkey,*sc023,%flg%		;h
-	hotkey,*sc023 up,%flg%
-	hotkey,*sc024,%flg% 	;j
-	hotkey,*sc024 up,%flg%
-	hotkey,*sc025,%flg% 	;k
-	hotkey,*sc025 up,%flg%
-	hotkey,*sc026,%flg% 	;l
-	hotkey,*sc026 up,%flg%
-	hotkey,*sc027,%flg% 	;';'
-	hotkey,*sc027 up,%flg%
-	hotkey,*sc028,%flg% 	;'*'
-	hotkey,*sc028 up,%flg%
-	hotkey,*sc02B,%flg% 	;']'
-	hotkey,*sc02B up,%flg%
-	hotkey,*sc01C,%flg%		;Enter
-	hotkey,*sc01C up,%flg%
+	SetHotkeyByPos("C01",flg)	;a
+	SetHotkeyByPos("C02",flg)	;s
+	SetHotkeyByPos("C03",flg)	;d
+	SetHotkeyByPos("C04",flg)	;f
+	SetHotkeyByPos("C05",flg)	;g
+	SetHotkeyByPos("C06",flg)	;h
+	SetHotkeyByPos("C07",flg)	;j
+	SetHotkeyByPos("C08",flg)	;k
+	SetHotkeyByPos("C09",flg)	;l
+	SetHotkeyByPos("C10",flg)	;';'
+	SetHotkeyByPos("C11",flg)	;*
+	SetHotkeyByPos("C12",flg)	;]
 	
-	hotkey,*sc02C,%flg%		;z
-	hotkey,*sc02C up,%flg%
-	hotkey,*sc02D,%flg%		;x
-	hotkey,*sc02D up,%flg%
-	hotkey,*sc02E,%flg%		;c
-	hotkey,*sc02E up,%flg%
-	hotkey,*sc02F,%flg%		;v
-	hotkey,*sc02F up,%flg%
-	hotkey,*sc030,%flg%		;b
-	hotkey,*sc030 up,%flg%
-	hotkey,*sc031,%flg%		;n
-	hotkey,*sc031 up,%flg%
-	hotkey,*sc032,%flg%		;m
-	hotkey,*sc032 up,%flg%
-	hotkey,*sc033,%flg%		;,
-	hotkey,*sc033 up,%flg%
-	hotkey,*sc034,%flg%		;.
-	hotkey,*sc034 up,%flg%
-	hotkey,*sc035,%flg%		;/
-	hotkey,*sc035 up,%flg%
-	hotkey,*sc073,%flg%		;\
-	hotkey,*sc073 up,%flg%
-	SetHotkeyFunctionByName("Space", flg)
+	SetHotkeyByPos("B01",flg)	;z
+	SetHotkeyByPos("B02",flg)	;x
+	SetHotkeyByPos("B03",flg)	;c
+	SetHotkeyByPos("B04",flg)	;v
+	SetHotkeyByPos("B05",flg)	;b
+	SetHotkeyByPos("B06",flg)	;n
+	SetHotkeyByPos("B07",flg)	;m
+	SetHotkeyByPos("B08",flg)	;,
+	SetHotkeyByPos("B09",flg)	;.
+	SetHotkeyByPos("B10",flg)	;/
+	SetHotkeyByPos("B11",flg)	;\
 	return
+}
+;----------------------------------------------------------------------
+; 動的にキーをオン・オフする
+;----------------------------------------------------------------------
+SetHotkeyByPos(_pos, flg)
+{
+	global scanCodeHash
+	global keyAttribute3, g_Romaji, g_Koyubi
+	
+	_scode := scanCodeHash[_pos]
+	if(_pos=="" || _scode=="") {
+		return
+	}
+	if(keyAttribute3[g_Romaji . g_Koyubi . _pos]!="") {
+		hotkey,*%_scode%,%flg%
+		hotkey,*%_scode% up,%flg%
+	} else {
+		hotkey,*%_scode%,off
+		hotkey,*%_scode% up,off
+	}
 }
 
 ;----------------------------------------------------------------------

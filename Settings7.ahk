@@ -942,7 +942,8 @@ gFileSelect:
 		SetTimer,Interrupt10,off
 		SetHotkey("off")
 		SetHotkeyHenkan("off")
-
+		SetHotkeyFunction("off")
+		
 		Gosub, InitLayout2
 		GoSub, ReadLayoutFile
 		if(_error=="")
