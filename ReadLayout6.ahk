@@ -107,7 +107,6 @@ InitLayout2:
 	fkeyVkeyOrg := MakefkeyVkeyHash(fkey2NameHash)
 	
 	kanaHash := MakeKanaHash()
-	GuiLayoutHash := MakeGuiLayoutHash()
 	code2SimulPos := MakeCode2SimulPos()
 	code2ContPos := MakeCode2ContPos()
 	ctrlKeyHash := MakeCtrlKeyHash()
@@ -1214,7 +1213,7 @@ GetOnKeyPos(_pushedKeys)
 ;----------------------------------------------------------------------
 CopyColumns(_mdsrc, _mddst)
 {
-	global LF, _rowhash
+	global LF
 
 	if(LF[_mdsrc] == "") 
 	{
@@ -1511,19 +1510,13 @@ MakeLayout2Hash() {
 	return Hash
 }
 
-MakeGuiLayoutHash() {
-	Hash := Object()
-	Hash["A"] := "英数配列"
-	Hash["R"] := "ローマ字配列"
-	return Hash
-}
 ;----------------------------------------------------------------------
 ;	全角を半角に変換
 ;----------------------------------------------------------------------
 MakeZ2hHash() {
 	hash := Object()
-	hash["後"] := "BS"	;"Backspace"
-	hash["逃"] := "Esc"	;Escape
+	hash["後"] := "Backspace"
+	hash["逃"] := "Escape"
 	hash["入"] := "Enter"
 	hash["空"] := "Space"
 	hash["消"] := "Delete"
@@ -2620,6 +2613,23 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["RNH16"] := "T"
 	keyAttribute3["RKH16"] := "T"
 
+	keyAttribute3["H01"]   := "off"
+	keyAttribute3["H02"]   := "off"
+	keyAttribute3["H03"]   := "off"
+	keyAttribute3["H04"]   := "off"
+	keyAttribute3["H05"]   := "off"
+	keyAttribute3["H06"]   := "off"
+	keyAttribute3["H07"]   := "off"
+	keyAttribute3["H08"]   := "off"
+	keyAttribute3["H09"]   := "off"
+	keyAttribute3["H10"]   := "off"
+	keyAttribute3["H11"]   := "off"
+	keyAttribute3["H12"]   := "off"
+	keyAttribute3["H13"]   := "off"
+	keyAttribute3["H14"]   := "off"
+	keyAttribute3["H15"]   := "off"
+	keyAttribute3["H16"]   := "off"
+
 	keyAttribute3["ANG01"] := "X"
 	keyAttribute3["AKG01"] := "X"
 	keyAttribute3["RNG01"] := "X"
@@ -2673,6 +2683,20 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["RNG13"] := "X"
 	keyAttribute3["RKG13"] := "X"
 
+	keyAttribute3["G01"]   := "off"
+	keyAttribute3["G02"]   := "off"
+	keyAttribute3["G03"]   := "off"
+	keyAttribute3["G04"]   := "off"
+	keyAttribute3["G05"]   := "off"
+	keyAttribute3["G06"]   := "off"
+	keyAttribute3["G07"]   := "off"
+	keyAttribute3["G08"]   := "off"
+	keyAttribute3["G09"]   := "off"
+	keyAttribute3["G10"]   := "off"
+	keyAttribute3["G11"]   := "off"
+	keyAttribute3["G12"]   := "off"
+	keyAttribute3["G13"]   := "off"
+
 	keyAttribute3["ANF00"] := "X"	;Esc
 	keyAttribute3["AKF00"] := "X"
 	keyAttribute3["RNF00"] := "X"
@@ -2725,6 +2749,20 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKF12"] := "X"
 	keyAttribute3["RNF12"] := "X"
 	keyAttribute3["RKF12"] := "X"
+
+	keyAttribute3["F00"]   := "off"
+	keyAttribute3["F01"]   := "off"
+	keyAttribute3["F02"]   := "off"
+	keyAttribute3["F03"]   := "off"
+	keyAttribute3["F04"]   := "off"
+	keyAttribute3["F05"]   := "off"
+	keyAttribute3["F06"]   := "off"
+	keyAttribute3["F07"]   := "off"
+	keyAttribute3["F08"]   := "off"
+	keyAttribute3["F09"]   := "off"
+	keyAttribute3["F10"]   := "off"
+	keyAttribute3["F11"]   := "off"
+	keyAttribute3["F12"]   := "off"
 
 	keyAttribute3["ANE00"] := "X"	; 半角/全角
 	keyAttribute3["AKE00"] := "X"
@@ -2786,6 +2824,23 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKE14"] := "M"	; Backspace
 	keyAttribute3["RNE14"] := "M"	; Backspace
 	keyAttribute3["RKE14"] := "M"	; Backspace
+
+	keyAttribute3["E00"]   := "off"
+	keyAttribute3["E01"]   := "off"
+	keyAttribute3["E02"]   := "off"
+	keyAttribute3["E03"]   := "off"
+	keyAttribute3["E04"]   := "off"
+	keyAttribute3["E05"]   := "off"
+	keyAttribute3["E06"]   := "off"
+	keyAttribute3["E07"]   := "off"
+	keyAttribute3["E08"]   := "off"
+	keyAttribute3["E09"]   := "off"
+	keyAttribute3["E10"]   := "off"
+	keyAttribute3["E11"]   := "off"
+	keyAttribute3["E12"]   := "off"
+	keyAttribute3["E13"]   := "off"
+	keyAttribute3["E14"]   := "off"
+
 	keyAttribute3["AND00"] := "X"	; Tab
 	keyAttribute3["AKD00"] := "X"	; Tab
 	keyAttribute3["RND00"] := "X"	; Tab
@@ -2838,6 +2893,21 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKD12"] := "M"
 	keyAttribute3["RND12"] := "M"
 	keyAttribute3["RKD12"] := "M"
+
+	keyAttribute3["D00"]   := "off"
+	keyAttribute3["D01"]   := "off"
+	keyAttribute3["D02"]   := "off"
+	keyAttribute3["D03"]   := "off"
+	keyAttribute3["D04"]   := "off"
+	keyAttribute3["D05"]   := "off"
+	keyAttribute3["D06"]   := "off"
+	keyAttribute3["D07"]   := "off"
+	keyAttribute3["D08"]   := "off"
+	keyAttribute3["D09"]   := "off"
+	keyAttribute3["D10"]   := "off"
+	keyAttribute3["D11"]   := "off"
+	keyAttribute3["D12"]   := "off"
+
 	keyAttribute3["ANC01"] := "M"
 	keyAttribute3["AKC01"] := "M"
 	keyAttribute3["RNC01"] := "M"
@@ -2890,6 +2960,20 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKC13"] := "X"	; Enter
 	keyAttribute3["RNC13"] := "X"	; Enter
 	keyAttribute3["RKC13"] := "X"	; Enter
+
+	keyAttribute3["C01"]   := "off"
+	keyAttribute3["C02"]   := "off"
+	keyAttribute3["C03"]   := "off"
+	keyAttribute3["C04"]   := "off"
+	keyAttribute3["C05"]   := "off"
+	keyAttribute3["C06"]   := "off"
+	keyAttribute3["C07"]   := "off"
+	keyAttribute3["C08"]   := "off"
+	keyAttribute3["C09"]   := "off"
+	keyAttribute3["C10"]   := "off"
+	keyAttribute3["C11"]   := "off"
+	keyAttribute3["C12"]   := "off"
+	keyAttribute3["C13"]   := "off"
 	
 	keyAttribute3["ANB01"] := "M"
 	keyAttribute3["AKB01"] := "M"
@@ -2935,6 +3019,18 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKB11"] := "M"
 	keyAttribute3["RNB11"] := "M"
 	keyAttribute3["RKB11"] := "M"
+
+	keyAttribute3["B01"]   := "off"
+	keyAttribute3["B02"]   := "off"
+	keyAttribute3["B03"]   := "off"
+	keyAttribute3["B04"]   := "off"
+	keyAttribute3["B05"]   := "off"
+	keyAttribute3["B06"]   := "off"
+	keyAttribute3["B07"]   := "off"
+	keyAttribute3["B08"]   := "off"
+	keyAttribute3["B09"]   := "off"
+	keyAttribute3["B10"]   := "off"
+	keyAttribute3["B11"]   := "off"
 
 	keyAttribute3["ANA00"] := ""	; LCtrl
 	keyAttribute3["AKA00"] := ""
@@ -2988,6 +3084,20 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKA12"] := ""
 	keyAttribute3["RNA12"] := ""
 	keyAttribute3["RKA12"] := ""
+
+	keyAttribute3["A00"]   := "off"
+	keyAttribute3["A01"]   := "off"
+	keyAttribute3["A02"]   := "off"
+	keyAttribute3["A03"]   := "off"
+	keyAttribute3["A04"]   := "off"
+	keyAttribute3["A05"]   := "off"
+	keyAttribute3["A06"]   := "off"
+	keyAttribute3["A07"]   := "off"
+	keyAttribute3["A08"]   := "off"
+	keyAttribute3["A09"]   := "off"
+	keyAttribute3["A10"]   := "off"
+	keyAttribute3["A11"]   := "off"
+	keyAttribute3["A12"]   := "off"
 	return keyAttribute3
 }
 
@@ -4004,45 +4114,6 @@ MakeChr2vkeyHash()
 	hash["＿"] := "vkE2"	;\
 	return hash
 }
-
-;----------------------------------------------------------------------
-;	制御キー
-;----------------------------------------------------------------------
-MakeCtrlKeyHash() {
-	hash := Object()
-	hash["後"] := "BS"	;"Backspace"
-	hash["逃"] := "Escape"
-	hash["入"] := "Enter"
-	hash["空"] := "Space"
-	hash["消"] := "Delete"
-	hash["挿"] := "Insert"
-	hash["上"] := "Up"
-	hash["左"] := "Left"
-	hash["右"] := "Right"
-	hash["下"] := "Down"
-	hash["家"] := "Home"
-	hash["終"] := "End"
-	hash["前"] := "PgUp"
-	hash["次"] := "PgDn"
-	hash["表"] := "tab"
-	hash["日"] := "vkF2sc070"
-	hash["英"] := "vkF0sc03A"
-	hash["変"] := "vk1Csc079"
-	hash["換"] := "vk1Dsc07B"
-	hash["機1"] := "sc03B"
-	hash["機2"] := "sc03C"
-	hash["機3"] := "sc03D"
-	hash["機4"] := "sc03E"
-	hash["機5"] := "sc03F"
-	hash["機6"] := "sc040"
-	hash["機7"] := "sc041"
-	hash["機8"] := "sc042"
-	hash["機9"] := "sc043"
-	hash["機10"] := "sc044"
-	hash["機11"] := "sc057"
-	hash["機12"] := "sc058"
-	return hash
-}
 ;----------------------------------------------------------------------
 ;	テンキーのハッシュ
 ;	NumLock + ScanCode
@@ -4081,6 +4152,45 @@ MakeTenkeyHash() {
 	hash["0" . sc2scstr(GetKeySC("NumpadUp"))]    := "NumpadUp"
 	hash["0" . sc2scstr(GetKeySC("NumpadPgUp"))]  := "NumpadPgUp"
 	hash["0" . sc2scstr(GetKeySC("NumpadDel"))]   := "NumpadDel"
+	return hash
+}
+
+;----------------------------------------------------------------------
+;	制御キー
+;----------------------------------------------------------------------
+MakeCtrlKeyHash() {
+	hash := Object()
+	hash["後"] := "Backspace"
+	hash["逃"] := "Escape"
+	hash["入"] := "Enter"
+	hash["空"] := "Space"
+	hash["消"] := "Delete"
+	hash["挿"] := "Insert"
+	hash["上"] := "Up"
+	hash["左"] := "Left"
+	hash["右"] := "Right"
+	hash["下"] := "Down"
+	hash["家"] := "Home"
+	hash["終"] := "End"
+	hash["前"] := "PgUp"
+	hash["次"] := "PgDn"
+	hash["表"] := "tab"
+	hash["日"] := "vkF2sc070"
+	hash["英"] := "vkF0sc03A"
+	hash["変"] := "vk1Csc079"
+	hash["換"] := "vk1Dsc07B"
+	hash["機1"] := "sc03B"
+	hash["機2"] := "sc03C"
+	hash["機3"] := "sc03D"
+	hash["機4"] := "sc03E"
+	hash["機5"] := "sc03F"
+	hash["機6"] := "sc040"
+	hash["機7"] := "sc041"
+	hash["機8"] := "sc042"
+	hash["機9"] := "sc043"
+	hash["機10"] := "sc044"
+	hash["機11"] := "sc057"
+	hash["機12"] := "sc058"
 	return hash
 }
 ;----------------------------------------------------------------------

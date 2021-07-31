@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.720 .... 2021/7/28
+;	ver.0.1.4.720 .... 2021/7/30
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -12,7 +12,7 @@
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
 	g_Ver := "ver.0.1.4.720"
-	g_Date := "2021/7/28"
+	g_Date := "2021/7/30"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -58,12 +58,6 @@
 	g_Continue := 1
 	g_Threshold := 100	; 
 	RegRead,_keyboardDelayIdx,HKEY_CURRENT_USER\Control Panel\Keyboard,KeyboardDelay
-	;g_keyboardDelay := Object()
-	;g_keyboardDelay[0] := 250
-	;g_keyboardDelay[1] := 500
-	;g_keyboardDelay[2] := 750
-	;g_keyboardDelay[3] := 1000
-	;g_MaxTimeout := g_keyboardDelay[_keyboardDelayIdx]
 	g_MaxTimeout := ( 0 = _keyboardDelayIdx) ? 250
 				  : ( 1 = _keyboardDelayIdx) ? 500
 				  : ( 2 = _keyboardDelayIdx) ? 750
@@ -172,7 +166,6 @@
 	SetTimer,InterruptProcessPolling,600
 
 	SetHotkey("off")
-	SetHotkeyHenkan("off")
 	SetHotkeyFunction("off")
 	return
 
@@ -182,7 +175,6 @@ MenuExit:
 	SetTimer,InterruptProcessPolling,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
 	SetHotkey("off")
-	SetHotkeyHenkan("off")
 	SetHotkeyFunction("off")
 	exitapp
 
@@ -547,26 +539,38 @@ SubSend(vOut)
 		_stroke := _stroke . A_LoopField
 		StringLeft, _left2c, _stroke, 2
 		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
+			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+				_scnt := _scnt + 1
+				SetKeyDelay, -1
+				Send, {blind}{capslock}
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
+				if(_scnt>=4) {
+					DllCall("kernel32.dll\Sleep", "UInt", 10)
+					_scnt := 0
+				}
+			}
 			if(instr(_stroke,"{Enter")>0) {
 				_scnt := _scnt + 4
 			} else {
 				_scnt := _scnt + 1
 			}
-			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
-				Send, {blind}{capslock}
-				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
-			}
 			SetKeyDelay, -1
 			Send, {blind}%_stroke%
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
-			if(_cnt != _len && _scnt>=4) {
+			if(_scnt>=4) {
 				DllCall("kernel32.dll\Sleep", "UInt", 10)
 				_scnt := 0
 			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+				_scnt := _scnt + 1
+				SetKeyDelay, -1
 				Send, {blind}{capslock}
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
+				if(_scnt>=4) {
+					DllCall("kernel32.dll\Sleep", "UInt", 10)
+					_scnt := 0
+				}
 			}
 			_sendch := ""
 		}
@@ -586,8 +590,8 @@ SubSend(vOut)
 SubSendOne(vOut)
 {
 	global g_KeyInPtn, g_trigger
-	SetKeyDelay, -1
 	if(vOut!="") {
+		SetKeyDelay, -1
 		Send, {blind}%vOut%
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
 	}
@@ -755,7 +759,7 @@ SendKeyUp()
 ;----------------------------------------------------------------------
 SetTimeout(_KeyInPtn)
 {
-	global g_TDownOnHold, g_OnHoldIdx, g_Threshold, g_OverlapMO, g_OverlapOM, g_MaxTimeout, g_OnHoldIdx
+	global g_TDownOnHold, g_OnHoldIdx, g_Threshold, g_OverlapMO, g_OverlapOM, g_MaxTimeout
 	global g_SimulMode, g_ThresholdSS, g_OverlapSS, INFINITE, g_Interval
 	global g_OyaTick, g_OyaUpTick, g_Oya, g_MojiCount
 	global ksc, g_RomajiOnHold, g_OyaOnHold, g_KoyubiOnHold, g_MojiOnHold
@@ -1392,6 +1396,14 @@ JudgePushedKeys(_mode,_MojiOnHold)
 ;----------------------------------------------------------------------
 KoyubiOrSans(_Koyubi, _sans)
 {
+	global g_sans, keyNameHash, g_sansPos
+
+	if(g_sans=="K") {
+		if(GetKeyState(keyNameHash[g_sansPos],"P")==0) {
+			SansSend()
+			_sans := "N"
+		}
+	}
 	if(_Koyubi=="K" || _sans=="K") 
 	{
 		return "K"
@@ -1447,6 +1459,8 @@ keydownX:
 		Gosub,pauseKeyDown
 	}
 	keyState[g_layoutPos] := 2
+
+	Gosub,ModeInitialize
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSendOne(SetModifierSymbol() . MnDown(kName))
 		kup_save[g_layoutPos] := MnUp(kName)
@@ -1474,6 +1488,8 @@ keydownN:
 	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 1
+
+	Gosub,ModeInitialize
 	critical,off
 	return
 
@@ -1487,6 +1503,8 @@ keydownS:
 	keyState[g_layoutPos] := 2
 
 	g_ModifierTick := keyTick[g_layoutPos]
+	Gosub,ModeInitialize
+	
 	if(g_sans == "K" && g_sansTick != INFINITE) {
 		SubSendOne(SetModifierSymbol() . MnDown(kName))
 		kup_save[g_layoutPos] := MnUp(kName)
@@ -1907,28 +1925,23 @@ Interrupt10:
 	if(g_Modifier!=0) 
 	{
 		Gosub,ModeInitialize
-;		SetHotkey("off")
-;		SetHotkeyHenkan("on")
-;		SetHotkeyFunction("on")
 	} else
 	if(g_Pause==1) 
 	{
 		Gosub,ModeInitialize
 		SetHotkey("off")
-		SetHotkeyHenkan("off")
 		SetHotkeyFunction("off")
 	} else {
 		Gosub,ChkIME
 
 		; 現在の配列面が定義されていればキーフック
-		if(LF[g_Romaji . "N" . g_Koyubi]!="") {
+		if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
 			SetHotkey("on")
 			SetHotkeyFunction("on")
 		} else {
 			SetHotkey("off")
 			SetHotkeyFunction("off")
 		}
-		SetHotkeyHenkan("on")
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1937,44 +1950,64 @@ Interrupt10:
 		{
 			; ひらがな／カタカナキーはキーアップを受信できないから、0.1秒でキーアップと見做す
 			g_layoutPos := "A04"
-			g_metaKey := keyAttribute3[g_Romaji . g_Koyubi . g_layoutPos]
+			g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 			kName := keyNameHash[g_layoutPos]
 			goto, keyup%g_metaKey%
 		}
 	}
 	if(g_sans=="K") {
 		if(GetKeyState(keyNameHash[g_sansPos],"P") == 0) {
-			if(g_sansTick!=INFINITE)	; 未タイムアウト
-			{
-				SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
-				SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
-				g_sansTick := INFINITE
-				kup_save[g_layoutPos] := ""
-				keyState[g_sansPos] := 0
-			}
-			g_sans := "N"
+			SansSend()
+;			if(g_sansTick!=INFINITE)	; 未タイムアウト
+;			{
+;				SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
+;				SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
+;				g_sansTick := INFINITE
+;				kup_save[g_sansPos] := ""
+;				keyState[g_sansPos] := 0
+;			}
+;			g_sans := "N"
 		}
 	}
 	Gosub,Polling
 	critical,off
 	if(A_IsCompiled != 1)
 	{
-		vImeMode := IME_GET() & 32767
-		vImeConvMode := IME_GetConvMode()
+		;vImeMode := IME_GET2() & 32767
+		;vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
 		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
 		g_debugout3 := g_Modifier
 		g_debugout2 := GetPushedKeys()
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
-		_mode := g_Romaji . g_Oya . g_Koyubi
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . g_Koyubi . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
+		_mode := g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans)
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 	}
 	sleep,-1
 	return
 
+;----------------------------------------------------------------------
+; Sansでスペースの出力
+;----------------------------------------------------------------------
+SansSend()
+{
+	global g_sansTick, INFINITE
+	global keyNameHash, g_sansPos
+	global kup_save, keyState, g_sans
+	
+	if(g_sansTick!=INFINITE)	; 未タイムアウト
+	{
+		SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
+		SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
+		g_sansTick := INFINITE
+		kup_save[g_sansPos] := ""
+		keyState[g_sansPos] := 0
+	}
+	g_sans := "N"
+}
 
 ;----------------------------------------------------------------------
 ; 10mSECなどのポーリング
@@ -2095,13 +2128,9 @@ ScanModifier:
 	} else {
 		g_Modifier := g_Modifier & (~0x4000)
 	}
+	g_Modifier := g_Modifier & 0x7E00
+
 	GetKeyStateWithLog5("Applications")
-	if(keyState[fkeyPosHash["Applications"]]!=0) {
-		g_Modifier := g_Modifier | 0x8000
-	} else {
-		g_Modifier := g_Modifier & (~0x8000)
-	}
-	g_Modifier := g_Modifier & 0xFE00
 	return
 
 ;----------------------------------------------------------------------
@@ -2175,11 +2204,11 @@ ModeInitialize:
 ;-----------------------------------------------------------------------
 GetKeyStateWithLog5(fName) {
 	global keyState, fkeyPosHash, fkeyVkeyHash
-	global keyAttribute3, g_Romaji, g_Oya, g_Koyubi
+	global keyAttribute3
 
 	kDown := 0
 	_locationPos := fkeyPosHash[fName]
-	if(_locationPos != "" && keyAttribute3[g_Romaji . g_Oya . g_Koyubi . _locationPos]=="") {
+	if(_locationPos != "" && keyAttribute3[_locationPos]=="off") {
 		stCurr := GetKeyState(fkeyVkeyHash[fName],"P")
 		if(stCurr != 0 && keyState[_locationPos] == 0)	; keydown
 		{
@@ -2209,9 +2238,10 @@ GetPushedKeys()
 		if(keyState[element] == 1) {
 			if(GetKeyState(keyNameHash[element],"P")==0) {
 				keyState[element] := 0
+			} else {
+				_cont := g_colPushedHash[substr(element,1,1)] . substr(element,2,2)
+				_pushedKeys := _pushedKeys . _cont
 			}
-			_cont := g_colPushedHash[substr(element,1,1)] . substr(element,2,2)
-			_pushedKeys := _pushedKeys . _cont
 		}
 	}
 	return _pushedKeys
@@ -2234,25 +2264,20 @@ pauseKeyDown:
 ;              よって、最下位ビットのみを見る
 ;----------------------------------------------------------------------
 ChkIME:
-	if(LF[g_Romaji . "NK"]=="" || g_Koyubi == "N") {		
-		; 小指シフトオン時に、MS-IMEは英数モードを、Google日本語入力はローマ字モードを返す
-		; 両方とも小指シフト面を反映させるため、変換モードは見ない
-		; 小指シフト面が設定されていなければ変換モードを見る
-		vImeMode := IME_GET() & 32767
-		if(vImeMode==0)
+	vImeMode := IME_GET2() & 32767
+	if(vImeMode==0)
+	{
+		vImeConvMode :=IME_GetConvMode()
+		g_Romaji := "A"
+	} else {
+		vImeConvMode :=IME_GetConvMode()
+		if((vImeConvMode & 0x01)==1) ;半角カナ・全角平仮名・全角カタカナ
 		{
-			vImeConvMode :=IME_GetConvMode2()
+			g_Romaji := "R"
+		}
+		else ;ローマ字変換モード
+		{
 			g_Romaji := "A"
-		} else {
-			vImeConvMode :=IME_GetConvMode2()
-			if( vImeConvMode & 0x01==1) ;半角カナ・全角平仮名・全角カタカナ
-			{
-				g_Romaji := "R"
-			}
-			else ;ローマ字変換モード
-			{
-				g_Romaji := "A"
-			}
 		}
 	}
 	;if(A_IsCompiled <> 1)
@@ -2265,13 +2290,13 @@ ChkIME:
 ;----------------------------------------------------------------------
 ; IMEの変換モード取得のラッパ
 ;----------------------------------------------------------------------
-IME_GetConvMode2()
+IME_GET2()
 {
 	
 	if(WinExist("ahk_class #32768")!=0) {	; IMEメニュー表示中
 		return 0
 	}
-	return IME_GetConvMode()
+	return IME_GET()
 }
 
 ;----------------------------------------------------------------------
@@ -2279,106 +2304,106 @@ IME_GetConvMode2()
 ;----------------------------------------------------------------------
 SetHotkeyInit()
 {
-	SetHotkeyInitByPos("H01")
-	SetHotkeyInitByPos("H02")
-	SetHotkeyInitByPos("H03")
-	SetHotkeyInitByPos("H04")
-	SetHotkeyInitByPos("H05")
-	SetHotkeyInitByPos("H06")
-	SetHotkeyInitByPos("H07")
-	SetHotkeyInitByPos("H08")
-	SetHotkeyInitByPos("H09")
-	SetHotkeyInitByPos("H10")
-	SetHotkeyInitByPos("H11")
-	SetHotkeyInitByPos("H12")
-	SetHotkeyInitByPos("H13")
-	SetHotkeyInitByPos("H14")
-	SetHotkeyInitByPos("H15")
-	SetHotkeyInitByPos("H16")
+	SetHotkeyInitByPos("H01")	;NumpadDiv
+	SetHotkeyInitByPos("H02")	;NumpadMult
+	SetHotkeyInitByPos("H03")	;NumpadAdd
+	SetHotkeyInitByPos("H04")	;NumpadSub
+	SetHotkeyInitByPos("H05")	;NumpadEnter
+	SetHotkeyInitByPos("H06")	;Numpad0
+	SetHotkeyInitByPos("H07")	;Numpad1
+	SetHotkeyInitByPos("H08")	;Numpad2
+	SetHotkeyInitByPos("H09")	;Numpad3
+	SetHotkeyInitByPos("H10")	;Numpad4
+	SetHotkeyInitByPos("H11")	;Numpad5
+	SetHotkeyInitByPos("H12")	;Numpad6
+	SetHotkeyInitByPos("H13")	;Numpad7
+	SetHotkeyInitByPos("H14")	;Numpad8
+	SetHotkeyInitByPos("H15")	;Numpad9
+	SetHotkeyInitByPos("H16")	;NumpadDot
 
-	SetHotkeyInitByPos("G01")		;PrintScreen
-	SetHotkeyInitByPos("G02")		;ScrollLock
-	SetHotkeyInitByPos("G03")		;Pause
-	SetHotkeyInitByPos("G04")
-	SetHotkeyInitByPos("G05")
-	SetHotkeyInitByPos("G06")
-	SetHotkeyInitByPos("G07")
-	SetHotkeyInitByPos("G08")
-	SetHotkeyInitByPos("G09")
-	SetHotkeyInitByPos("G10")
-	SetHotkeyInitByPos("G11")
-	SetHotkeyInitByPos("G12")
-	SetHotkeyInitByPos("G13")
+	SetHotkeyInitByPos("G01")	;PrintScreen
+	SetHotkeyInitByPos("G02")	;ScrollLock
+	SetHotkeyInitByPos("G03")	;Pause
+	SetHotkeyInitByPos("G04")	;Insert
+	SetHotkeyInitByPos("G05")	;Home
+	SetHotkeyInitByPos("G06")	;PgUp
+	SetHotkeyInitByPos("G07")	;Delete
+	SetHotkeyInitByPos("G08")	;End
+	SetHotkeyInitByPos("G09")	;PgDn
+	SetHotkeyInitByPos("G10")	;Up
+	SetHotkeyInitByPos("G11")	;Left
+	SetHotkeyInitByPos("G12")	;Down
+	SetHotkeyInitByPos("G13")	;Right
 
-	SetHotkeyInitByPos("F00")		;Esc
-	SetHotkeyInitByPos("F01")		;F1
-	SetHotkeyInitByPos("F02")		;F2
-	SetHotkeyInitByPos("F03")		;F3
-	SetHotkeyInitByPos("F04")		;F4
-	SetHotkeyInitByPos("F05")		;F5
-	SetHotkeyInitByPos("F06")		;F6
-	SetHotkeyInitByPos("F07")		;F7
-	SetHotkeyInitByPos("F08")		;F8
-	SetHotkeyInitByPos("F09")		;F9
-	SetHotkeyInitByPos("F10")		;F10
-	SetHotkeyInitByPos("F11")		;F11
-	SetHotkeyInitByPos("F12")		;F12
+	SetHotkeyInitByPos("F00")	;Esc
+	SetHotkeyInitByPos("F01")	;F1
+	SetHotkeyInitByPos("F02")	;F2
+	SetHotkeyInitByPos("F03")	;F3
+	SetHotkeyInitByPos("F04")	;F4
+	SetHotkeyInitByPos("F05")	;F5
+	SetHotkeyInitByPos("F06")	;F6
+	SetHotkeyInitByPos("F07")	;F7
+	SetHotkeyInitByPos("F08")	;F8
+	SetHotkeyInitByPos("F09")	;F9
+	SetHotkeyInitByPos("F10")	;F10
+	SetHotkeyInitByPos("F11")	;F11
+	SetHotkeyInitByPos("F12")	;F12
 
-	SetHotkeyInitByPos("E00")		;半角／全角
-	SetHotkeyInitByPos("E01")		;1
-	SetHotkeyInitByPos("E02")		;2
-	SetHotkeyInitByPos("E03")		;3
-	SetHotkeyInitByPos("E04")		;4
-	SetHotkeyInitByPos("E05")		;5
-	SetHotkeyInitByPos("E06")		;6
-	SetHotkeyInitByPos("E07")		;7
-	SetHotkeyInitByPos("E08")		;8
-	SetHotkeyInitByPos("E09")		;9
-	SetHotkeyInitByPos("E10")		;0
-	SetHotkeyInitByPos("E11")		;-
-	SetHotkeyInitByPos("E12")		;^
-	SetHotkeyInitByPos("E13")		;\
-	SetHotkeyInitByPos("E14")		;\b
+	SetHotkeyInitByPos("E00")	;半角／全角
+	SetHotkeyInitByPos("E01")	;1
+	SetHotkeyInitByPos("E02")	;2
+	SetHotkeyInitByPos("E03")	;3
+	SetHotkeyInitByPos("E04")	;4
+	SetHotkeyInitByPos("E05")	;5
+	SetHotkeyInitByPos("E06")	;6
+	SetHotkeyInitByPos("E07")	;7
+	SetHotkeyInitByPos("E08")	;8
+	SetHotkeyInitByPos("E09")	;9
+	SetHotkeyInitByPos("E10")	;0
+	SetHotkeyInitByPos("E11")	;-
+	SetHotkeyInitByPos("E12")	;^
+	SetHotkeyInitByPos("E13")	;\
+	SetHotkeyInitByPos("E14")	;\b
 	
-	SetHotkeyInitByPos("D00")		;\t
-	SetHotkeyInitByPos("D01")		;q
-	SetHotkeyInitByPos("D02")		;w
-	SetHotkeyInitByPos("D03")		;e
-	SetHotkeyInitByPos("D04")		;r
-	SetHotkeyInitByPos("D05")		;t
-	SetHotkeyInitByPos("D06")		;y
-	SetHotkeyInitByPos("D07")		;u
-	SetHotkeyInitByPos("D08")		;i
-	SetHotkeyInitByPos("D09")		;o
-	SetHotkeyInitByPos("D10")		;p
-	SetHotkeyInitByPos("D11")		;@
-	SetHotkeyInitByPos("D12")		;[
+	SetHotkeyInitByPos("D00")	;\t
+	SetHotkeyInitByPos("D01")	;q
+	SetHotkeyInitByPos("D02")	;w
+	SetHotkeyInitByPos("D03")	;e
+	SetHotkeyInitByPos("D04")	;r
+	SetHotkeyInitByPos("D05")	;t
+	SetHotkeyInitByPos("D06")	;y
+	SetHotkeyInitByPos("D07")	;u
+	SetHotkeyInitByPos("D08")	;i
+	SetHotkeyInitByPos("D09")	;o
+	SetHotkeyInitByPos("D10")	;p
+	SetHotkeyInitByPos("D11")	;@
+	SetHotkeyInitByPos("D12")	;[
 
-	SetHotkeyInitByPos("C01")		;a
-	SetHotkeyInitByPos("C02")		;s
-	SetHotkeyInitByPos("C03")		;d
-	SetHotkeyInitByPos("C04")		;f
-	SetHotkeyInitByPos("C05")		;g
-	SetHotkeyInitByPos("C06")		;h
-	SetHotkeyInitByPos("C07")		;j
+	SetHotkeyInitByPos("C01")	;a
+	SetHotkeyInitByPos("C02")	;s
+	SetHotkeyInitByPos("C03")	;d
+	SetHotkeyInitByPos("C04")	;f
+	SetHotkeyInitByPos("C05")	;g
+	SetHotkeyInitByPos("C06")	;h
+	SetHotkeyInitByPos("C07")	;j
 	SetHotkeyInitByPos("C08") 	;k
 	SetHotkeyInitByPos("C09") 	;l
-	SetHotkeyInitByPos("C10")		;';'
-	SetHotkeyInitByPos("C11")		;'*'
-	SetHotkeyInitByPos("C12")		;']'
-	SetHotkeyInitByPos("C13")		;\r
+	SetHotkeyInitByPos("C10")	;';'
+	SetHotkeyInitByPos("C11")	;'*'
+	SetHotkeyInitByPos("C12")	;']'
+	SetHotkeyInitByPos("C13")	;\r
 	
-	SetHotkeyInitByPos("B01")		;z
-	SetHotkeyInitByPos("B02")		;x
-	SetHotkeyInitByPos("B03")		;c
-	SetHotkeyInitByPos("B04")		;v
-	SetHotkeyInitByPos("B05")		;b
-	SetHotkeyInitByPos("B06")		;n
-	SetHotkeyInitByPos("B07")		;m
-	SetHotkeyInitByPos("B08")		;,
-	SetHotkeyInitByPos("B09")		;.
-	SetHotkeyInitByPos("B10")		;/
-	SetHotkeyInitByPos("B11")		;\
+	SetHotkeyInitByPos("B01")	;z
+	SetHotkeyInitByPos("B02")	;x
+	SetHotkeyInitByPos("B03")	;c
+	SetHotkeyInitByPos("B04")	;v
+	SetHotkeyInitByPos("B05")	;b
+	SetHotkeyInitByPos("B06")	;n
+	SetHotkeyInitByPos("B07")	;m
+	SetHotkeyInitByPos("B08")	;,
+	SetHotkeyInitByPos("B09")	;.
+	SetHotkeyInitByPos("B10")	;/
+	SetHotkeyInitByPos("B11")	;\
 	;-----------------------------------------------------------------------
 	; 機能：モディファイアキー
 	;-----------------------------------------------------------------------
@@ -2388,19 +2413,19 @@ SetHotkeyInit()
 	;但し、WindowsキーやAltキーを離したことを感知できないことに留意。
 	;ver.0.1.3 にて、GetKeyState でWindowsキーとAltキーとを監視
 	;ver.0.1.3.7 ... Ctrlはやはり必要なので戻す
-	SetHotkeyInitByPos("A00")		;LCtrl
-	SetHotkeyInitByPos("A01")		;無変換
-	SetHotkeyInitByPos("A02")		;Space
-	SetHotkeyInitByPos("A03")		;変換
-	SetHotkeyInitByPos("A04")		;ひらがな／カタカナ
-	SetHotkeyInitByPos("A05")		;RCtrl
-	SetHotkeyInitByPos("A06")		;左Shift
-	SetHotkeyInitByPos("A07")		;左Win
-	SetHotkeyInitByPos("A08")		;左Alt
-	SetHotkeyInitByPos("A09")		;右Alt
-	SetHotkeyInitByPos("A10")		;右Win
-	SetHotkeyInitByPos("A11")		;Applications
-	SetHotkeyInitByPos("A12")		;右Shift
+	SetHotkeyInitByPos("A00")	;LCtrl
+	SetHotkeyInitByPos("A01")	;無変換
+	SetHotkeyInitByPos("A02")	;Space
+	SetHotkeyInitByPos("A03")	;変換
+	SetHotkeyInitByPos("A04")	;ひらがな／カタカナ
+	SetHotkeyInitByPos("A05")	;RCtrl
+	SetHotkeyInitByPos("A06")	;左Shift
+	SetHotkeyInitByPos("A07")	;左Win
+	SetHotkeyInitByPos("A08")	;左Alt
+	SetHotkeyInitByPos("A09")	;右Alt
+	SetHotkeyInitByPos("A10")	;右Win
+	SetHotkeyInitByPos("A11")	;Applications
+	SetHotkeyInitByPos("A12")	;右Shift
 	return
 }
 ;----------------------------------------------------------------------
@@ -2412,6 +2437,7 @@ SetHotkeyInitByPos(_pos)
 	
 	sCode := ScanCodeHash[_pos]
 	if(sCode!="") {
+		keyAttribute3[_pos] := "off"
 		hotkey,*%sCode%,g%sCode%
 		hotkey,*%sCode%,off
 		hotkey,*%sCode% up,g%sCode%up
@@ -2440,7 +2466,9 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("半角/全角", flg)
 
 	SetHotkeyFunctionByName("左Ctrl", flg)
+	SetHotkeyFunctionByName("無変換", flg)
 	SetHotkeyFunctionByName("Space", flg)
+	SetHotkeyFunctionByName("変換", flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
 	SetHotkeyFunctionByName("右Ctrl", flg)
 	SetHotkeyFunctionByName("左Shift", flg)
@@ -2491,17 +2519,19 @@ SetHotkeyFunction(flg)
 SetHotkeyFunctionByName(kName, flg)
 {
 	global keyAttribute3, fkeyPosHash, fkeyCodeHash
-	global g_Romaji, g_Koyubi
+	global g_Romaji, g_Koyubi, g_sans
 	
 	_pos := fkeyPosHash[kName]
 	_scode := fkeyCodeHash[kName]
 	if(_pos=="" || _scode=="") {
 		return
 	}
-	if(keyAttribute3[g_Romaji . g_Koyubi . _pos]!="") {
+	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
+		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
 		hotkey,*%_scode% up,%flg%
 	} else {
+		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
 		hotkey,*%_scode% up,off
 	}
@@ -2572,28 +2602,21 @@ SetHotkey(flg)
 SetHotkeyByPos(_pos, flg)
 {
 	global scanCodeHash
-	global keyAttribute3, g_Romaji, g_Koyubi
+	global keyAttribute3, g_Romaji, g_Koyubi, g_sans
 	
 	_scode := scanCodeHash[_pos]
 	if(_pos=="" || _scode=="") {
 		return
 	}
-	if(keyAttribute3[g_Romaji . g_Koyubi . _pos]!="") {
+	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
+		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
 		hotkey,*%_scode% up,%flg%
 	} else {
+		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
 		hotkey,*%_scode% up,off
 	}
-}
-
-;----------------------------------------------------------------------
-; 動的に変換・無変換キーをオン・オフする
-;----------------------------------------------------------------------
-SetHotkeyHenkan(flg)
-{
-	SetHotkeyFunctionByName("無変換", flg)
-	SetHotkeyFunctionByName("変換", flg)
 }
 
 ;----------------------------------------------------------------------
@@ -2724,7 +2747,7 @@ gSC136: ;右Shift
 	}
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	if(kName=="LCtrl") {	;左Ctrl
-		g_Modifier := g_Modifier | 0x0200A
+		g_Modifier := g_Modifier | 0x0200
 		goto, keydown%g_metaKey%
 	}
 	if(kName=="RCtrl") {	;右Ctrl
@@ -2745,10 +2768,6 @@ gSC136: ;右Shift
 	}
 	if(kName=="RWin") {	;右Win
 		g_Modifier := g_Modifier | 0x4000
-		goto, keydown%g_metaKey%
-	}
-	if(kName=="AppsKey") {	;Applications
-		g_Modifier := g_Modifier | 0x8000
 		goto, keydown%g_metaKey%
 	}
 	if(g_Modifier != 0) {
@@ -2934,9 +2953,6 @@ gSC136up:	;右Shift
 	}
 	if(kName=="RWin") {	;右Win
 		g_Modifier := g_Modifier & (~0x4000)
-	}
-	if(kName=="AppsKey") {	;Applications
-		g_Modifier := g_Modifier & (~0x8000)
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	goto, keyup%g_metaKey%
