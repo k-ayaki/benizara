@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.7 .... 2021/6/15
+;	ver.0.1.4.720 .... 2021/7/30
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -941,7 +941,6 @@ gFileSelect:
 
 		SetTimer,Interrupt10,off
 		SetHotkey("off")
-		SetHotkeyHenkan("off")
 		SetHotkeyFunction("off")
 		
 		Gosub, InitLayout2
