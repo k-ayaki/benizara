@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.720 .... 2021/7/30
+;	ver.0.1.4.721 .... 2021/8/3
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.720"
-	g_Date := "2021/7/30"
+	g_Ver := "ver.0.1.4.721"
+	g_Date := "2021/8/3"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -430,6 +430,8 @@ keyupL:
 			;}
 		}
 	}
+	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
+	kup_save[g_layoutPos] := ""
 	keyState[g_layoutPos] := 0
 	
 	if(g_Oya == g_metaKey) {
@@ -485,8 +487,8 @@ CancelZeroDelayOut(g_ZeroDelay) {
 		_len := StrLen(g_ZeroDelaySurface)
 		loop, %_len%
 		{
-			SubSendOne(MnDown("BS"))
-			SubSendOne(MnUp("BS"))
+			SubSendOne("",MnDown("BS"))
+			SubSendOne("",MnUp("BS"))
 		}
 	}
 	g_ZeroDelaySurface := ""
@@ -587,13 +589,13 @@ SubSend(vOut)
 ;----------------------------------------------------------------------
 ; 送信文字列の出力・１つだけ
 ;----------------------------------------------------------------------
-SubSendOne(vOut)
+SubSendOne(modifier, vOut)
 {
 	global g_KeyInPtn, g_trigger
 	if(vOut!="") {
 		SetKeyDelay, -1
-		Send, {blind}%vOut%
-		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
+		Send, {blind}%modifier%%vOut%
+		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . modifier . vOut)
 	}
 }
 
@@ -747,11 +749,12 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 ;----------------------------------------------------------------------
 SendKeyUp()
 {
-	global kup_save, g_MojiOnHold
+	global kup_save, g_MojiOnHold, keyState
 	
 	if(kup_save[g_MojiOnHold[0]]!="") {
-		SubSend(kup_save[g_MojiOnHold[0]])
+		SubSendOne(SetModifierSymbol(), kup_save[g_MojiOnHold[0]])
 		kup_save[g_MojiOnHold[0]] := ""
+		keyState[g_MojiOnHold[0]] := 0
 	}
 }
 ;----------------------------------------------------------------------
@@ -1127,8 +1130,11 @@ SendOnHoldMMM:
 SendOnHoldO:
 	if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
 		if(g_KeySingle == "有効" || g_MojiOnHold[1] == "A02") {
-			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
-			SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
+			vOut := kdn[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
+			SubSendOne(SetModifierSymbol(), vOut)
+			if(vOut!="") {
+				kup_save[g_MojiOnHold[1]] := kup[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
+			}
 		}
 		dequeueKey()
 		if(g_KeyInPtn=="RM" || g_KeyInPtn=="RMr" || g_KeyInPtn=="MR"
@@ -1462,7 +1468,7 @@ keydownX:
 
 	Gosub,ModeInitialize
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		SubSendOne(SetModifierSymbol(), MnDown(kName))
 		kup_save[g_layoutPos] := MnUp(kName)
 		keyState[g_layoutPos] := 1
 		g_LastKey["表層"] := ""
@@ -1472,7 +1478,7 @@ keydownX:
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
-	SubSendOne(SetModifierSymbol() . MnDown(kName))
+	SubSendOne(SetModifierSymbol(), MnDown(kName))
 	kup_save[g_layoutPos] := MnUp(kName)
 	keyState[g_layoutPos] := 1
 	g_LastKey["表層"] := ""
@@ -1506,7 +1512,7 @@ keydownS:
 	Gosub,ModeInitialize
 	
 	if(g_sans == "K" && g_sansTick != INFINITE) {
-		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		SubSendOne(SetModifierSymbol(), MnDown(kName))
 		kup_save[g_layoutPos] := MnUp(kName)
 		keyState[g_layoutPos] := 1
 		g_LastKey["表層"] := ""
@@ -1658,7 +1664,7 @@ keyupM:
 	keyState[g_layoutPos] := 0
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト" || ShiftMode[g_Romaji] == "小指シフト") {
-		SubSendOne(kup_save[g_layoutPos])
+		SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
 		kup_save[g_layoutPos] := ""
 		keyState[g_layoutPos] := 0
 		critical,off
@@ -1783,7 +1789,7 @@ keyupM:
 			}
 		}
 	}
-	SubSendOne(kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
 	keyState[g_layoutPos] := 0
 	g_trigger := ""
@@ -1802,7 +1808,7 @@ keyupT:
 
 	RegLogs(kName . " up")
 
-	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
 	keyState[g_layoutPos] := 0
 	g_trigger := ""
@@ -1829,12 +1835,12 @@ keyupS:
 
 	RegLogs(kName . " up")
 	if(g_sansTick != INFINITE) {
-		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		SubSendOne(SetModifierSymbol(), MnDown(kName))
 		g_sansTick := INFINITE
 		kup_save[g_layoutPos] := MnUp(kName)
 		keyState[g_layoutPos] := 1
 	}
-	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
 	keyState[g_layoutPos] := 0
 
@@ -1860,7 +1866,7 @@ keyup9:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
-	SubSendOne(SetModifierSymbol() . kup_save[g_layoutPos])
+	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
 	kup_save[g_layoutPos] := ""
 	keyState[g_layoutPos] := 0
 	critical,off
@@ -2000,8 +2006,8 @@ SansSend()
 	
 	if(g_sansTick!=INFINITE)	; 未タイムアウト
 	{
-		SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
-		SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
+		SubSendOne(SetModifierSymbol(), MnDown(keyNameHash[g_sansPos]))
+		SubSendOne(SetModifierSymbol(), MnUp(keyNameHash[g_sansPos]))
 		g_sansTick := INFINITE
 		kup_save[g_sansPos] := ""
 		keyState[g_sansPos] := 0
@@ -2071,9 +2077,9 @@ Polling:
 		}
 		if(_TickCount > g_sansTick) 	; タイムアウト
 		{
-			SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
+			SubSendOne(SetModifierSymbol(), MnDown(keyNameHash[g_sansPos]))
 			g_sansTick := INFINITE
-			kup_save[g_layoutPos] := MnUp(keyNameHash[g_sansPos])
+			kup_save[g_layoutPos] := SetModifierSymbol() . MnUp(keyNameHash[g_sansPos])
 			keyState[g_sansPos] := 1
 		}
 	}
@@ -2774,7 +2780,7 @@ gSC136: ;右Shift
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
-		SubSendOne(SetModifierSymbol() . MnDown(kName))
+		SubSendOne(SetModifierSymbol(), MnDown(kName))
 		kup_save[g_layoutPos] := MnUp(kName)
 		keyState[g_sansPos] := 1
 		
