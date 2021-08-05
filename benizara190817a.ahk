@@ -12,7 +12,7 @@
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
 	g_Ver := "ver.0.1.4.721"
-	g_Date := "2021/8/3"
+	g_Date := "2021/8/5"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -252,7 +252,7 @@ keydownL:
 			if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]] == "") {
 				Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
 				if(g_KeyInPtn == "M") {
-					SendKeyUp()
+					SubSendUp(g_MojiOnHold[0])
 					g_SendTick := SetTimeout("M")
 				}
 			} else {
@@ -262,13 +262,13 @@ keydownL:
 				if(g_Interval["S12"] < g_Interval["M" . g_metaKey]) {
 					Gosub, SendOnHoldMM
 					if(g_KeyInPtn == "M") {
-						SendKeyUp()
+						SubSendUp(g_MojiOnHold[0])
 						g_SendTick := SetTimeout("M")
 					}
 				} else {
 					Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
 					if(g_KeyInPtn == "M") {
-						SendKeyUp()
+						SubSendUp(g_MojiOnHold[0])
 						g_SendTick := SetTimeout("M")
 					}
 				}
@@ -430,9 +430,7 @@ keyupL:
 			;}
 		}
 	}
-	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-	kup_save[g_layoutPos] := ""
-	keyState[g_layoutPos] := 0
+	SubSendUp(g_layoutPos)
 	
 	if(g_Oya == g_metaKey) {
 		if(g_Continue == 1) {
@@ -598,6 +596,27 @@ SubSendOne(modifier, vOut)
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . modifier . vOut)
 	}
 }
+;----------------------------------------------------------------------
+; キーダウン時の出力コードを保存
+;----------------------------------------------------------------------
+SetKeyupSave(_kup,_layoutPos)
+{
+	global kup_save, keyState
+	
+	kup_save[_layoutPos] := _kup
+	keyState[_layoutPos] := 1
+}
+;----------------------------------------------------------------------
+; キーアップ時の出力コードを送信
+;----------------------------------------------------------------------
+SubSendUp(_layoutPos)
+{
+	global kup_save, keyState
+	
+	SubSendOne(SetModifierSymbol(), kup_save[_layoutPos])
+	kup_save[_layoutPos] := ""
+	keyState[_layoutPos] := 0
+}
 
 ;----------------------------------------------------------------------
 ;	capslockが必要か
@@ -743,20 +762,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 		SubSend(vOut)
 	}
 }
-;----------------------------------------------------------------------
-; キーアップ
-; g_MojiOnHold[0]には、直前に出力したキーの場所が入っている
-;----------------------------------------------------------------------
-SendKeyUp()
-{
-	global kup_save, g_MojiOnHold, keyState
-	
-	if(kup_save[g_MojiOnHold[0]]!="") {
-		SubSendOne(SetModifierSymbol(), kup_save[g_MojiOnHold[0]])
-		kup_save[g_MojiOnHold[0]] := ""
-		keyState[g_MojiOnHold[0]] := 0
-	}
-}
+
 ;----------------------------------------------------------------------
 ; タイムアウト時間を設定
 ;----------------------------------------------------------------------
@@ -1080,7 +1086,7 @@ SendOnHoldMMM:
 	else if(cntM == 2) {
 		Gosub, SendOnHoldMM
 		if(g_KeyInPtn == "M") {
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 			Gosub, SendOnHoldM
 		}
 		return
@@ -1104,7 +1110,7 @@ SendOnHoldMMM:
 		SendOnHold(_mode, g_MojiOnHold[2] . g_MojiOnHold[1], g_ZeroDelay)
 		dequeueKey()
 		dequeueKey()
-		SendKeyUp()
+		SubSendUp(g_MojiOnHold[0])
 		Gosub,SendOnHoldM
 		clearQueue()
 		g_keyInPtn := ""
@@ -1112,10 +1118,10 @@ SendOnHoldMMM:
 	} else {
 		SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
 		dequeueKey()
-		SendKeyUp()
+		SubSendUp(g_MojiOnHold[0])
 		Gosub,SendOnHoldMM
 		if(g_KeyInPtn == "M") {
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 			Gosub,SendOnHoldM
 			clearQueue()
 			g_keyInPtn := ""
@@ -1132,9 +1138,7 @@ SendOnHoldO:
 		if(g_KeySingle == "有効" || g_MojiOnHold[1] == "A02") {
 			vOut := kdn[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
 			SubSendOne(SetModifierSymbol(), vOut)
-			if(vOut!="") {
-				kup_save[g_MojiOnHold[1]] := kup[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
-			}
+			SetKeyupSave(kup[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]],g_MojiOnHold[1])
 		}
 		dequeueKey()
 		if(g_KeyInPtn=="RM" || g_KeyInPtn=="RMr" || g_KeyInPtn=="MR"
@@ -1249,10 +1253,10 @@ keydownM:
 			if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]!="" && g_Interval["S12"] < g_Interval["S23"]) {
 				; 保留中の同時打鍵を確定
 				Gosub, SendOnHoldMM		; ２文字を同時打鍵として出力して初期状態に
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 			} else {
 				Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 			}
 		}
 	}
@@ -1263,10 +1267,10 @@ keydownM:
 		if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]!="" && g_Interval["S12"] < g_Interval["S23"]) {
 			; 保留中の同時打鍵を確定
 			Gosub, SendOnHoldMM		; ２文字を同時打鍵として出力して初期状態に
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 		} else {
 			Gosub, SendOnHoldM		; 保留した２文字前だけを打鍵してMオン状態に遷移
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 		}
 	}
 	else if(g_KeyInPtn == "MMM") {
@@ -1469,8 +1473,7 @@ keydownX:
 	Gosub,ModeInitialize
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		SubSendOne(SetModifierSymbol(), MnDown(kName))
-		kup_save[g_layoutPos] := MnUp(kName)
-		keyState[g_layoutPos] := 1
+		SetKeyupSave(MnUp(kName),g_layoutPos)
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
 		g_prefixshift := ""
@@ -1479,8 +1482,7 @@ keydownX:
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
 	SubSendOne(SetModifierSymbol(), MnDown(kName))
-	kup_save[g_layoutPos] := MnUp(kName)
-	keyState[g_layoutPos] := 1
+	SetKeyupSave(MnUp(kName),g_layoutPos)
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
 	g_KeyInPtn := ""
@@ -1513,8 +1515,7 @@ keydownS:
 	
 	if(g_sans == "K" && g_sansTick != INFINITE) {
 		SubSendOne(SetModifierSymbol(), MnDown(kName))
-		kup_save[g_layoutPos] := MnUp(kName)
-		keyState[g_layoutPos] := 1
+		SetKeyupSave(MnUp(kName),g_layoutPos)
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
 	}
@@ -1664,9 +1665,8 @@ keyupM:
 	keyState[g_layoutPos] := 0
 	
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト" || ShiftMode[g_Romaji] == "小指シフト") {
-		SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-		kup_save[g_layoutPos] := ""
-		keyState[g_layoutPos] := 0
+		SubSendUp(g_layoutPos)
+
 		critical,off
 		sleep,-1
 		return
@@ -1689,7 +1689,7 @@ keyupM:
 		if(g_layoutPos == g_MojiOnHold[1]) {
 			if(kdn[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]=="") {
 				Gosub, SendOnHoldM	; ２文字前を単独打鍵して確定
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 				; １文字前の待機
 				g_KeyInPtn := "M"
 				g_SendTick := SetTimeout(g_KeyInPtn)
@@ -1702,7 +1702,7 @@ keyupM:
 					; 押下キー判定 
 					Gosub, SendOnHoldMM
 					if(g_KeyInPtn == "M") {
-						SendKeyUp()
+						SubSendUp(g_MojiOnHold[0])
 						Gosub, SendOnHoldM
 					}
 				} else {
@@ -1715,7 +1715,7 @@ keyupM:
 		if(g_layoutPos == g_MojiOnHold[2]) {
 			Gosub, SendOnHoldMM
 			if(g_KeyInPtn == "M") {
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 				Gosub, SendOnHoldM
 			}
 		}
@@ -1730,12 +1730,12 @@ keyupM:
 			if(g_OverlapSS <= vOverlap) {
 				Gosub, SendOnHoldMM
 				if(g_KeyInPtn == "M") {
-					SendKeyUp()
+					SubSendUp(g_MojiOnHold[0])
 					Gosub, SendOnHoldM
 				}
 			} else {
 				Gosub, SendOnHoldM
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 				Gosub, SendOnHoldM
 			}
 		}
@@ -1789,9 +1789,7 @@ keyupM:
 			}
 		}
 	}
-	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-	kup_save[g_layoutPos] := ""
-	keyState[g_layoutPos] := 0
+	SubSendUp(g_layoutPos)
 	g_trigger := ""
 	critical,off
 	sleep,-1
@@ -1808,9 +1806,8 @@ keyupT:
 
 	RegLogs(kName . " up")
 
-	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-	kup_save[g_layoutPos] := ""
-	keyState[g_layoutPos] := 0
+
+	SubSendUp(g_layoutPos)
 	g_trigger := ""
 	critical,off
 	sleep,-1
@@ -1836,14 +1833,10 @@ keyupS:
 	RegLogs(kName . " up")
 	if(g_sansTick != INFINITE) {
 		SubSendOne(SetModifierSymbol(), MnDown(kName))
+		SetKeyupSave(MnUp(kName), g_layoutPos)
 		g_sansTick := INFINITE
-		kup_save[g_layoutPos] := MnUp(kName)
-		keyState[g_layoutPos] := 1
 	}
-	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-	kup_save[g_layoutPos] := ""
-	keyState[g_layoutPos] := 0
-
+	SubSendUp(g_layoutPos)
 	g_trigger := ""
 	g_sans := "N"
 	critical,off
@@ -1866,9 +1859,7 @@ keyup9:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	RegLogs(kName . " up")
-	SubSendOne(SetModifierSymbol(), kup_save[g_layoutPos])
-	kup_save[g_layoutPos] := ""
-	keyState[g_layoutPos] := 0
+	SubSendUp(g_layoutPos)
 	critical,off
 	sleep,-1
 	return
@@ -1964,15 +1955,6 @@ Interrupt10:
 	if(g_sans=="K") {
 		if(GetKeyState(keyNameHash[g_sansPos],"P") == 0) {
 			SansSend()
-;			if(g_sansTick!=INFINITE)	; 未タイムアウト
-;			{
-;				SubSendOne(SetModifierSymbol() . MnDown(keyNameHash[g_sansPos]))
-;				SubSendOne(SetModifierSymbol() . MnUp(keyNameHash[g_sansPos]))
-;				g_sansTick := INFINITE
-;				kup_save[g_sansPos] := ""
-;				keyState[g_sansPos] := 0
-;			}
-;			g_sans := "N"
 		}
 	}
 	Gosub,Polling
@@ -2033,14 +2015,14 @@ Polling:
 			{
 				Gosub, SendOnHoldMM
 				if(g_KeyInPtn == "M") {
-					SendKeyUp()
+					SubSendUp(g_MojiOnHold[0])
 					Gosub, SendOnHoldM
 				}
 			}
 			else if(g_KeyInPtn == "MMm")
 			{
 				Gosub, SendOnHoldM
-				SendKeyUp()
+				SubSendUp(g_MojiOnHold[0])
 				Gosub, SendOnHoldM
 			}
 			else if(g_KeyInPtn =="MMM")
@@ -2079,8 +2061,7 @@ Polling:
 		{
 			SubSendOne(SetModifierSymbol(), MnDown(keyNameHash[g_sansPos]))
 			g_sansTick := INFINITE
-			kup_save[g_layoutPos] := SetModifierSymbol() . MnUp(keyNameHash[g_sansPos])
-			keyState[g_sansPos] := 1
+			SetKeyupSave(MnUp(keyNameHash[g_sansPos]),g_sansPos)
 		}
 	}
 	g_trigger := ""
@@ -2168,7 +2149,7 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldMM
 		if(g_KeyInPtn == "M") {
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 			Gosub, SendOnHoldM
 		}
 	}
@@ -2176,7 +2157,7 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldMM
 		if(g_KeyInPtn == "M") {
-			SendKeyUp()
+			SubSendUp(g_MojiOnHold[0])
 			Gosub, SendOnHoldM
 		}
 	}
@@ -2781,8 +2762,7 @@ gSC136: ;右Shift
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
 		SubSendOne(SetModifierSymbol(), MnDown(kName))
-		kup_save[g_layoutPos] := MnUp(kName)
-		keyState[g_sansPos] := 1
+		SetKeyupSave(MnUp(kName),g_layoutPos)
 		
 		clearQueue()
 		g_LastKey["表層"] := ""
