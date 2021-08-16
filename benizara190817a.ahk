@@ -2916,6 +2916,7 @@ gSC15Cup:	;右Win
 gSC15Dup:	;Applications
 gSC136up:	;右Shift
 	critical
+	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
