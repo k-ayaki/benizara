@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.722 .... 2021/8/13
+;	ver.0.1.4.723 .... 2021/8/24
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -485,8 +485,8 @@ CancelZeroDelayOut(g_ZeroDelay) {
 		_len := StrLen(g_ZeroDelaySurface)
 		loop, %_len%
 		{
-			SubSendOne("",MnDown("BS"))
-			SubSendOne("",MnUp("BS"))
+			SubSendOne(MnDown("BS"))
+			SubSendOne(MnUp("BS"))
 		}
 	}
 	g_ZeroDelaySurface := ""
@@ -587,13 +587,13 @@ SubSend(vOut)
 ;----------------------------------------------------------------------
 ; 送信文字列の出力・１つだけ
 ;----------------------------------------------------------------------
-SubSendOne(modifier, vOut)
+SubSendOne(vOut)
 {
 	global g_KeyInPtn, g_trigger
 	if(vOut!="") {
 		SetKeyDelay, -1
-		Send, {blind}%modifier%%vOut%
-		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . modifier . vOut)
+		Send, {blind}%vOut%
+		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
 	}
 }
 ;----------------------------------------------------------------------
@@ -613,7 +613,7 @@ SubSendUp(_layoutPos)
 {
 	global kup_save, keyState
 	
-	SubSendOne(SetModifierSymbol(), kup_save[_layoutPos])
+	SubSendOne(kup_save[_layoutPos])
 	kup_save[_layoutPos] := ""
 	keyState[_layoutPos] := 0
 }
@@ -1137,7 +1137,7 @@ SendOnHoldO:
 	if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
 		if(g_KeySingle == "有効" || g_MojiOnHold[1] == "A02") {
 			vOut := kdn[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
-			SubSendOne(SetModifierSymbol(), vOut)
+			SubSendOne(vOut)
 			SetKeyupSave(kup[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]],g_MojiOnHold[1])
 		}
 		dequeueKey()
@@ -1472,7 +1472,7 @@ keydownX:
 
 	Gosub,ModeInitialize
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		SubSendOne(SetModifierSymbol(), MnDown(kName))
+		SubSendOne(MnDown(kName))
 		SetKeyupSave(MnUp(kName),g_layoutPos)
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
@@ -1481,7 +1481,7 @@ keydownX:
 		return
 	}
 	g_ModifierTick := keyTick[g_layoutPos]
-	SubSendOne(SetModifierSymbol(), MnDown(kName))
+	SubSendOne(MnDown(kName))
 	SetKeyupSave(MnUp(kName),g_layoutPos)
 	g_LastKey["表層"] := ""
 	g_LastKey["状態"] := ""
@@ -1514,7 +1514,7 @@ keydownS:
 	Gosub,ModeInitialize
 	
 	if(g_sans == "K" && g_sansTick != INFINITE) {
-		SubSendOne(SetModifierSymbol(), MnDown(kName))
+		SubSendOne(MnDown(kName))
 		SetKeyupSave(MnUp(kName),g_layoutPos)
 		g_LastKey["表層"] := ""
 		g_LastKey["状態"] := ""
@@ -1832,7 +1832,7 @@ keyupS:
 
 	RegLogs(kName . " up")
 	if(g_sansTick != INFINITE) {
-		SubSendOne(SetModifierSymbol(), MnDown(kName))
+		SubSendOne(MnDown(kName))
 		SetKeyupSave(MnUp(kName), g_layoutPos)
 		g_sansTick := INFINITE
 	}
@@ -1988,8 +1988,8 @@ SansSend()
 	
 	if(g_sansTick!=INFINITE)	; 未タイムアウト
 	{
-		SubSendOne(SetModifierSymbol(), MnDown(keyNameHash[g_sansPos]))
-		SubSendOne(SetModifierSymbol(), MnUp(keyNameHash[g_sansPos]))
+		SubSendOne(MnDown(keyNameHash[g_sansPos]))
+		SubSendOne(MnUp(keyNameHash[g_sansPos]))
 		g_sansTick := INFINITE
 		kup_save[g_sansPos] := ""
 		keyState[g_sansPos] := 0
@@ -2059,7 +2059,7 @@ Polling:
 		}
 		if(_TickCount > g_sansTick) 	; タイムアウト
 		{
-			SubSendOne(SetModifierSymbol(), MnDown(keyNameHash[g_sansPos]))
+			SubSendOne(MnDown(keyNameHash[g_sansPos]))
 			g_sansTick := INFINITE
 			SetKeyupSave(MnUp(keyNameHash[g_sansPos]),g_sansPos)
 		}
@@ -2761,7 +2761,7 @@ gSC136: ;右Shift
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
-		SubSendOne(SetModifierSymbol(), MnDown(kName))
+		SubSendOne(MnDown(kName))
 		SetKeyupSave(MnUp(kName),g_layoutPos)
 		
 		clearQueue()
@@ -2776,26 +2776,6 @@ gSC136: ;右Shift
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
 
-;----------------------------------------------------------------------
-; 修飾シンボルの設定
-;----------------------------------------------------------------------
-SetModifierSymbol() {
-	global g_modifier,g_Koyubi
-	_symbol := ""
-	if((g_modifier & 0x6000)!=0){
-		_symbol := "#"	; Win
-	}
-	if((g_modifier & 0x1800)!=0) {
-		_symbol := _symbol . "!"	; Alt
-	}
-	if((g_modifier & 0x0600)!=0) {
-		_symbol := _symbol . "^"	; Ctrl
-	}
-	if(g_Koyubi == "K") {
-		_symbol := _symbol . "+"	; Shift
-	}
-	return _symbol
-}
 ;----------------------------------------------------------------------
 ; キーオフのイベント
 ;----------------------------------------------------------------------
