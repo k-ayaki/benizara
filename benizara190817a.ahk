@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.723 .... 2021/8/24
+;	ver.0.1.4.724 .... 2021/8/26
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.722"
-	g_Date := "2021/8/13"
+	g_Ver := "ver.0.1.4.724"
+	g_Date := "2021/8/26"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -1488,18 +1488,6 @@ keydownX:
 	g_KeyInPtn := ""
 	critical,off
 	return
-;----------------------------------------------------------------------
-; 修飾キー押下
-;----------------------------------------------------------------------
-keydownN:
-	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := Pf_Count()
-	RegLogs(kName . " down")
-	keyState[g_layoutPos] := 1
-
-	Gosub,ModeInitialize
-	critical,off
-	return
 
 ;----------------------------------------------------------------------
 ; スペース＆シフトキー押下
@@ -2073,47 +2061,61 @@ Polling:
 ScanModifier:
 	GetKeyStateWithLog5("左Shift")
 	GetKeyStateWithLog5("右Shift")
-	if(keyState[fkeyPosHash["左Shift"]]!=0 || keyState[fkeyPosHash["右Shift"]]!=0)
-	{
-		g_Koyubi := "K"
-	} else {
-		g_Koyubi := "N"
+	if(keyAttribute3[fkeyPosHash["右Shift"]]=="off"	|| keyAttribute3[fkeyPosHash["右Shift"]]=="off") {
+		if(keyState[fkeyPosHash["左Shift"]]!=0 || keyState[fkeyPosHash["右Shift"]]!=0)
+		{
+			g_Koyubi := "K"
+		} else {
+			g_Koyubi := "N"
+		}
 	}
 	GetKeyStateWithLog5("左Ctrl")
-	if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
-		g_Modifier := g_Modifier | 0x0200
-	} else {
-		g_Modifier := g_Modifier & (~0x0200)
+	if(keyAttribute3[fkeyPosHash["左Ctrl"]]=="off") {
+		if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
+			g_Modifier := g_Modifier | 0x0200
+		} else {
+			g_Modifier := g_Modifier & (~0x0200)
+		}
 	}
 	GetKeyStateWithLog5("右Ctrl")	
-	if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
-		g_Modifier := g_Modifier | 0x0400
-	} else {
-		g_Modifier := g_Modifier & (~0x0400)
+	if(keyAttribute3[fkeyPosHash["右Ctrl"]]=="off") {
+		if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
+			g_Modifier := g_Modifier | 0x0400
+		} else {
+			g_Modifier := g_Modifier & (~0x0400)
+		}
 	}
 	GetKeyStateWithLog5("左Alt")
-	if(keyState[fkeyPosHash["左Alt"]]!=0) {
-		g_Modifier := g_Modifier | 0x0800
-	} else {
-		g_Modifier := g_Modifier & (~0x0800)
+	if(keyAttribute3[fkeyPosHash["左Alt"]]=="off") {
+		if(keyState[fkeyPosHash["左Alt"]]!=0) {
+			g_Modifier := g_Modifier | 0x0800
+		} else {
+			g_Modifier := g_Modifier & (~0x0800)
+		}
 	}
 	GetKeyStateWithLog5("右Alt")
-	if(keyState[fkeyPosHash["右Alt"]]!=0) {
-		g_Modifier := g_Modifier | 0x1000
-	} else {
-		g_Modifier := g_Modifier & (~0x1000)
+	if(keyAttribute3[fkeyPosHash["右Alt"]]=="off") {
+		if(keyState[fkeyPosHash["右Alt"]]!=0) {
+			g_Modifier := g_Modifier | 0x1000
+		} else {
+			g_Modifier := g_Modifier & (~0x1000)
+		}
 	}
 	GetKeyStateWithLog5("左Win")
-	if(keyState[fkeyPosHash["左Win"]]!=0) {
-		g_Modifier := g_Modifier | 0x2000
-	} else {
-		g_Modifier := g_Modifier & (~0x2000)
+	if(keyAttribute3[fkeyPosHash["左Win"]]=="off") {
+		if(keyState[fkeyPosHash["左Win"]]!=0) {
+			g_Modifier := g_Modifier | 0x2000
+		} else {
+			g_Modifier := g_Modifier & (~0x2000)
+		}
 	}
 	GetKeyStateWithLog5("右Win")
-	if(keyState[fkeyPosHash["右Win"]]!=0) {
-		g_Modifier := g_Modifier | 0x4000
-	} else {
-		g_Modifier := g_Modifier & (~0x4000)
+	if(keyAttribute3[fkeyPosHash["右Win"]]=="off") {
+		if(keyState[fkeyPosHash["右Win"]]!=0) {
+			g_Modifier := g_Modifier | 0x4000
+		} else {
+			g_Modifier := g_Modifier & (~0x4000)
+		}
 	}
 	g_Modifier := g_Modifier & 0x7E00
 

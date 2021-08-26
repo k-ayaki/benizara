@@ -768,24 +768,8 @@ SetLayoutProperty:
 	{
 		ShiftMode["R"] := "小指シフト"
 	}
-	if(LF["RNK"]!="") {
-		InitShiftkey("R")
-	}
 	SetSansKey(g_sansPos)
 	return
-
-;----------------------------------------------------------------------
-;	キー属性配列を初期化する
-;----------------------------------------------------------------------
-InitShiftkey(_Romaji)
-{
-	global keyAttribute3
-
-	keyAttribute3[_Romaji . "NA06"] := "N"	;左Shift
-	keyAttribute3[_Romaji . "KA06"] := "N"
-	keyAttribute3[_Romaji . "NA12"] := "N"	;右Shift
-	keyAttribute3[_Romaji . "KA12"] := "N"
-}
 
 ;----------------------------------------------------------------------
 ;	プレフィックスシフト
@@ -3056,10 +3040,10 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKA05"] := "X"
 	keyAttribute3["RNA05"] := "X"
 	keyAttribute3["RKA05"] := "X"
-	keyAttribute3["ANA06"] := ""	;左Shift
-	keyAttribute3["AKA06"] := ""
-	keyAttribute3["RNA06"] := ""
-	keyAttribute3["RKA06"] := ""
+	keyAttribute3["ANA06"] := "X"	;左Shift
+	keyAttribute3["AKA06"] := "X"
+	keyAttribute3["RNA06"] := "X"
+	keyAttribute3["RKA06"] := "X"
 	keyAttribute3["ANA07"] := ""	;左Win
 	keyAttribute3["AKA07"] := ""
 	keyAttribute3["RNA07"] := ""
@@ -3080,10 +3064,10 @@ MakeKeyAttribute3Hash() {
 	keyAttribute3["AKA11"] := ""
 	keyAttribute3["RNA11"] := ""
 	keyAttribute3["RKA11"] := ""
-	keyAttribute3["ANA12"] := ""	;右Shift
-	keyAttribute3["AKA12"] := ""
-	keyAttribute3["RNA12"] := ""
-	keyAttribute3["RKA12"] := ""
+	keyAttribute3["ANA12"] := "X"	;右Shift
+	keyAttribute3["AKA12"] := "X"
+	keyAttribute3["RNA12"] := "X"
+	keyAttribute3["RKA12"] := "X"
 
 	keyAttribute3["A00"]   := "off"
 	keyAttribute3["A01"]   := "off"
