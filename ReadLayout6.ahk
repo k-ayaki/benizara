@@ -110,6 +110,8 @@ InitLayout2:
 	code2SimulPos := MakeCode2SimulPos()
 	code2ContPos := MakeCode2ContPos()
 	ctrlKeyHash := MakeCtrlKeyHash()
+	ctrlvKeyHash := MakeCtrlvKeyHash()
+	CtrlScHash := MakeCtrlScHash()
 	modifierHash := MakeModifierHash()
 
 	keyAttribute3 := MakeKeyAttribute3Hash()
@@ -627,7 +629,7 @@ Mode3Key:
 		return
 	}
 	if(CountObject(org) == 13) {
-		org[14] := "後"
+		org[14] := "無"
 	}
 	if(_cpos != _spos) {
 		_lpos2 := substr(_spos,1,3)
@@ -923,7 +925,9 @@ SetKeyTable:
 		; 無の指定ならば，元のキーそのもののスキャンコードとする
 		if(org[A_Index] == "無") {
 			kLabel[g_mode . _lpos2] := org[A_Index]
-			kst[g_mode . _lpos2] := "S"	; scan code
+			if(CtrlScHash[ScanCodeHash[_lpos2]]!="") {
+				kst[g_mode . _lpos2] := "c"	; 制御コード
+			}
 			kdn[g_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " down}"
 			kup[g_mode . _lpos2] := "{" . ScanCodeHash[_lpos2] . " up}"
 			continue
@@ -1236,7 +1240,7 @@ Romaji2Kana(aStr)
 GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 {
 	global z2hHash, modifierHash, roma3Hash, ctrlKeyHash
-	global _error
+	global _error, ctrlvKeyHash
 	
 	_error := ""
 	_status := ""
@@ -1276,8 +1280,10 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 				_error := "仮想キーコードの記載が誤っています"
 			}
 			_c2 := "vk" . substr(_a3,2,2)
+			if(ctrlvKeyHash[_c2]!="") {
+				_status := _status . "c"		; 制御キー
+			}
 			_dn := _dn . "{" . _c2 . " down}"
-			_status := _status . "v"		; 仮想キーコード
 			_idx := _idx + 3
 		} else if(_a1 == "'" || _a1 == """") {	; 引用符のマーク
 			if(_quotation == "") {
@@ -1386,6 +1392,9 @@ MergeStatus(_status)
 	}
 	if(instr(_status,"m") > 0 ) {	; 修飾キー
 		_status2 := _status2 . "m"
+	}
+	if(instr(_status,"f") > 0 ) {	; 制御キー（ファンクションキー）
+		_status2 := _status2 . "f"
 	}
 	return _status2
 }
@@ -4177,6 +4186,143 @@ MakeCtrlKeyHash() {
 	hash["機12"] := "sc058"
 	return hash
 }
+;----------------------------------------------------------------------
+;	仮想キーの制御キー
+;----------------------------------------------------------------------
+MakeCtrlvKeyHash() {
+	hash := Object()
+	hash["vk03"] := "VK_CANCEL"
+	hash["vk08"] := "VK_BACK"
+	hash["vk09"] := "VK_TAB"
+	hash["vk0D"] := "VK_RETURN"
+	hash["vk10"] := "VK_SHIFT"
+	hash["vk11"] := "VK_CONTROL"
+	hash["vk12"] := "VK_MENU"		; ALT
+	hash["vk13"] := "VK_PAUSE"
+	hash["vk14"] := "VK_CAPITAL"	; CapsLock
+	hash["vk15"] := "VK_KANA"
+	hash["vk17"] := "VK_JUNJA"
+	hash["vk18"] := "VK_FINAL"
+	hash["vk19"] := "VK_KANJI"
+	hash["vk1B"] := "VK_ESCAPE"
+	hash["vk1C"] := "VK_CONVERT"
+	hash["vk1D"] := "VK_NONCONVERT"
+	hash["vk1E"] := "VK_ACCEPT"
+	hash["vk1F"] := "VK_MODECHANGE"
+	hash["vk21"] := "VK_PRIOR"		; PageUp
+	hash["vk22"] := "VK_NEXT"		; PageDown
+	hash["vk23"] := "VK_END"
+	hash["vk24"] := "VK_HOME"
+	hash["vk25"] := "VK_LEFT"
+	hash["vk26"] := "VK_UP"
+	hash["vk27"] := "VK_RIGHT"
+	hash["vk28"] := "VK_DOWN"
+	hash["vk29"] := "VK_SELECT"
+	hash["vk2A"] := "VK_PRINT"
+	hash["vk2B"] := "VK_EXECUTE"
+	hash["vk2C"] := "VK_SNAPSHOT"	; PrintScreen
+	hash["vk2D"] := "VK_INSERT"
+	hash["vk2E"] := "VK_DELETE"
+	hash["vk2F"] := "VK_HELP"
+
+	hash["vk5B"] := "VK_LWIN"
+	hash["vk5C"] := "VK_RWIN"
+	hash["vk5D"] := "VK_APPS"
+	hash["vk5F"] := "VK_SLEEP"
+	hash["vk70"] := "VK_F1"
+	hash["vk71"] := "VK_F2"
+	hash["vk72"] := "VK_F3"
+	hash["vk73"] := "VK_F4"
+	hash["vk74"] := "VK_F5"
+	hash["vk75"] := "VK_F6"
+	hash["vk76"] := "VK_F7"
+	hash["vk77"] := "VK_F8"
+	hash["vk78"] := "VK_F9"
+	hash["vk79"] := "VK_F10"
+	hash["vk7A"] := "VK_F11"
+	hash["vk7B"] := "VK_F12"
+	hash["vk7C"] := "VK_F13"
+	hash["vk7D"] := "VK_F14"
+	hash["vk7E"] := "VK_F15"
+	hash["vk7F"] := "VK_F16"
+	hash["vk80"] := "VK_F17"
+	hash["vk81"] := "VK_F18"
+	hash["vk82"] := "VK_F19"
+	hash["vk83"] := "VK_F20"
+	hash["vk84"] := "VK_F21"
+	hash["vk85"] := "VK_F22"
+	hash["vk86"] := "VK_F23"
+	hash["vk87"] := "VK_F24"
+	hash["vk90"] := "VK_NUMLOCK"
+	hash["vk91"] := "VK_SCROLL"
+
+	hash["vkA0"] := "VK_LSHIFT"
+	hash["vkA1"] := "VK_RSHIFT"
+	hash["vkA2"] := "VK_LCONTROL"
+	hash["vkA3"] := "VK_RCONTROL"
+	hash["vkA4"] := "VK_LMENU"
+	hash["vkA5"] := "VK_RMENU"
+
+	hash["vkF0"] := "VK_OEM_ATTN"	; 英数CapsLock
+	hash["vkF2"] := "VK_OEM_COPY"	; カタカナひらがな
+	hash["vkF3"] := "VK_OEM_AUTO"	; 半角／全角
+	hash["vkF5"] := "VK_OEM_BACKTAB"	; ALT+カタカナひらがな
+	return hash
+}
+
+;----------------------------------------------------------------------
+;	スキャンコードの制御コード
+;----------------------------------------------------------------------
+MakeCtrlScHash() {
+	hash := Object()
+	hash["sc00E"] := "Backspace"
+	hash["sc00F"] := "Tab"
+	hash["sc03A"] := "CapsLock"
+	hash["sc01C"] := "Enter"
+	hash["sc02A"] := "LSHIFT"
+	hash["sc136"] := "RSHIFT"
+	hash["sc01D"] := "LCTRL"
+	hash["sc038"] := "LALT"
+	hash["sc138"] := "RALT"
+	hash["sc11D"] := "RCTRL"
+	hash["sc152"] := "Insert"
+	hash["sc153"] := "Delete"
+	hash["sc14B"] := "L Arrow"
+	hash["sc147"] := "Home"
+	hash["sc14F"] := "End"
+	hash["sc148"] := "Up Arrow"
+	hash["sc150"] := "Dn Arrow"
+	hash["sc149"] := "Page Up"
+	hash["sc151"] := "Page Down"
+	hash["sc14D"] := "R Arrow"
+	hash["sc145"] := "Num Lock"
+	hash["sc11C"] := "Numeric Enter"
+	hash["sc001"] := "Esc"
+	hash["sc03B"] := "F1"
+	hash["sc03C"] := "F2"
+	hash["sc03D"] := "F3"
+	hash["sc03E"] := "F4"
+	hash["sc03F"] := "F5"
+	hash["sc040"] := "F6"
+	hash["sc041"] := "F7"
+	hash["sc042"] := "F8"
+	hash["sc043"] := "F9"
+	hash["sc044"] := "F10"
+	hash["sc057"] := "F11"
+	hash["sc058"] := "F12"
+	hash["sc137"] := "PrintScreen"
+	hash["sc046"] := "Scroll Lock"
+	hash["sc045"] := "Pause"
+	hash["sc15B"] := "Left Win"
+	hash["sc05B"] := "Right Win"
+	hash["sc15D"] := "Application"
+	hash["sc070"] := "DBE_KATAKANA"
+	hash["sc077"] := "DBE_SBCSCHAR"
+	hash["sc079"] := "CONVERT"
+	hash["sc07B"] := "NONCONVERT"
+	return hash
+}
+
 ;----------------------------------------------------------------------
 ;	修飾キー
 ;----------------------------------------------------------------------
