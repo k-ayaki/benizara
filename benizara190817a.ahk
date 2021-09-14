@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.725 .... 2021/9/2
+;	ver.0.1.4.8 .... 2021/9/11
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.725"
-	g_Date := "2021/9/2"
+	g_Ver := "ver.0.1.4.8"
+	g_Date := "2021/9/11"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -84,9 +84,13 @@
 	g_LastKey   := Object()		; 最後に入力したキーを濁音や半濁音に置き換える
 	g_LastKey["表層"] := ""
 
-	g_OyaAlt := Object()	; 反対側の親指キー
-	g_OyaAlt["R"] := "L"
-	g_OyaAlt["L"] := "R"
+	;g_OyaOthers := Object()	; 反対側の親指キー
+	;g_OyaOthers["R"] := "LABCD"
+	;g_OyaOthers["L"] := "RABCD"
+	;g_OyaOthers["A"] := "RLBCD"
+	;g_OyaOthers["B"] := "RLACD"
+	;g_OyaOthers["C"] := "RLABD"
+	;g_OyaOthers["D"] := "RLABC"
 
 	g_metaKeyUp := Object()		; 親指キーを離す
 	g_metaKeyUp["R"] := "r"
@@ -96,10 +100,18 @@
 	g_metaKeyUp["X"] := "x"
 	g_metaKeyUp["1"] := "_1"
 	g_metaKeyUp["2"] := "_2"
+	g_metaKeyUp["A"] := "a"
+	g_metaKeyUp["B"] := "b"
+	g_metaKeyUp["C"] := "c"
+	g_metaKeyUp["D"] := "d"
 
 	g_MojiCount := Object()	; 親指キーシフトの文字押下カウンター
 	g_MojiCount["R"] := 0
 	g_MojiCount["L"] := 0
+	g_MojiCount["A"] := 0
+	g_MojiCount["B"] := 0
+	g_MojiCount["C"] := 0
+	g_MojiCount["D"] := 0
 
 	g_RomajiOnHold := Object()
 	g_KoyubiOnHold := Object()
@@ -152,6 +164,10 @@
 	_currentTick := Pf_Count()	;A_TickCount
 	g_OyaTick["R"] := _currentTick
 	g_OyaTick["L"] := _currentTick
+	g_OyaTick["A"] := _currentTick
+	g_OyaTick["B"] := _currentTick
+	g_OyaTick["C"] := _currentTick
+	g_OyaTick["D"] := _currentTick
 	VarSetCapacity(lpKeyState,256,0)
 
 	g_process := Object()	; 反対側の親指キー
@@ -219,6 +235,10 @@ DoResume:
 
 keydownR:
 keydownL:
+keydownA:
+keydownB:
+keydownC:
+keydownD:
 	g_trigger := g_metaKey
 	g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
 	RegLogs(g_metaKey . " down")
@@ -298,8 +318,8 @@ keydownL:
 				g_KeyInPtn := g_KeyInPtn . g_Oya	;MOオンに遷移
 				g_SendTick := SetTimeout(g_KeyInPtn)
 			}
-		} 
-		else if(g_KeyInPtn == g_OyaAlt[g_Oya])	;S3)Oオン状態　（既に他の親指キーオン）
+		}
+		else if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1 && g_KeyInPtn!=g_Oya)	;S3)Oオン状態　（既に他の親指キーオン）
 		{
 			Gosub, SendOnHoldO	; 他の親指キー（保留キー）の打鍵
 			g_Oya := g_metaKey
@@ -307,7 +327,7 @@ keydownL:
 			g_KeyInPtn := g_Oya				;S4)Oオンに遷移
 			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
-		else if(g_KeyInPtn == "M" . g_OyaAlt[g_Oya])	;S4)M-Oオン状態で反対側のOキーオン
+		else if(RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1 && g_KeyInPtn!="M" . g_Oya)	;S4)M-Oオン状態で反対側のOキーオン
 		{
 			Gosub, SendOnHoldMO	; 保留キーの打鍵
 			g_Oya := g_metaKey
@@ -316,12 +336,13 @@ keydownL:
 			g_KeyInPtn := g_Oya	; S3)Oオンに遷移
 			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
-		else if(g_KeyInPtn == g_OyaAlt[g_Oya] . "M")	;S5)O-Mオン状態で反対側のOキーオン
+		else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1 && g_KeyInPtn!=g_Oya . "M")	;S5)O-Mオン状態で反対側のOキーオン
 		{
+			g_currentOya := substr(g_KeyInPtn,1,1)
 			; 処理B 3キー判定
-			g_Interval[g_OyaAlt[g_Oya] . "M"] := g_TDownOnHold[1] - g_OyaTick[g_OyaAlt[g_Oya]]	; 他の親指キー押しから文字キー押しまでの期間
+			g_Interval[g_currentOya . "M"] := g_TDownOnHold[1] - g_OyaTick[g_currentOya]	; 他の親指キー押しから文字キー押しまでの期間
 			g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから当該親指キー押しまでの期間
-			if(g_Interval["M" . g_Oya] > g_Interval[g_OyaAlt[g_Oya] . "M"] || g_Continue==1)
+			if(g_Interval["M" . g_Oya] > g_Interval[g_currentOya . "M"] || g_Continue==1)
 			{
 				Gosub, SendOnHoldMO	; 保留キーの打鍵　L,Rモードに遷移
 				g_Oya := g_metaKey
@@ -332,7 +353,7 @@ keydownL:
 			}
 			else
 			{
-				if(g_ZeroDelayOut<>"")
+				if(g_ZeroDelayOut!="")
 				{
 					CancelZeroDelayOut(g_ZeroDelay)
 				}
@@ -344,7 +365,7 @@ keydownL:
 				SendZeroDelay(g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2], g_MojiOnHold[1], g_ZeroDelay)
 			}
 		}
-		else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	; S6)O-M-Oオフ状態
+		else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)	;S6)O-M-Oオフ状態
 		{
 			if(g_Continue == 0 && g_OnHoldIdx >= 2) {
 				Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
@@ -355,7 +376,8 @@ keydownL:
 			g_SendTick := SetTimeout(g_KeyInPtn)
 		}
 	}
-	if(g_KeyInPtn == "L" || g_KeyInPtn == "R") {
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1)
+	{
 		g_SendTick := INFINITE
 	}
 	critical,off
@@ -366,6 +388,10 @@ keydownL:
 ;-----------------------------------------------------------------------
 keyupR:
 keyupL:
+keyupA:
+keyupB:
+keyupC:
+keyupD:
 	g_trigger := g_metaKeyUp[g_metaKey]
 
 	g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
@@ -433,13 +459,28 @@ keyupL:
 	
 	if(g_Oya == g_metaKey) {
 		if(g_Continue == 1) {
-			; 反対側の親指キーが押されていなければ N に設定
-			g_Oya := g_OyaAlt[g_Oya]
-			_layout := g_Oya2Layout[g_Oya]
-			_keyName := keyNameHash[_layout]
-			_keyState := GetKeyState(_keyName,"P")
-			if(_keyState == 0) {
+			; 他の親指キーが押されていなければ N に設定
+			_oyaOther := "RLABCD"
+			loop, Parse, _oyaOther
+			{
+				if(A_LoopField == g_metaKey) 
+				{
+					continue
+				}
 				g_Oya := "N"
+				_layout := g_Oya2Layout[A_LoopField]
+				if(_layout!="")
+				{
+					_scanCode := scanCodeHash[_layout]
+					if(_scanCode!="")
+					{
+						_keyState := GetKeyState(_scanCode,"P")
+						if(_keyState!=0) {
+							g_Oya := A_LoopField
+							break
+						}
+					}
+				}
 			}
 		} else {
 			g_Oya := "N"
@@ -499,7 +540,7 @@ CancelZeroDelayOut(g_ZeroDelay) {
 ;----------------------------------------------------------------------
 MnDown(aStr) {
 	vOut := ""
-	if(aStr<>"")
+	if(aStr!="")
 	{
 		vOut := "{" . aStr . " down}"
 	}
@@ -512,7 +553,7 @@ MnDown(aStr) {
 ;----------------------------------------------------------------------
 MnUp(aStr) {
 	vOut := ""
-	if(aStr<>"")
+	if(aStr!="")
 	{
 		vOut := "{" . aStr . " up}"
 	}
@@ -636,7 +677,7 @@ isCapsLock(_ch)
 ;----------------------------------------------------------------------
 MnDownUp(key)
 {
-	if(key <> "")
+	if(key!="")
 		return "{" . key . " down}{" . key . " up}"
 	else
 		return ""
@@ -676,16 +717,16 @@ SendOnHoldMO:
 		return
 	}
 	if(cntM >= 1) {
-		if((g_MetaOnHold[1]=="M" && g_MetaOnHold[2]=="L")
-		|| (g_MetaOnHold[1]=="M" && g_MetaOnHold[2]=="R")) {
+		if(g_MetaOnHold[1]=="M" && RegExMatch(g_MetaOnHold[2], "^[RLABCD]$")==1)
+		{
 			_mode := g_RomajiOnHold[2] . g_OyaOnHold[2] . g_KoyubiOnHold[2]
 			SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
 			dequeueKey()
 			dequeueKey()
 			clearQueue()
-		} else 
-		if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
-		|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M")) {
+		} else
+		if(RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1 && g_MetaOnHold[2]=="M")
+		{
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 			SendOnHold(_mode, g_MojiOnHold[2], g_ZeroDelay)
 			dequeueKey()
@@ -745,7 +786,7 @@ SendOnHold(_mode, _MojiOnHold, g_ZeroDelay)
 	}
 	if(g_ZeroDelay == 1)
 	{
-		if(vOut <> g_ZeroDelayOut)
+		if(vOut!=g_ZeroDelayOut)
 		{
 			CancelZeroDelayOut(g_ZeroDelay)
 			SubSend(vOut)
@@ -782,23 +823,28 @@ SetTimeout(_KeyInPtn)
 			}
 		}
 	} else
-	if(_KeyInPtn=="MM") {
+	if(_KeyInPtn=="MM") 
+	{
 		if(ksc[_mode . g_MojiOnHold[2] . g_MojiOnHold[1]]<=2) {
 			_SendTick := g_TDownOnHold[g_OnHoldIdx] + maximum(g_ThresholdSS,g_Threshold)
 		}
 	} else
-	if(_KeyInPtn=="MMm") {
+	if(_KeyInPtn=="MMm") 
+	{
 		g_Interval["S12"]  := g_TDownOnHold[2] - g_TDownOnHold[1]	; 最初の文字だけをオンしていた期間
 		g_Interval["S2_1"] := g_TUpOnHold[1] - g_TDownOnHold[2]		; 前回の文字キー押しからの重なり期間
 		_SendTick := g_TUpOnHold[1] + minimum(floor((g_Interval["S2_1"]*(100-g_OverlapSS))/g_OverlapSS)-g_Interval["S12"],g_MaxTimeout)
 	} else
-	if(_KeyInPtn=="MMM") {
+	if(_KeyInPtn=="MMM") 
+	{
 		_SendTick := g_TDownOnHold[g_OnHoldIdx]
 	} else
-	if(_KeyInPtn=="L" || _KeyInPtn=="R") {
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1)
+	{
 		_SendTick := INFINITE	;g_OyaTick[g_Oya] + minimum(floor((g_Threshold*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 	} else
-	if(_KeyInPtn=="LM" || _KeyInPtn=="RM") {
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)
+	{
 		if(g_MojiCount[g_Oya]==1) {
 			g_Interval[g_Oya . "M"] := g_TDownOnHold[g_OnHoldIdx] - g_OyaTick[g_Oya]
 			_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(floor(g_Interval[g_Oya . "M"]*g_OverlapOM/(100-g_OverlapOM)),g_MaxTimeout)
@@ -806,11 +852,13 @@ SetTimeout(_KeyInPtn)
 			_SendTick := g_TDownOnHold[g_OnHoldIdx] + minimum(g_Threshold,g_MaxTimeout)
 		}
 	} else
-	if(_KeyInPtn=="ML" || _KeyInPtn=="MR") {
+	if(RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1)
+	{
 		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]
 		_SendTick := g_OyaTick[g_Oya] + minimum(floor(g_Interval["M" . g_Oya]*g_OverlapMO/(100-g_OverlapMO)),g_MaxTimeout)
 	} else
-	if(_KeyInPtn=="RMr" || _KeyInPtn=="LMl") {
+	if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)
+	{
 		g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
 		_SendTick := g_OyaUpTick[g_Oya] + minimum(floor((g_Interval["M_" . g_Oya]*(100-g_OverlapOM))/g_OverlapOM),g_MaxTimeout)
 	}
@@ -828,8 +876,8 @@ SendOnHoldM:
 	; debugging 
 	if(cntM >= 1) {
 		if(g_OnHoldIdx >= 2
-		&& ((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
-		||  (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M"))) {
+		&& (RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1 && g_MetaOnHold[2]=="M"))
+		{
 			_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 			dequeueKey()
 		} else
@@ -839,20 +887,15 @@ SendOnHoldM:
 		SendOnHold(_mode, g_MojiOnHold[1], g_ZeroDelay)
 		dequeueKey()
 		g_SendTick := INFINITE
-		if(g_KeyInPtn=="MR")
-		{
-			g_keyInPtn := "R"
-		}
-		else if(g_KeyInPtn=="ML")
-		{
-			g_keyInPtn := "L"
+		if(RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1) {
+			g_keyInPtn := substr(g_keyInPtn,2,1)
 		}
 		else if(g_KeyInPtn=="M")
 		{
 			clearQueue()
 			g_keyInPtn := ""		
 		}
-		else if(g_KeyInPtn=="RMr" || g_KeyInPtn=="LMl")
+		else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)
 		{
 			g_keyInPtn := ""
 		}
@@ -935,29 +978,37 @@ enqueueKey(_Romaji, _Oya, _Koyubi, _Moji, _Meta, _Tick)
 	return g_OnHoldIdx
 }
 ;----------------------------------------------------------------------
-; 文字キーのMO/OMを１つにマージ
+; 文字キーのOMを１つにマージ
 ;----------------------------------------------------------------------
-mergeKey()
+mergeOMKey()
 {
-	global g_RomajiOnHold, g_OyaOnHold, g_KoyubiOnHold, g_MojiOnHold, g_OnHoldIdx
-	global g_TDownOnHold, g_TUpOnHold, g_MetaOnHold
+	global g_OnHoldIdx
+	global g_TDownOnHold, g_TUpOnHold, g_MetaOnHold, g_MojiOnHold
 	
 	if(g_OnHoldIdx==2) {
-		if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
-			g_RomajiOnHold[2] := g_RomajiOnHold[1]
-			g_OyaOnHold[2]    := g_OyaOnHold[1]
-			g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
-			dequeueKey()
-		} else
-		if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
-			g_MetaOnHold[2]   := g_MetaOnHold[1]
-			g_MojiOnHold[2]   := g_MojiOnHold[1]
-			g_TDownOnHold[2]  := g_TDownOnHold[1]
-			g_TUpOnHold[2]    := g_TUpOnHold[1]			
-			dequeueKey()
-		}
+		g_RomajiOnHold[2] := g_RomajiOnHold[1]
+		g_OyaOnHold[2]    := g_OyaOnHold[1]
+		g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
+		dequeueKey()
 	}
 }
+;----------------------------------------------------------------------
+; 文字キーのMOを１つにマージ
+;----------------------------------------------------------------------
+mergeMOKey()
+{
+	global g_OnHoldIdx
+	global g_MetaOnHold, g_MojiOnHold, g_TDownOnHold, g_TUpOnHold
+	
+	if(g_OnHoldIdx==2) {
+		g_MetaOnHold[2]   := g_MetaOnHold[1]
+		g_MojiOnHold[2]   := g_MojiOnHold[1]
+		g_TDownOnHold[2]  := g_TDownOnHold[1]
+		g_TUpOnHold[2]    := g_TUpOnHold[1]			
+		dequeueKey()
+	}
+}
+
 ;----------------------------------------------------------------------
 ; 文字キーキューの全クリア
 ;----------------------------------------------------------------------
@@ -1038,8 +1089,9 @@ SendOnHoldMM:
 	}
 	if(cntM >= 2) {
 		if(g_OnHoldIdx >= 3
-		&& ((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M")
-		||  (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M"))) {
+		&& RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1 
+		&& g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M")
+		{
 			g_RomajiOnHold[2] := g_RomajiOnHold[1]
 			g_OyaOnHold[2]    := g_OyaOnHold[1]
 			g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
@@ -1086,8 +1138,9 @@ SendOnHoldMMM:
 		return
 	}
 	; 異常時の対処
-	if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M" && g_MetaOnHold[4]=="M")
-	|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M" && g_MetaOnHold[4]=="M")) {
+	if(RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1 
+	&& g_MetaOnHold[2]=="M" && g_MetaOnHold[3]=="M" && g_MetaOnHold[4]=="M")
+	{
 		g_RomajiOnHold[2] := g_RomajiOnHold[1]
 		g_OyaOnHold[2]    := g_OyaOnHold[1]
 		g_KoyubiOnHold[2] := g_KoyubiOnHold[1]
@@ -1128,32 +1181,37 @@ SendOnHoldMMM:
 ; 2020/10/16 : スペースキーをホールドしているときは単独打鍵する
 ;----------------------------------------------------------------------
 SendOnHoldO:
-	if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
+	if(RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1) 
+	{
 		if(g_KeySingle == "有効" || g_MojiOnHold[1] == "A02") {
 			vOut := kdn[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]]
 			SubSendOne(vOut)
 			SetKeyupSave(kup[g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1] . g_MojiOnHold[1]],g_MojiOnHold[1])
 		}
 		dequeueKey()
-		if(g_KeyInPtn=="RM" || g_KeyInPtn=="RMr" || g_KeyInPtn=="MR"
-		|| g_KeyInPtn=="LM" || g_KeyInPtn=="LMl" || g_KeyInPtn=="ML")
+		if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1
+		|| RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1
+		|| RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1)
 		{
 			g_keyInPtn := "M"
 		}
-		else if(g_KeyInPtn=="L" || g_KeyInPtn=="R")
+		else if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1)
 		{
 			g_keyInPtn := ""
 		}
 	} else
-	if(g_KeyInPtn=="RM" || g_KeyInPtn=="LM") {
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)
+	{
 		g_OyaOnHold[1] := "N"
 		g_keyInPtn := "M"
 	}
 	; debugging 
-	if(g_MetaOnHold[1]=="L" || g_MetaOnHold[1]=="R") {
+	if(RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1)
+	{
 		dequeueKey()
 	}
-	if(g_Continue == 0) {
+	if(g_Continue == 0) 
+	{
 		g_Oya := "N"
 	}
 	return
@@ -1172,7 +1230,7 @@ keydownM:
 		keyState[g_sansPos] := 1
 	}
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
-		if(g_prefixshift <> "" )
+		if(g_prefixshift != "" )
 		{
 			SendKey(g_Romaji . g_prefixshift . KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos)
 			g_SendTick := INFINTE
@@ -1207,7 +1265,7 @@ keydownM:
 		}
 	}
 	else
-	if(g_KeyInPtn="RM" || g_KeyInPtn="LM")	;S5)O-Mオン状態
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)	;S5)O-Mオン状態
 	{
 		; M2キー押下
 		if(g_MetaOnHold[1]=="M") {
@@ -1284,7 +1342,7 @@ keydownM:
 			Gosub, SendOnHoldMO		; 保留キーの同時打鍵
 		}
 	}
-	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;S6)O-M-Oオフ状態
+	else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)	;S6)O-M-Oオフ状態
 	{
 		if(g_MojiOnHold[g_OnHoldIdx]!="") {
 			if(g_Continue == 0 && g_OnHoldIdx >= 2) {
@@ -1349,7 +1407,7 @@ keydownM:
 			}
 		} else
 		if(g_KeyInPtn == g_Oya . "M") {
-			mergeKey()
+			mergeOMKey()
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
 			g_KeyInPtn := "MM"
@@ -1359,7 +1417,7 @@ keydownM:
 			JudgePushedKeys(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[2] . g_MojiOnHold[1])
 		} else
 		if(g_KeyInPtn == "M" . g_Oya) {
-			mergeKey()
+			mergeMOKey()
 			enqueueKey(g_Romaji, g_Oya, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKey, keyTick[g_layoutPos])
 			; 当該キーとその前を同時打鍵として保留
 			g_KeyInPtn := "MM"
@@ -1537,8 +1595,8 @@ keydown9:
 SendZeroDelayMO:
 	cntM := countMoji()
 	if(cntM >= 1) {
-		if((g_MetaOnHold[1]=="L" && g_MetaOnHold[2]=="M")
-		|| (g_MetaOnHold[1]=="R" && g_MetaOnHold[2]=="M")) {
+		if(RegExMatch(g_MetaOnHold[1], "^[RLABCD]$")==1 && g_MetaOnHold[2]=="M")
+		{
 			SendZeroDelay(g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1], g_MojiOnHold[2], g_ZeroDelay)
 		} else 
 		if(g_MetaOnHold[1]=="M") {
@@ -1727,7 +1785,7 @@ keyupM:
 			}
 		}
 	}
-	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")	; O-Mオン状態
+	else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)	; O-Mオン状態
 	{
 		if((g_OnHoldIdx>=1 && g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
 		|| (g_OnHoldIdx>=2 && g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
@@ -1736,7 +1794,7 @@ keyupM:
 			Gosub, SendOnHoldMO
 		}
 	}
-	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")	;O-M-Oオフ状態
+	else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)	;O-M-Oオフ状態
 	{
 		if((g_OnHoldIdx>=1 && g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
 		|| (g_OnHoldIdx>=2 && g_MetaOnHold[2]=="M" && g_layoutPos==g_MojiOnHold[2]))	; 保留キーがアップされた
@@ -1768,27 +1826,13 @@ keyup:
 keyupX:
 keyupT:
 	g_trigger := g_metaKeyUp[g_metaKey]
-
 	RegLogs(kName . " up")
-
-
 	SubSendUp(g_layoutPos)
 	g_trigger := ""
 	critical,off
 	sleep,-1
 	return
 
-;----------------------------------------------------------------------
-; 文字コード以外のキーアップ（押下終了）
-;----------------------------------------------------------------------
-keyupN:
-	g_trigger := g_metaKeyUp[g_metaKey]
-	RegLogs(kName . " up")
-	keyState[g_layoutPos] := 0
-	g_trigger := ""
-	critical,off
-	sleep,-1
-	return
 ;----------------------------------------------------------------------
 ; スペース＆シフトキー（押下終了）
 ;----------------------------------------------------------------------
@@ -1822,7 +1866,6 @@ keyup7:
 keyup8:
 keyup9:
 	g_trigger := g_metaKeyUp[g_metaKey]
-
 	RegLogs(kName . " up")
 	SubSendUp(g_layoutPos)
 	critical,off
@@ -1883,6 +1926,7 @@ InterruptProcessPolling:
 Interrupt10:
 	critical
 	Gosub,ScanModifier
+	Gosub,ScanOyaKey
 	Gosub,ScanPauseKey
 	if(g_Modifier!=0) 
 	{
@@ -1926,15 +1970,15 @@ Interrupt10:
 	critical,off
 	if(A_IsCompiled != 1)
 	{
-		;vImeMode := IME_GET2() & 32767
-		;vImeConvMode := IME_GetConvMode()
+		vImeMode := IME_GET2() & 32767
+		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
 		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
 		g_debugout2 := g_LastKey["表層"]
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans)
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans) . ":" . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 	}
@@ -1993,7 +2037,7 @@ Polling:
 			{
 				Gosub, SendOnHoldMMM
 			}
-			else if(g_KeyInPtn=="L" || g_KeyInPtn=="R")	; Oオン状態
+			else if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1)	; Oオン状態
 			{
 				if(g_MojiOnHold[1] == "A02" || g_KeySingle == "有効") {
 					Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
@@ -2005,11 +2049,12 @@ Polling:
 					}
 				}
 			}
-			else if(g_KeyInPtn=="ML" || g_KeyInPtn=="MR" || g_KeyInPtn=="LM" || g_KeyInPtn=="RM" )	; M-Oオン状態、O-Mオン状態
+			else if(RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1
+			||      RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)	; M-Oオン状態、O-Mオン状態
 			{
 				Gosub, SendOnHoldMO		; 保留キーの同時打鍵
 			}
-			else if(g_KeyInPtn=="RMr" || g_KeyInPtn=="LMl")	; O-M-Oオフ状態
+			else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)	; O-M-Oオフ状態			
 			{
 				if(g_Continue == 0 && g_OnHoldIdx >= 2) {
 					Gosub, SendOnHoldO		; 保留親指キーの単独打鍵
@@ -2099,6 +2144,31 @@ ScanModifier:
 	return
 
 ;----------------------------------------------------------------------
+; 親指キー読み取り
+;----------------------------------------------------------------------
+ScanOyaKey:
+	_pos := g_Oya2Layout[g_Oya]
+	if(_pos!="")
+	{
+		if(keyAttribute3[_pos]=="off")
+		{
+			g_Oya := "N"
+		} else 
+		{
+			_scanCode := scanCodeHash[_pos]
+			if(_scanCode!="")
+			{
+				if(GetKeyState(_scanCode,"P")==0) {
+					g_Oya := "N"
+				}
+			}
+		}
+	} else {
+		g_Oya := "N"
+	}
+	return
+
+;----------------------------------------------------------------------
 ; Pauseキー読み取り
 ;----------------------------------------------------------------------
 ScanPauseKey:
@@ -2143,19 +2213,19 @@ ModeInitialize:
 	{
 		Gosub, SendOnHoldMMM
 	}
-	else if(g_KeyInPtn="L" || g_KeyInPtn="R")
+	else if(RegExMatch(g_KeyInPtn, "^[RLABCD]$")==1)
 	{
 		Gosub, SendOnHoldO		; 保留キーの同時打鍵
 	}
-	else if(g_KeyInPtn="ML" || g_KeyInPtn="MR")
+	else if(RegExMatch(g_KeyInPtn, "^M[RLABCD]$")==1)
 	{
 		Gosub, SendOnHoldMO		; 保留キーの同時打鍵
 	}
-	else if(g_KeyInPtn="RM" || g_KeyInPtn="LM")
+	else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M$")==1)
 	{
 		Gosub, SendOnHoldMO
 	}
-	else if(g_KeyInPtn="RMr" || g_KeyInPtn="LMl")
+	else if(RegExMatch(g_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)
 	{
 		Gosub, SendOnHoldMO
 	}
@@ -2245,7 +2315,7 @@ ChkIME:
 			g_Romaji := "A"
 		}
 	}
-	;if(A_IsCompiled <> 1)
+	;if(A_IsCompiled != 1)
 	;{
 		;vImeConverting := IME_GetConverting() & 32767
 		;Tooltip, %g_Romaji% %vImeConvMode%, 0, 0, 2 ; debug
@@ -2398,7 +2468,7 @@ SetHotkeyInit()
 ;----------------------------------------------------------------------
 SetHotkeyInitByPos(_pos)
 {
-	global ScanCodeHash
+	global ScanCodeHash, keyAttribute3
 	
 	sCode := ScanCodeHash[_pos]
 	if(sCode!="") {
@@ -2488,7 +2558,8 @@ SetHotkeyFunctionByName(kName, flg)
 	
 	_pos := fkeyPosHash[kName]
 	_scode := fkeyCodeHash[kName]
-	if(_pos=="" || _scode=="") {
+	if(_pos=="" || _scode=="")
+	{
 		return
 	}
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
@@ -2704,7 +2775,7 @@ gSC15C: ;右Win
 gSC15D: ;Applications
 gSC136: ;右Shift
 	critical
-	Gosub,ScanModifier
+ 	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	kName := keyNameHash[g_layoutPos]
 	if(kName=="LShift" || kName=="RShift") {
@@ -2739,9 +2810,13 @@ gSC136: ;右Shift
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
 		; 修飾キー＋文字キーの同時押しのときに
-		SubSendOne(MnDown(kName))
-		SetKeyupSave(MnUp(kName),g_layoutPos)
-		
+		if(g_metaKey=="M" && kdn["ANN"]!="") {
+			SubSendOne(kdn["ANN" . g_layoutPos])
+			SetKeyupSave(kup["ANN" . g_layoutPos],g_layoutPos)
+		} else {
+			SubSendOne(MnDown(kName))
+			SetKeyupSave(MnUp(kName),g_layoutPos)
+		}
 		clearQueue()
 		g_LastKey["表層"] := ""
 		g_SendTick := INFINITE
@@ -2752,6 +2827,7 @@ gSC136: ;右Shift
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
+
 
 ;----------------------------------------------------------------------
 ; キーオフのイベント
