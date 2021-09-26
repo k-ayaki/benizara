@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.8 .... 2021/9/11
+;	ver.0.1.4.81 .... 2021/9/26
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.8"
-	g_Date := "2021/9/11"
+	g_Ver := "ver.0.1.4.81"
+	g_Date := "2021/9/26"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -83,14 +83,6 @@
 	g_Interval  := Object()
 	g_LastKey   := Object()		; 最後に入力したキーを濁音や半濁音に置き換える
 	g_LastKey["表層"] := ""
-
-	;g_OyaOthers := Object()	; 反対側の親指キー
-	;g_OyaOthers["R"] := "LABCD"
-	;g_OyaOthers["L"] := "RABCD"
-	;g_OyaOthers["A"] := "RLBCD"
-	;g_OyaOthers["B"] := "RLACD"
-	;g_OyaOthers["C"] := "RLABD"
-	;g_OyaOthers["D"] := "RLABC"
 
 	g_metaKeyUp := Object()		; 親指キーを離す
 	g_metaKeyUp["R"] := "r"
@@ -1527,6 +1519,8 @@ keydownX:
 	g_ModifierTick := keyTick[g_layoutPos]
 	SubSendOne(MnDown(kName))
 	SetKeyupSave(MnUp(kName),g_layoutPos)
+
+	Gosub,GetImeStatus
 	g_LastKey["表層"] := ""
 	g_KeyInPtn := ""
 	critical,off
@@ -1938,16 +1932,7 @@ Interrupt10:
 		SetHotkey("off")
 		SetHotkeyFunction("off")
 	} else {
-		Gosub,ChkIME
-
-		; 現在の配列面が定義されていればキーフック
-		if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
-			SetHotkey("on")
-			SetHotkeyFunction("on")
-		} else {
-			SetHotkey("off")
-			SetHotkeyFunction("off")
-		}
+		Gosub,GetImeStatus
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1970,7 +1955,6 @@ Interrupt10:
 	critical,off
 	if(A_IsCompiled != 1)
 	{
-		vImeMode := IME_GET2() & 32767
 		vImeConvMode := IME_GetConvMode()
 		szConverting := IME_GetConverting()
 		
@@ -2004,6 +1988,20 @@ SansSend()
 	}
 	g_sans := "N"
 }
+;----------------------------------------------------------------------
+; IME状態設定
+;----------------------------------------------------------------------
+GetImeStatus:
+	Gosub,ChkIME
+	; 現在の配列面が定義されていればキーフック
+	if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
+		SetHotkey("on")
+		SetHotkeyFunction("on")
+	} else {
+		SetHotkey("off")
+		SetHotkeyFunction("off")
+	}
+	return
 
 ;----------------------------------------------------------------------
 ; 10mSECなどのポーリング
@@ -2299,7 +2297,13 @@ pauseKeyDown:
 ;              よって、最下位ビットのみを見る
 ;----------------------------------------------------------------------
 ChkIME:
-	vImeMode := IME_GET2() & 32767
+	if(WinExist("ahk_class #32768")!=0) ; IMEメニュー表示中
+	{
+		vImeMode := 0
+	} else 
+	{
+		vImeMode := IME_GET() & 32767
+	}
 	if(vImeMode==0)
 	{
 		vImeConvMode :=IME_GetConvMode()
@@ -2321,18 +2325,6 @@ ChkIME:
 		;Tooltip, %g_Romaji% %vImeConvMode%, 0, 0, 2 ; debug
 	;}
 	return
-
-;----------------------------------------------------------------------
-; IMEの変換モード取得のラッパ
-;----------------------------------------------------------------------
-IME_GET2()
-{
-	
-	if(WinExist("ahk_class #32768")!=0) {	; IMEメニュー表示中
-		return 0
-	}
-	return IME_GET()
-}
 
 ;----------------------------------------------------------------------
 ; キーを押下されたときに呼び出されるGotoラベルにフックする
@@ -2554,7 +2546,7 @@ SetHotkeyFunction(flg)
 SetHotkeyFunctionByName(kName, flg)
 {
 	global keyAttribute3, fkeyPosHash, fkeyCodeHash
-	global g_Romaji, g_Koyubi, g_sans
+	global g_Romaji, g_Koyubi, g_sans, kup_save
 	
 	_pos := fkeyPosHash[kName]
 	_scode := fkeyCodeHash[kName]
@@ -2565,11 +2557,17 @@ SetHotkeyFunctionByName(kName, flg)
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
 		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
-		hotkey,*%_scode% up,%flg%
+		if(kup_save[_pos]=="" || _scode == "sc029")
+		{
+			hotkey,*%_scode% up,%flg%
+		}
 	} else {
 		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
-		hotkey,*%_scode% up,off
+		if(kup_save[_pos]=="" || _scode == "sc029")
+		{
+			hotkey,*%_scode% up,off
+		}
 	}
 }
 ;----------------------------------------------------------------------
@@ -2638,7 +2636,7 @@ SetHotkey(flg)
 SetHotkeyByPos(_pos, flg)
 {
 	global scanCodeHash
-	global keyAttribute3, g_Romaji, g_Koyubi, g_sans
+	global keyAttribute3, g_Romaji, g_Koyubi, g_sans, kup_save
 	
 	_scode := scanCodeHash[_pos]
 	if(_pos=="" || _scode=="") {
@@ -2647,11 +2645,17 @@ SetHotkeyByPos(_pos, flg)
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
 		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
-		hotkey,*%_scode% up,%flg%
+		if(kup_save[_pos]=="")
+		{
+			hotkey,*%_scode% up,%flg%
+		}
 	} else {
 		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
-		hotkey,*%_scode% up,off
+		if(kup_save[_pos]=="")
+		{
+			hotkey,*%_scode% up,off
+		}
 	}
 }
 
@@ -2975,5 +2979,10 @@ gSC136up:	;右Shift
 		g_Modifier := g_Modifier & (~0x4000)
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
-	goto, keyup%g_metaKey%
+	gosub, keyup%g_metaKey%
+	if(keyAttribute3[g_layoutPos] == "off")
+	{
+		SetHotkeyByPos(g_layoutpos,"off")	
+	}
+	return
 
