@@ -434,6 +434,14 @@ ReadLayoutFile:
 					{
 						g_layoutURL := org[2]
 					}
+					else
+					if(org[1]=="キーリピート")
+					{
+						if(org[2] > g_MaxTimeout && org[2]<=2000)
+						{
+							g_MaxTimeoutM := org[2]
+						}
+					}
 				}
 				continue
 			}
@@ -1394,6 +1402,11 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 			_a3 := ""
 		}
 		if(_c2 != "") {
+			if(_modifier!="")
+			{
+				_dn := _dn . _modifier
+				_modifier := ""
+			}
 			_dn := _dn .  "{" . _c2 . " up}"
 			_c2 := ""
 		}
@@ -1475,6 +1488,11 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 				loop,Parse, _c1
 				{
 					if(_c2 != "") {
+						if(_modifier!="")
+						{
+							_dn := _dn . _modifier
+							_modifier := ""
+						}
 						_dn := _dn .  "{" . _c2 . " up}"
 						_c2 := ""
 					}

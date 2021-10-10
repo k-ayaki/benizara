@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.81 .... 2021/9/26
+;	ver.0.1.4.82 .... 2021/10/10
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.81"
-	g_Date := "2021/9/26"
+	g_Ver := "ver.0.1.4.82"
+	g_Date := "2021/10/10"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -66,6 +66,7 @@
 	if(g_MaxTimeout == 0) {
 		g_MaxTimeout := 500
 	}
+	g_MaxTimeoutM := 500
 	g_ThresholdSS := 250	; 
 	g_OverlapMO := 35
 	g_OverlapOM := 70
@@ -115,6 +116,7 @@
 	g_OnHoldIdx := 0
 	keyTick := Object()
 	g_KeyOnHold := ""
+	g_RepeatCount := 0
 	
 	g_sansTick := INFINITE
 	g_sans := "N"
@@ -232,7 +234,7 @@ keydownB:
 keydownC:
 keydownD:
 	g_trigger := g_metaKey
-	g_OyaTick[g_metaKey] := Pf_Count()				; A_TickCount
+	g_OyaTick[g_metaKey] := pf_TickCount	;Pf_Count()				; A_TickCount
 	RegLogs(g_metaKey . " down")
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat == 1 || g_layoutPos == "A02"))
 	{
@@ -1214,7 +1216,7 @@ SendOnHoldO:
 ;----------------------------------------------------------------------
 keydownM:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := Pf_Count()
+	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_sansTick := INFINITE
@@ -1499,7 +1501,7 @@ keydownT:
 keydown:
 keydownX:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := Pf_Count()
+	keyTick[g_layoutPos] := pf_TickCount	; Pf_Count()
 	RegLogs(kName . " down")
 
 	if(g_KeyPause==kName) {
@@ -1531,7 +1533,7 @@ keydownX:
 ;----------------------------------------------------------------------
 keydownS:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := Pf_Count()
+	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 
@@ -1566,7 +1568,7 @@ keydown6:
 keydown7:
 keydown8:
 keydown9:
-	keyTick[g_layoutPos] := Pf_Count()
+	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
@@ -2829,6 +2831,15 @@ gSC136: ;右Shift
 		critical,off
 		return
 	}
+	pf_TickCount := Pf_Count()				; A_TickCount
+	if(keyState[g_layoutPos] != 0 && g_KeyRepeat == 1)
+	{
+		if(g_metaKey=="M" && g_RepeatCount == 0 && pf_TickCount - keyTick[g_layoutPos]<g_MaxTimeoutM)
+		{
+			return
+		}
+		g_RepeatCount := g_RepeatCount + 1
+	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
 
@@ -2980,6 +2991,7 @@ gSC136up:	;右Shift
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	gosub, keyup%g_metaKey%
+	g_RepeatCount := 0
 	if(keyAttribute3[g_layoutPos] == "off")
 	{
 		SetHotkeyByPos(g_layoutpos,"off")	
