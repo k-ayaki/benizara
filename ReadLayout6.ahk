@@ -74,11 +74,12 @@ InitLayout2:
 	ksc := Object()	; 最大同時打鍵個数
 	kup := Object()	; keyup したときの Send形式
 	kdn := Object()	; keydown したときの Send形式
-
+	
 	DakuonSurfaceHash := MakeDakuonSurfaceHash()	; 濁音
 	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
 	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
 	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
+	g_MaxTimeoutM := g_MaxTimeout
 
 	g_Oya2Layout := Object()
 	g_Oya2Layout["L"] := "A01"
