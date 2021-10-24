@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.83 .... 2021/10/12
+;	ver.0.1.4.84 .... 2021/10/24
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.83"
-	g_Date := "2021/10/12"
+	g_Ver := "ver.0.1.4.84"
+	g_Date := "2021/10/24"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -567,6 +567,7 @@ SubSend(vOut)
 	_len := strlen(vOut)
 	_cnt := 0
 	_sendch := ""
+	_bsflg := 0
 	loop, Parse, vOut
 	{
 		_cnt := _cnt + 1
@@ -574,37 +575,42 @@ SubSend(vOut)
 		StringLeft, _left2c, _stroke, 2
 		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
-				_scnt := _scnt + 1
-				SetKeyDelay, -1
-				Send, {blind}{capslock}
-				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
-				if(_scnt>=4) {
-					DllCall("kernel32.dll\Sleep", "UInt", 10)
+				if(_scnt>=4) 
+				{
+					SetKeyDelay, 16,-1
 					_scnt := 0
+				} else {
+					SetKeyDelay, -1,-1
 				}
-			}
-			if(instr(_stroke,"{Enter")>0) {
-				_scnt := _scnt + 4
-			} else {
+				Send, {blind}{capslock}
 				_scnt := _scnt + 1
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
 			}
-			SetKeyDelay, -1
+			if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
+				_scnt := _scnt + 4
+			}
+			if(_scnt>=4)
+			{
+				SetKeyDelay, 64,-1
+				_scnt := 0
+			} else {
+				SetKeyDelay, -1,-1
+			}
 			Send, %_stroke%
+			_scnt := _scnt + 1
 			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			_stroke := ""
-			if(_scnt>=4) {
-				DllCall("kernel32.dll\Sleep", "UInt", 10)
-				_scnt := 0
-			}
 			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
-				_scnt := _scnt + 1
-				SetKeyDelay, -1
-				Send, {blind}{capslock}
-				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
-				if(_scnt>=4) {
-					DllCall("kernel32.dll\Sleep", "UInt", 10)
+				if(_scnt>=4) 
+				{
+					SetKeyDelay,16,-1
 					_scnt := 0
+				} else {
+					SetKeyDelay,-1,-1
 				}
+				Send, {blind}{capslock}
+				_scnt := _scnt + 1
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
 			}
 			_sendch := ""
 		}
@@ -612,9 +618,9 @@ SubSend(vOut)
 			_sendch := substr(_left2c,2,1)
 		}
 	}
+	SetKeyDelay, -1,-1
 	if(_stroke != "") {
-		SetKeyDelay, -1
-		Send, {blind}%_stroke%
+		Send, %_stroke%
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 	}
 }
@@ -625,7 +631,7 @@ SubSendOne(vOut)
 {
 	global g_KeyInPtn, g_trigger
 	if(vOut!="") {
-		SetKeyDelay, -1
+		SetKeyDelay, -1,-1
 		Send, {blind}%vOut%
 		RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . vOut)
 	}
@@ -1346,7 +1352,7 @@ keydownM:
 			Gosub, SendOnHoldM		; 保留文字キーの単独打鍵
 		}
 	}
-	SetKeyDelay, -1
+	;SetKeyDelay, -1
 	Gosub,ChkIME
 
 	if(g_Oya=="N")

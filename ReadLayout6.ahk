@@ -438,7 +438,7 @@ ReadLayoutFile:
 					else
 					if(org[1]=="キーリピート")
 					{
-						if(org[2] > g_MaxTimeout && org[2]<=2000)
+						if(org[2] > g_MaxTimeout)
 						{
 							g_MaxTimeoutM := org[2]
 						}
@@ -1388,8 +1388,8 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 	_qstr := ""
 	_vkey := ""
 	_vcnt := 0
-	_c2 := ""
-	_c3 := ""
+	_c1 := ""	; ローマ字
+	_c2 := ""	; アルファベット
 	_idx := 1
 	while(_idx <= _len)
 	{
@@ -1403,12 +1403,8 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 			_a3 := ""
 		}
 		if(_c2 != "") {
-			if(_modifier!="")
-			{
-				_dn := _dn . _modifier
-				_modifier := ""
-			}
-			_dn := _dn .  "{" . _c2 . " up}"
+			_dn := _dn . _modifier . "{" . _c2 . "}"
+			_modifier := ""
 			_c2 := ""
 		}
 		if((_a1 == "v" || _a1 == "V") && strlen(_a3)==3) {	; 仮想キーコードのマーク
@@ -1420,7 +1416,6 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 			if(ctrlvKeyHash[_c2]!="") {
 				_status := _status . "c"		; 制御キー
 			}
-			_dn := _dn . "{" . _c2 . " down}"
 			_idx := _idx + 3
 		} else if(_a1 == "'" || _a1 == """") {	; 引用符のマーク
 			if(_quotation == "") {
@@ -1432,39 +1427,27 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 			_idx := _idx + 1
 		} else if(_quotation != "") {
 			_dn := _dn . "{" . _a1 . "}"
+			_modifier := ""
 			_idx := _idx + 1
 		} else if(modifierHash[_a1] != "") {
 			if(_idx != _len) {
 				_modifier := _modifier . modifierHash[_a1]
-				_dn := _dn .  modifierHash[_a1]
 			}
 			_status := _status . "m"			; 修飾キーがあった
 			_idx := _idx + 1
 		} else {
 			if(ctrlKeyHash[_a3] != "") {
 				_c2 := z2hHash[_a3]
-				if(_c2 != "")
-				{
-					_dn := _dn .  "{" . _c2 . " down}"
-				}
 				_status := _status . "c"		; 機10から機12 の制御キーがあった
 				_idx := _idx + strlen(_a3)
 			} else
 			if(ctrlKeyHash[_a2] != "") {
 				_c2 := z2hHash[_a2]
-				if(_c2 != "")
-				{
-					_dn := _dn .  "{" . _c2 . " down}"
-				}
 				_status := _status . "c"		; 機1から機9 の制御キーがあった
 				_idx := _idx + strlen(_a2)
 			} else
 			if(ctrlKeyHash[_a1] != "") {
 				_c2 := z2hHash[_a1]
-				if(_c2 != "")
-				{
-					_dn := _dn .  "{" . _c2 . " down}"
-				}
 				if(_a1=="入" && substr(_mode,1,1)=="R" 
 				&& (substr(_status,strlen(_status),1)=="Q" || substr(_status,strlen(_status),1)=="D")) {
 					;ローマ字モードで確定のエンターは制御キーとして扱わない
@@ -1489,26 +1472,20 @@ GenSendStr3(_mode, aStr,BYREF _dn,BYREF _up, BYREF _status)
 				loop,Parse, _c1
 				{
 					if(_c2 != "") {
-						if(_modifier!="")
-						{
-							_dn := _dn . _modifier
-							_modifier := ""
-						}
-						_dn := _dn .  "{" . _c2 . " up}"
+						_dn := _dn . _modifier . "{" . _c2 . "}"
+						_modifier := ""
 						_c2 := ""
 					}
 					_c2 := z2hHash[A_LoopField]
-					if(_c2 != "")
-					{
-						_dn := _dn .  "{" . _c2 . " down}"
-					}
 				}
 				_status := _status . "D"		; 通常の出力
 			}
 		}
 	}
 	if(_c2 != "") {
-		_up := _up .  _modifier . "{" . _c2 . " up}"
+		_dn := _dn . _modifier . "{" . _c2 . " down}"
+		_up := _up . _modifier . "{" . _c2 . " up}"
+		_modifier := ""
 		_c2 := ""
 	}
 	if(_quotation != "") {
