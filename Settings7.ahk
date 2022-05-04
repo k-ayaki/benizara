@@ -638,7 +638,13 @@ G2RefreshLayout:
 		GuiControl,-Redraw,vkeyRL%element%
 		GuiControl,-Redraw,vkeyRR%element%
 		
-		if(g_CurrSimulMode == "…") {
+		if(g_sansPos != "") {
+			s_st := kst[g_Romaji . "NS" . element]
+			Gosub, SetFontColor
+			GuiControl,Font,vkeyRK%element%
+			s_ch := kLabel[g_Romaji . "NS" . element]
+			GuiControl,,vkeyRK%element%,%s_ch%
+		} else if(g_CurrSimulMode == "…") {
 			s_st := kst[g_Romaji . "NK" . element]
 			Gosub, SetFontColor
 			GuiControl,Font,vkeyRK%element%

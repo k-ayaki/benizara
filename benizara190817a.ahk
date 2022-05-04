@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.84 .... 2021/10/24
+;	ver.0.1.4.9 .... 2022/5/4
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.84"
-	g_Date := "2021/10/24"
+	g_Ver := "ver.0.1.4.9"
+	g_Date := "2022/5/4"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -141,21 +141,16 @@
 		Menu, Tray, NoStandard
 	}
 	Menu, Tray, Add, 紅皿設定,Settings
-	;Menu, Tray, Add, 配列,ShowLayout
 	Menu, Tray, Add, ログ,Logs
 	Menu, Tray, Add, 一時停止,DoPause
 	Menu, Tray, Add, 再開,DoResume
 	Menu, Tray, Add, 終了,MenuExit
 	Gosub,DoResume
-	;Menu, Tray,disable,再開
-	;if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
-	;{
-	;	Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
-	;}
+
 	SetBatchLines, -1
 	SetHotkeyInit()
 	fPf := Pf_Init()
-	_currentTick := Pf_Count()	;A_TickCount
+	_currentTick := Pf_Count()
 	g_OyaTick["R"] := _currentTick
 	g_OyaTick["L"] := _currentTick
 	g_OyaTick["A"] := _currentTick
@@ -178,7 +173,9 @@
 	SetHotkeyFunction("off")
 	return
 
-
+;-----------------------------------------------------------------------
+;	メニューからの終了
+;-----------------------------------------------------------------------
 MenuExit:
 	SetTimer,Interrupt10,off
 	SetTimer,InterruptProcessPolling,off
@@ -227,14 +224,14 @@ DoResume:
 ; スペースキーに割り当てられていれば連続打鍵
 ;-----------------------------------------------------------------------
 
-keydownR:
-keydownL:
-keydownA:
-keydownB:
-keydownC:
-keydownD:
+keydownR:	; 無変換
+keydownL:	; 変換 
+keydownA:	; 拡張1 A13
+keydownB:	; 拡張2 A14
+keydownC:	; 拡張3 A15
+keydownD:	; 拡張4 A16
 	g_trigger := g_metaKey
-	g_OyaTick[g_metaKey] := pf_TickCount	;Pf_Count()				; A_TickCount
+	g_OyaTick[g_metaKey] := Pf_Count()
 	RegLogs(g_metaKey . " down")
 	if(keyState[g_layoutPos] != 0 && (g_KeyRepeat == 1 || g_layoutPos == "A02"))
 	{
@@ -380,15 +377,15 @@ keydownD:
 ;-----------------------------------------------------------------------
 ; 親指シフトキーのオフ
 ;-----------------------------------------------------------------------
-keyupR:
-keyupL:
-keyupA:
-keyupB:
-keyupC:
-keyupD:
+keyupR:	; 無変換
+keyupL:	; 変換
+keyupA:	; 拡張1 A13
+keyupB:	; 拡張2 A14
+keyupC:	; 拡張3 A15
+keyupD:	; 拡張4 A16
 	g_trigger := g_metaKeyUp[g_metaKey]
 
-	g_OyaUpTick[g_metaKey] := Pf_Count()				;A_TickCount
+	g_OyaUpTick[g_metaKey] := Pf_Count()
 	loop,4
 	{
 		if(g_layoutPos == g_MojiOnHold[A_Index]) {
@@ -585,22 +582,20 @@ SubSend(vOut)
 				Send, {blind}{capslock}
 				_scnt := _scnt + 1
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
-			}
-			if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
-				_scnt := _scnt + 4
-			}
-			if(_scnt>=4)
-			{
-				SetKeyDelay, 64,-1
-				_scnt := 0
-			} else {
-				SetKeyDelay, -1,-1
-			}
-			Send, %_stroke%
-			_scnt := _scnt + 1
-			RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
-			_stroke := ""
-			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+				if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
+					_scnt := _scnt + 4
+				}
+				if(_scnt>=4)
+				{
+					SetKeyDelay, 64,-1
+					_scnt := 0
+				} else {
+					SetKeyDelay, -1,-1
+				}
+				Send, %_stroke%
+				_scnt := _scnt + 1
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
+				
 				if(_scnt>=4) 
 				{
 					SetKeyDelay,16,-1
@@ -611,7 +606,22 @@ SubSend(vOut)
 				Send, {blind}{capslock}
 				_scnt := _scnt + 1
 				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . "{capslock}")
+			} else {
+				if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
+					_scnt := _scnt + 4
+				}
+				if(_scnt>=4)
+				{
+					SetKeyDelay, 64,-1
+					_scnt := 0
+				} else {
+					SetKeyDelay, -1,-1
+				}
+				Send, %_stroke%
+				_scnt := _scnt + 1
+				RegLogs("       " . substr(g_KeyInPtn . "    ",1,4) . substr(g_trigger . "    ",1,4) . _stroke)
 			}
+			_stroke := ""
 			_sendch := ""
 		}
 		if(_sendch=="" && substr(_left2c,1,1)=="{") {
@@ -690,7 +700,7 @@ RegLogs(thisLog)
 	global aLog, idxLogs, aLogCnt
 	static tickLast
 	
-	tickCount := Pf_Count()	;A_TickCount
+	tickCount := Pf_Count()
 
 	;SetFormat Integer,D
 	_timeSinceLastLog := tickCount - tickLast
@@ -1222,7 +1232,7 @@ SendOnHoldO:
 ;----------------------------------------------------------------------
 keydownM:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
+	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_sansTick := INFINITE
@@ -1466,9 +1476,13 @@ KoyubiOrSans(_Koyubi, _sans)
 			_sans := "N"
 		}
 	}
-	if(_Koyubi=="K" || _sans=="K") 
+	if (_Koyubi=="K")
 	{
 		return "K"
+	}
+	if (_sans=="K") 
+	{
+		return "S"
 	}
 	return "N"
 }
@@ -1507,7 +1521,7 @@ keydownT:
 keydown:
 keydownX:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := pf_TickCount	; Pf_Count()
+	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 
 	if(g_KeyPause==kName) {
@@ -1539,7 +1553,7 @@ keydownX:
 ;----------------------------------------------------------------------
 keydownS:
 	g_trigger := g_metaKey
-	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
+	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 
@@ -1574,7 +1588,7 @@ keydown6:
 keydown7:
 keydown8:
 keydown9:
-	keyTick[g_layoutPos] := pf_TickCount	;Pf_Count()
+	keyTick[g_layoutPos] := Pf_Count()
 	RegLogs(kName . " down")
 	keyState[g_layoutPos] := 2
 	g_trigger := g_metaKey
@@ -1685,7 +1699,7 @@ nextDakuten(_mode,_MojiOnHold)
 ;----------------------------------------------------------------------
 keyupM:
 	g_trigger := g_metaKeyUp[g_metaKey]
-	g_MojiUpTick := Pf_Count()	;A_TickCount
+	g_MojiUpTick := Pf_Count()
 	RegLogs(kName . " up")
 	keyState[g_layoutPos] := 0
 	
@@ -1944,7 +1958,7 @@ Interrupt10:
 	}
 	if(keyState["A04"] != 0)
 	{
-		_TickCount := Pf_Count()	;A_TickCount
+		_TickCount := Pf_Count()
 		if(_TickCount > keyTick["A04"] + 100) 	; タイムアウト
 		{
 			; ひらがな／カタカナキーはキーアップを受信できないから、0.1秒でキーアップと見做す
@@ -2018,7 +2032,7 @@ Polling:
 	if(g_SendTick != INFINITE)
 	{
 		g_trigger := "TO"
-		_TickCount := Pf_Count()	;A_TickCount
+		_TickCount := Pf_Count()
 		if(_TickCount > g_SendTick) 	; タイムアウト
 		{
 			if(g_KeyInPtn=="M")			; Mオン状態
@@ -2837,7 +2851,7 @@ gSC136: ;右Shift
 		critical,off
 		return
 	}
-	pf_TickCount := Pf_Count()				; A_TickCount
+	pf_TickCount := Pf_Count()
 	if(keyState[g_layoutPos] != 0 && g_KeyRepeat == 1)
 	{
 		if((g_metaKey=="M" || g_metaKey=="S") && g_RepeatCount == 0 && pf_TickCount - keyTick[g_layoutPos]<g_MaxTimeoutM)
@@ -2972,11 +2986,11 @@ gSC136up:	;右Shift
 	critical
 	Gosub,ScanModifier
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
-	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	kName := keyNameHash[g_layoutPos]
 	if(kName=="LShift" || kName=="RShift") {
 		g_Koyubi := "N"
 	}
+	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	if(kName=="LCtrl") {	;左Ctrl
 		g_Modifier := g_Modifier & (~0x0200)
 	}
