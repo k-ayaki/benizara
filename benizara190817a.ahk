@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.9 .... 2022/5/4
+;	ver.0.1.4.91 .... 2022/5/4
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,7 +11,7 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.9"
+	g_Ver := "ver.0.1.4.91"
 	g_Date := "2022/5/4"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
@@ -571,7 +571,7 @@ SubSend(vOut)
 		_stroke := _stroke . A_LoopField
 		StringLeft, _left2c, _stroke, 2
 		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
-			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_storoke,"{vk")==0) {
+			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_stroke,"{vk")==0) {
 				if(_scnt>=4) 
 				{
 					SetKeyDelay, 16,-1
@@ -1470,7 +1470,7 @@ KoyubiOrSans(_Koyubi, _sans)
 {
 	global g_sans, keyNameHash, g_sansPos
 
-	if(g_sans=="K") {
+	if(g_sans=="S") {
 		if(GetKeyState(keyNameHash[g_sansPos],"P")==0) {
 			SansSend()
 			_sans := "N"
@@ -1480,7 +1480,7 @@ KoyubiOrSans(_Koyubi, _sans)
 	{
 		return "K"
 	}
-	if (_sans=="K") 
+	if (_sans=="S") 
 	{
 		return "S"
 	}
@@ -1560,12 +1560,12 @@ keydownS:
 	g_ModifierTick := keyTick[g_layoutPos]
 	Gosub,ModeInitialize
 	
-	if(g_sans == "K" && g_sansTick != INFINITE) {
+	if(g_sans == "S" && g_sansTick != INFINITE) {
 		SubSendOne(MnDown(kName))
 		SetKeyupSave(MnUp(kName),g_layoutPos)
 		g_LastKey["表層"] := ""
 	}
-	g_sans := "K"
+	g_sans := "S"
 	g_sansTick := keyTick[g_layoutPos] + g_MaxTimeout
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
 		g_prefixshift := ""
@@ -1968,7 +1968,7 @@ Interrupt10:
 			goto, keyup%g_metaKey%
 		}
 	}
-	if(g_sans=="K") {
+	if(g_sans=="S") {
 		if(GetKeyState(keyNameHash[g_sansPos],"P") == 0) {
 			SansSend()
 		}
