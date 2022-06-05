@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.91 .... 2022/5/4
+;	ver.0.1.4.92 .... 2022/6/2
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.91"
-	g_Date := "2022/5/4"
+	g_Ver := "ver.0.1.4.92"
+	g_Date := "2022/6/2"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -1522,7 +1522,7 @@ keydown:
 keydownX:
 	g_trigger := g_metaKey
 	keyTick[g_layoutPos] := Pf_Count()
-	RegLogs(kName . " down")
+	RegLogs(kName . " down-")
 
 	if(g_KeyPause==kName) {
 		Gosub,pauseKeyDown
@@ -1542,7 +1542,15 @@ keydownX:
 	SubSendOne(MnDown(kName))
 	SetKeyupSave(MnUp(kName),g_layoutPos)
 
-	Gosub,GetImeStatus
+	Gosub,ChkIME
+	; 現在の配列面が定義されていればキーフック
+	if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
+		SetHotkey("on")
+		SetHotkeyFunction("on")
+	} else {
+		SetHotkey("off")
+		SetHotkeyFunction("off")
+	}
 	g_LastKey["表層"] := ""
 	g_KeyInPtn := ""
 	critical,off
@@ -1842,7 +1850,7 @@ keyup:
 keyupX:
 keyupT:
 	g_trigger := g_metaKeyUp[g_metaKey]
-	RegLogs(kName . " up")
+	RegLogs(kName . " up-")
 	SubSendUp(g_layoutPos)
 	g_trigger := ""
 	critical,off
@@ -1954,7 +1962,15 @@ Interrupt10:
 		SetHotkey("off")
 		SetHotkeyFunction("off")
 	} else {
-		Gosub,GetImeStatus
+		Gosub,ChkIME
+		; 現在の配列面が定義されていればキーフック
+		if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
+			SetHotkey("on")
+			SetHotkeyFunction("on")
+		} else {
+			SetHotkey("off")
+			SetHotkeyFunction("off")
+		}
 	}
 	if(keyState["A04"] != 0)
 	{
@@ -1965,6 +1981,7 @@ Interrupt10:
 			g_layoutPos := "A04"
 			g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 			kName := keyNameHash[g_layoutPos]
+			GuiControl,2:,vkeyDN%g_layoutPos%,　
 			goto, keyup%g_metaKey%
 		}
 	}
@@ -2010,20 +2027,6 @@ SansSend()
 	}
 	g_sans := "N"
 }
-;----------------------------------------------------------------------
-; IME状態設定
-;----------------------------------------------------------------------
-GetImeStatus:
-	Gosub,ChkIME
-	; 現在の配列面が定義されていればキーフック
-	if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
-		SetHotkey("on")
-		SetHotkeyFunction("on")
-	} else {
-		SetHotkey("off")
-		SetHotkeyFunction("off")
-	}
-	return
 
 ;----------------------------------------------------------------------
 ; 10mSECなどのポーリング
@@ -2100,9 +2103,13 @@ Polling:
 ; 修飾キー状態読み取り
 ;----------------------------------------------------------------------
 ScanModifier:
-	GetKeyStateWithLog5("左Shift")
-	GetKeyStateWithLog5("右Shift")
-	if(keyAttribute3[fkeyPosHash["右Shift"]]=="off"	|| keyAttribute3[fkeyPosHash["右Shift"]]=="off") {
+	if(keyHook[fkeyPosHash["左Shift"]]=="off") {
+		GetKeyStateWithLog5("左Shift")
+	}
+	if(keyHook[fkeyPosHash["右Shift"]]=="off") {
+		GetKeyStateWithLog5("右Shift")
+	}
+	if(keyHook[fkeyPosHash["左Shift"]]=="off" || keyHook[fkeyPosHash["右Shift"]]=="off") {
 		if(keyState[fkeyPosHash["左Shift"]]!=0 || keyState[fkeyPosHash["右Shift"]]!=0)
 		{
 			g_Koyubi := "K"
@@ -2110,48 +2117,48 @@ ScanModifier:
 			g_Koyubi := "N"
 		}
 	}
-	GetKeyStateWithLog5("左Ctrl")
-	if(keyAttribute3[fkeyPosHash["左Ctrl"]]=="off") {
+	if(keyHook[fkeyPosHash["左Ctrl"]]=="off") {
+		GetKeyStateWithLog5("左Ctrl")
 		if(keyState[fkeyPosHash["左Ctrl"]]!=0) {
 			g_Modifier := g_Modifier | 0x0200
 		} else {
 			g_Modifier := g_Modifier & (~0x0200)
 		}
 	}
-	GetKeyStateWithLog5("右Ctrl")	
-	if(keyAttribute3[fkeyPosHash["右Ctrl"]]=="off") {
+	if(keyHook[fkeyPosHash["右Ctrl"]]=="off") {
+		GetKeyStateWithLog5("右Ctrl")	
 		if(keyState[fkeyPosHash["右Ctrl"]]!=0) {
 			g_Modifier := g_Modifier | 0x0400
 		} else {
 			g_Modifier := g_Modifier & (~0x0400)
 		}
 	}
-	GetKeyStateWithLog5("左Alt")
-	if(keyAttribute3[fkeyPosHash["左Alt"]]=="off") {
+	if(keyHook[fkeyPosHash["左Alt"]]=="off") {
+		GetKeyStateWithLog5("左Alt")
 		if(keyState[fkeyPosHash["左Alt"]]!=0) {
 			g_Modifier := g_Modifier | 0x0800
 		} else {
 			g_Modifier := g_Modifier & (~0x0800)
 		}
 	}
-	GetKeyStateWithLog5("右Alt")
-	if(keyAttribute3[fkeyPosHash["右Alt"]]=="off") {
+	if(keyHook[fkeyPosHash["右Alt"]]=="off") {
+		GetKeyStateWithLog5("右Alt")
 		if(keyState[fkeyPosHash["右Alt"]]!=0) {
 			g_Modifier := g_Modifier | 0x1000
 		} else {
 			g_Modifier := g_Modifier & (~0x1000)
 		}
 	}
-	GetKeyStateWithLog5("左Win")
-	if(keyAttribute3[fkeyPosHash["左Win"]]=="off") {
+	if(keyHook[fkeyPosHash["左Win"]]=="off") {
+		GetKeyStateWithLog5("左Win")
 		if(keyState[fkeyPosHash["左Win"]]!=0) {
 			g_Modifier := g_Modifier | 0x2000
 		} else {
 			g_Modifier := g_Modifier & (~0x2000)
 		}
 	}
-	GetKeyStateWithLog5("右Win")
-	if(keyAttribute3[fkeyPosHash["右Win"]]=="off") {
+	if(keyHook[fkeyPosHash["右Win"]]=="off") {
+		GetKeyStateWithLog5("右Win")
 		if(keyState[fkeyPosHash["右Win"]]!=0) {
 			g_Modifier := g_Modifier | 0x4000
 		} else {
@@ -2170,7 +2177,7 @@ ScanOyaKey:
 	_pos := g_Oya2Layout[g_Oya]
 	if(_pos!="")
 	{
-		if(keyAttribute3[_pos]=="off")
+		if(keyHook[_pos]=="off")
 		{
 			g_Oya := "N"
 		} else 
@@ -2259,20 +2266,20 @@ ModeInitialize:
 ;-----------------------------------------------------------------------
 GetKeyStateWithLog5(fName) {
 	global keyState, fkeyPosHash, fkeyVkeyHash
-	global keyAttribute3
+	global keyHook
 
 	kDown := 0
 	_locationPos := fkeyPosHash[fName]
-	if(_locationPos != "" && keyAttribute3[_locationPos]=="off") {
+	if(_locationPos != "" && keyHook[_locationPos]=="off") {
 		stCurr := GetKeyState(fkeyVkeyHash[fName],"P")
 		if(stCurr != 0 && keyState[_locationPos] == 0)	; keydown
 		{
 			kDown := 1
-			RegLogs(fkeyVkeyHash[fName] . " down")
+			RegLogs("(" . fkeyVkeyHash[fName] . " down)")
 		}
 		else if(stCurr == 0 && keyState[_locationPos] != 0)	; keyup
 		{
-			RegLogs(fkeyVkeyHash[fName] . " up")
+			RegLogs("(" . fkeyVkeyHash[fName] . " up)")
 		}
 		keyState[_locationPos] := stCurr
 	}
@@ -2482,11 +2489,11 @@ SetHotkeyInit()
 ;----------------------------------------------------------------------
 SetHotkeyInitByPos(_pos)
 {
-	global ScanCodeHash, keyAttribute3
+	global ScanCodeHash, keyHook
 	
 	sCode := ScanCodeHash[_pos]
 	if(sCode!="") {
-		keyAttribute3[_pos] := "off"
+		keyHook[_pos] := "off"
 		hotkey,*%sCode%,g%sCode%
 		hotkey,*%sCode%,off
 		hotkey,*%sCode% up,g%sCode%up
@@ -2520,13 +2527,19 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("変換", flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
 	SetHotkeyFunctionByName("右Ctrl", flg)
-	SetHotkeyFunctionByName("左Shift", flg)
+
+	;シフトキーの不整合はドラッグ＆ドロップ不具合となるため常にON
+	if(flg == "on")
+	{
+		SetHotkeyFunctionByName("左Shift", flg)
+		SetHotkeyFunctionByName("右Shift", flg)
+	}
+
 	SetHotkeyFunctionByName("左Win", flg)
 	SetHotkeyFunctionByName("左Alt", flg)
 	SetHotkeyFunctionByName("右Alt", flg)
 	SetHotkeyFunctionByName("右Win", flg)
 	SetHotkeyFunctionByName("Applications", flg)
-	SetHotkeyFunctionByName("右Shift", flg)
 
 	SetHotkeyFunctionByName("PrintScreen", flg)
 	SetHotkeyFunctionByName("ScrollLock", flg)
@@ -2567,7 +2580,7 @@ SetHotkeyFunction(flg)
 ;----------------------------------------------------------------------
 SetHotkeyFunctionByName(kName, flg)
 {
-	global keyAttribute3, fkeyPosHash, fkeyCodeHash
+	global keyAttribute3, fkeyPosHash, fkeyCodeHash, keyHook
 	global g_Romaji, g_Koyubi, g_sans, kup_save
 	
 	_pos := fkeyPosHash[kName]
@@ -2577,17 +2590,17 @@ SetHotkeyFunctionByName(kName, flg)
 		return
 	}
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
-		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
 		if(kup_save[_pos]=="" || _scode == "sc029")
 		{
+			keyHook[_pos] := flg
 			hotkey,*%_scode% up,%flg%
 		}
 	} else {
-		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
 		if(kup_save[_pos]=="" || _scode == "sc029")
 		{
+			keyHook[_pos] := "off"
 			hotkey,*%_scode% up,off
 		}
 	}
@@ -2658,24 +2671,24 @@ SetHotkey(flg)
 SetHotkeyByPos(_pos, flg)
 {
 	global scanCodeHash
-	global keyAttribute3, g_Romaji, g_Koyubi, g_sans, kup_save
+	global keyAttribute3, g_Romaji, g_Koyubi, g_sans, kup_save, keyHook
 	
 	_scode := scanCodeHash[_pos]
 	if(_pos=="" || _scode=="") {
 		return
 	}
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
-		keyAttribute3[_pos] := flg
 		hotkey,*%_scode%,%flg%
 		if(kup_save[_pos]=="")
 		{
+			keyHook[_pos] := flg
 			hotkey,*%_scode% up,%flg%
 		}
 	} else {
-		keyAttribute3[_pos] := "off"
 		hotkey,*%_scode%,off
 		if(kup_save[_pos]=="")
 		{
+			keyHook[_pos] := "off"
 			hotkey,*%_scode% up,off
 		}
 	}
@@ -2805,9 +2818,12 @@ gSC136: ;右Shift
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	kName := keyNameHash[g_layoutPos]
 	if(kName=="LShift" || kName=="RShift") {
-		g_Koyubi := "K"
-	}
+		g_Koyubi := "N"
+	}	
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
+	if(kName=="LShift" || kName=="RShift") {
+		goto, keydown%g_metaKey%
+	}	
 	if(kName=="LCtrl") {	;左Ctrl
 		g_Modifier := g_Modifier | 0x0200
 		goto, keydown%g_metaKey%
@@ -2833,10 +2849,12 @@ gSC136: ;右Shift
 		goto, keydown%g_metaKey%
 	}
 	if(g_Modifier != 0) {
+		GuiControl,2:,vkeyDN%g_layoutPos%,□
 		RegLogs(kName . " down")
 		Gosub,ModeInitialize
-		; 修飾キー＋文字キーの同時押しのときに
+		; 修飾キー＋文字キーの同時押しのとき
 		if(g_metaKey=="M" && kdn["ANN"]!="") {
+			; 英数キー配列が定義されていればそれを出力
 			SubSendOne(kdn["ANN" . g_layoutPos])
 			SetKeyupSave(kup["ANN" . g_layoutPos],g_layoutPos)
 		} else {
@@ -2862,7 +2880,6 @@ gSC136: ;右Shift
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,□
 	goto, keydown%g_metaKey%
-
 
 ;----------------------------------------------------------------------
 ; キーオフのイベント
@@ -3012,9 +3029,5 @@ gSC136up:	;右Shift
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	gosub, keyup%g_metaKey%
 	g_RepeatCount := 0
-	if(keyAttribute3[g_layoutPos] == "off")
-	{
-		SetHotkeyByPos(g_layoutpos,"off")	
-	}
 	return
 

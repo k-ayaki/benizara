@@ -749,16 +749,25 @@ ReadKeyboardState:
 ; 機能：キー状態を反映
 ;-----------------------------------------------------------------------
 SetKeyGui2:
-	s_keyState := GetKeyState(s_vkey,"P")
-	GuiControlGet,s_val,,vkeyDN%s_layoutPos%
-	if(s_keyState!= 0 && s_val != "□")
+	;ひらがな/カタカナキーはキー状態が読めない
+	if(s_layoutPos == "A04")
 	{
-		GuiControl,2:,vkeyDN%s_layoutPos%,□
+		return
 	}
-	else
-	if(s_keyState == 0	&&  s_val != "　")
+	;キーフックしていない場合にポーリングする
+	if(keyHook[g_layoutPos] == "off")
 	{
-		GuiControl,2:,vkeyDN%s_layoutPos%,　
+		s_keyState := GetKeyState(s_vkey,"P")
+		GuiControlGet,s_val,,vkeyDN%s_layoutPos%
+		if(s_keyState != 0 && s_val != "□")
+		{
+			GuiControl,2:,vkeyDN%s_layoutPos%,□
+		}
+		else
+		if(s_keyState == 0 && s_val != "　")
+		{
+			GuiControl,2:,vkeyDN%s_layoutPos%,　
+		}
 	}
 	return
 
