@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.4.92 .... 2022/6/2
+;	ver.0.1.4.93 .... 2022/6/5
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.4.92"
-	g_Date := "2022/6/2"
+	g_Ver := "ver.0.1.4.93"
+	g_Date := "2022/6/5"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -2528,12 +2528,8 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
 	SetHotkeyFunctionByName("右Ctrl", flg)
 
-	;シフトキーの不整合はドラッグ＆ドロップ不具合となるため常にON
-	if(flg == "on")
-	{
-		SetHotkeyFunctionByName("左Shift", flg)
-		SetHotkeyFunctionByName("右Shift", flg)
-	}
+	SetHotkeyFunctionByName("左Shift", flg)
+	SetHotkeyFunctionByName("右Shift", flg)
 
 	SetHotkeyFunctionByName("左Win", flg)
 	SetHotkeyFunctionByName("左Alt", flg)
@@ -2818,7 +2814,7 @@ gSC136: ;右Shift
 	g_layoutPos := layoutPosHash[A_ThisHotkey]
 	kName := keyNameHash[g_layoutPos]
 	if(kName=="LShift" || kName=="RShift") {
-		g_Koyubi := "N"
+		g_Koyubi := "K"
 	}	
 	g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 	if(kName=="LShift" || kName=="RShift") {
