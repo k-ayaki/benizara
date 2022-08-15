@@ -9,11 +9,13 @@
 ;----------------------------------------------------------------------
 CountObject(_obj)
 {
+	local enum
+	
 	_cnt := 0
 	enum := _obj._NewEnum()
 	While enum[k, v]
 	{
-		_cnt := _cnt + 1
+		_cnt += 1
 	}
 	return _cnt
 }
@@ -22,6 +24,8 @@ CountObject(_obj)
 ;----------------------------------------------------------------------
 RemoveObject(_obj)
 {
+	local enum
+
 	if(isObject(_obj)) {
 		loop
 		{
@@ -30,7 +34,7 @@ RemoveObject(_obj)
 			While enum[k, v]
 			{
 				_obj.Remove(k,k)
-				_cnt := _cnt + 1
+				_cnt += 1
 			}
 			if(_cnt == 0)
 				break
@@ -49,7 +53,7 @@ listSimulMode(_Romaji)
 	While enum[k, v]
 	{
 		if(substr(v,1,1)==_Romaji) {
-			_ddlist := ddlist . v . "|"
+			_ddlist .= v . "|"
 		}
 	}
 	return _ddlist

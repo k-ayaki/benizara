@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------
 ;	名称：Settings7.ahk
 ;	機能：紅皿のパラメータ設定
-;	ver.0.1.4.720 .... 2021/7/30
+;	ver.0.1.5.00 .... 2022/7/31
 ;-----------------------------------------------------------------------
 
 	Gosub,Init
@@ -19,6 +19,7 @@
 ; Iniファイルの読み込み
 ;-----------------------------------------------------------------------
 Init:
+	SetWorkingDir, %g_DataDir%
 	g_IniFile := ".\benizara.ini"
 	if(Path_FileExists(g_IniFile) = 0)
 	{
@@ -36,14 +37,14 @@ Init:
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
 		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
+		g_OverlapOMO := 50
+		IniWrite,%g_OverlapOMO%,%g_IniFile%,Key,OverlapOMO
 		g_OverlapSS := 100
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 		g_OyaKey := "無変換－変換"
 		IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 		g_KeySingle := "無効"
 		IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
-		g_KeyRepeat := 0
-		IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 		g_KeyPause := "Pause"
 		IniWrite,%g_KeyPause%,%g_IniFile%,Key,KeyPause
 	}
@@ -78,6 +79,11 @@ Init:
 		g_OverlapOM := 10
 	if(g_OverlapOM > 90)
 		g_OverlapOM := 90
+	IniRead,g_OverlapOMO,%g_IniFile%,Key,OverlapOMO
+	if(g_OverlapOMO < 10)
+		g_OverlapOMO := 10
+	if(g_OverlapOMO > 90)
+		g_OverlapOMO := 90
 	IniRead,g_OverlapSS,%g_IniFile%,Key,OverlapSS
 	if(g_OverlapSS < 10)
 		g_OverlapSS := 10
@@ -90,9 +96,11 @@ Init:
 	IniRead,g_KeySingle,%g_IniFile%,Key,KeySingle
 	if g_KeySingle not in 有効,無効
 		g_KeySingle := "無効"
-	IniRead,g_KeyRepeat,%g_IniFile%,Key,KeyRepeat
-	if g_KeyRepeat not in 1,0
+	if(g_KeySingle == "有効") {
+		g_KeyRepeat := 1
+	} else {
 		g_KeyRepeat := 0
+	}
 	IniRead,g_KeyPause,%g_IniFile%,Key,KeyPause
 	if g_KeyPause not in Pause,ScrollLock,無効
 		g_KeyPause := "Pause"
@@ -184,41 +192,46 @@ _Settings:
 	
 	Gui, Tab, 2
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W300 H40 ReadOnly -Vscroll,親指シフトキーの押し続けをシフトオンとします。
-	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y50,連続シフト
+	Gui, Add, Edit,X20 Y40 W300 H20 ReadOnly -Vscroll,親指シフトキーの押し続けをシフトオンとします。
+	Gui, Add, Checkbox,ggContinue vvContinue X+20 Y40,連続シフト
 	GuiControl,,vContinue,%g_Continue%
 
-	Gui, Add, Edit,X20 Y90 W300 H40 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
-	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y100,零遅延モード
+	Gui, Add, Edit,X20 Y70 W300 H20 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
+	Gui, Add, Checkbox,ggZeroDelay vvZeroDelay X+20 Y70,零遅延モード
 	GuiControl,,vZeroDelay,%g_ZeroDelay%
 	
-	Gui, Add, Edit,X20 Y140 W300 H40 ReadOnly -Vscroll,親指シフトキーをキーリピートさせます。
-	Gui, Add, Checkbox,ggKeyRepeat vvKeyRepeat X340 Y150,キーリピート
-	GuiControl,,vKeyRepeat,%g_KeyRepeat%
-	
-	Gui, Add, Edit,X20 Y190 W300 H60 ReadOnly -Vscroll,親指シフトキー⇒文字キーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y190 W230 H20,親指キー⇒文字キーの重なりの割合：
-	Gui, Add, Edit,vvOverlapNumOM X+3 Y188 W50 ReadOnly, %g_OverlapOM%
-	Gui, Add, Text,X+10 Y190 c000000,[`%]
+	Gui, Add, Edit,X20 Y100 W300 H60 ReadOnly -Vscroll,親指シフトキー⇒文字キーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y100 W230 H20,親指キー⇒文字キーの重なりの割合：
+	Gui, Add, Edit,vvOverlapNumOM X+3 Y98 W50 ReadOnly, %g_OverlapOM%
+	Gui, Add, Text,X+10 Y100 c000000,[`%]
 
-	Gui, Add, Slider, X320 Y220 ggOlSliderOM w400 vvOlSliderOM Range10-90 line10 TickInterval10
+	Gui, Add, Slider, X320 Y130 ggOlSliderOM w400 vvOlSliderOM Range10-90 line10 TickInterval10
 	GuiControl,,vOlSliderOM,%g_OverlapOM%
 
-	Gui, Add, Edit,X20 Y260 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y260 W230 H20,文字キー⇒親指キーの重なりの割合：
-	Gui, Add, Edit,vvOverlapNumMO X+3 Y258 W50 ReadOnly, %g_OverlapMO%
-	Gui, Add, Text,X+10 Y260 c000000,[`%]
+	Gui, Add, Edit,X20 Y170 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y170 W230 H20,文字キー⇒親指キーの重なりの割合：
+	Gui, Add, Edit,vvOverlapNumMO X+3 Y168 W50 ReadOnly, %g_OverlapMO%
+	Gui, Add, Text,X+10 Y170 c000000,[`%]
 	
-	Gui, Add, Slider, X320 Y290 ggOlSliderMO w400 vvOlSliderMO Range10-90 line10 TickInterval10
+	Gui, Add, Slider, X320 Y200 ggOlSliderMO w400 vvOlSliderMO Range10-90 line10 TickInterval10
 	GuiControl,,vOlSliderMO,%g_OverlapMO%
+
+	Gui, Add, Edit,X20 Y240 W300 H60 ReadOnly -Vscroll,文字キー⇒親指シフトキーオフ⇒文字キーオフの順の打鍵の重なりが打鍵全体の何％のときに、同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y240 W230 H20,親指キーオフ時の重なりの割合：
+	Gui, Add, Edit,vvOverlapNumOMO X+3 Y238 W50 ReadOnly, %g_OverlapOMO%
+	Gui, Add, Text,X+10 Y240 c000000,[`%]
 	
-	Gui, Add, Edit,X20 Y330 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
-	Gui, Add, Text,X+20 Y330 W230 H20,文字キーと親指キーの重なりの判定時間：
-	Gui, Add, Edit,vvThresholdNum X+3 Y328 W50 ReadOnly, %g_Threshold%
-	Gui, Add, Text,X+10 Y330 c000000,[mSEC]
+	Gui, Add, Slider, X320 Y270 ggOlSliderOMO w400 vvOlSliderOMO Range10-90 line10 TickInterval10
+	GuiControl,,vOlSliderOMO,%g_OverlapOMO%
+
+	Gui, Add, Edit,X20 Y310 W300 H60 ReadOnly -Vscroll,文字キーと親指シフトキーの打鍵の重なり期間やが何ミリ秒のときに同時打鍵であるかを決定します。
+	Gui, Add, Text,X+20 Y310 W230 H20,文字キーと親指キーの重なりの判定時間：
+	Gui, Add, Edit,vvThresholdNum X+3 Y308 W50 ReadOnly, %g_Threshold%
+	Gui, Add, Text,X+10 Y310 c000000,[mSEC]
 	
-	Gui, Add, Slider, X320 Y360 ggThSlider w400 vvThSlider Range10-400 line10 TickInterval10
+	Gui, Add, Slider, X320 Y340 ggThSlider w400 vvThSlider Range10-400 line10 TickInterval10
 	GuiControl,,vThSlider,%g_Threshold%
+
 
 	Gui, Tab, 3
 	Gui, Add, Edit,X20 Y40 W300 H60 ReadOnly -Vscroll,キー打鍵と共に遅延なく候補文字を表示します。	
@@ -317,28 +330,28 @@ G2DrawKeyFrame:
 		Gosub,DrawKeyE2B
 	}
 	_col := 2
-	_ypos := _ypos + 48
+	_ypos += 48
 	loop,12
 	{
 		_row := A_Index
 		Gosub,DrawKeyE2B
 	}
 	_col := 3
-	_ypos := _ypos + 48
+	_ypos += 48
 	loop,12
 	{
 		_row := A_Index
 		Gosub,DrawKeyE2B
 	}
 	_col := 4
-	_ypos := _ypos + 48
+	_ypos += 48
 	loop,11
 	{
 		_row := A_Index
 		Gosub,DrawKeyE2B
 	}
 	_col := 5
-	_ypos := _ypos + 48
+	_ypos += 48
 	loop, 4
 	{
 		_row := A_Index
@@ -356,8 +369,8 @@ DrawKeyE2B:
 	Gosub, DrawKeyRectE2B
 	_xpos0 := _xpos + 4
 	_ypos0 := _ypos + 10
-	_col2 := _colhash[_col]
-	_row2 := _rowhash[_row]
+	_col2 := g_colhash[_col]
+	_row2 := g_rowhash[_row]
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyRL%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
 	_xpos0 := _xpos + 24
@@ -382,8 +395,8 @@ DrawKeyA:
 	Gosub, DrawKeyRectA
 	_xpos0 := _xpos + 6
 	_ypos0 := _ypos + 10
-	_col2 := _colhash[_col]
-	_row2 := _rowhash[_row]
+	_col2 := g_colhash[_col]
+	_row2 := g_rowhash[_row]
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Text,vvkeyFA%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
 	_xpos0 := _xpos + 6
@@ -472,8 +485,8 @@ DrawKeyRectA:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	_col2 := _colhash[_col]
-	_row2 := _rowhash[_row]
+	_col2 := g_colhash[_col]
+	_row2 := g_rowhash[_row]
 	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	if(keyAttribute3[g_Romaji . "N" . _col2 . _row2] == "L")
 	{
@@ -490,8 +503,8 @@ DrawKeyRectA:
 	}
 	_ypos0 := _ypos - 8
 	_xpos0 := _xpos - 1
-	_col2 := _colhash[_col]
-	_row2 := _rowhash[_row]
+	_col2 := g_colhash[_col]
+	_row2 := g_rowhash[_row]
 	Gui, Add, Text,vvkeyFC%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
 	return
 
@@ -502,8 +515,8 @@ DrawKeyBorder:
 	Gui, Font,s45 c000000,Yu Gothic UI
 	_ypos0 := _ypos - 12
 	_xpos0 := _xpos - 3
-	_col2 := _colhash[_col]
-	_row2 := _rowhash[_row]
+	_col2 := g_colhash[_col]
+	_row2 := g_rowhash[_row]
 	
 	Gui, Add, Text,vvkeyDN%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
 	return
@@ -715,31 +728,31 @@ SetFontColor:
 ReadKeyboardState:
 	loop, 14
 	{
-		s_layoutPos := "E" . _rowhash[A_Index]
+		s_layoutPos := "E" . g_rowhash[A_Index]
 		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		s_layoutPos := "D" . _rowhash[A_Index]
+		s_layoutPos := "D" . g_rowhash[A_Index]
 		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 12
 	{
-		s_layoutPos := "C" . _rowhash[A_Index]
+		s_layoutPos := "C" . g_rowhash[A_Index]
 		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 11
 	{
-		s_layoutPos := "B" . _rowhash[A_Index]
+		s_layoutPos := "B" . g_rowhash[A_Index]
 		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
 	loop, 4
 	{
-		s_layoutPos := "A" . _rowhash[A_Index]
+		s_layoutPos := "A" . g_rowhash[A_Index]
 		s_vkey := vkeyStrHash[s_layoutPos]
 		Gosub,SetKeyGui2
 	}
@@ -822,6 +835,14 @@ gOlSliderOM:
 	return
 
 ;-----------------------------------------------------------------------
+; 機能：親指シフト同時打鍵の割合のスライダー操作
+;-----------------------------------------------------------------------
+gOlSliderOMO:
+	GuiControlGet, g_OverlapOMO , , vOlSliderOMO, 
+	GuiControl,, vOverlapNumOMO, %g_OverlapOMO%
+	return
+
+;-----------------------------------------------------------------------
 ; 機能：文字同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderSS:
@@ -840,12 +861,14 @@ gContinue:
 		g_Threshold := 100
 		g_OverlapOM := 35
 		g_OverlapMO := 70
+		g_OverlapOMO := 50
 	}
 	else
 	{
 		g_Threshold := 150
 		g_OverlapOM := 35
 		g_OverlapMO := 70
+		g_OverlapOMO := 50
 	}
 	GuiControl,,vThSlider,%g_Threshold%
 	GuiControl,,vThresholdNum,%g_Threshold%
@@ -855,6 +878,9 @@ gContinue:
 
 	GuiControl,, vOverlapNumMO, %g_OverlapMO%
 	GuiControl,,vOlSliderMO,%g_OverlapMO%
+
+	GuiControl,, vOverlapNumOMO, %g_OverlapOMO%
+	GuiControl,,vOlSliderOMO,%g_OverlapOMO%
 	Return
 
 ;-----------------------------------------------------------------------
@@ -897,6 +923,8 @@ gKeySingle:
 		if(g_KeySingle = "有効")	; キーリピートON（事後的にOFF可)
 		{
 			g_KeyRepeat := 1
+		} else {
+			g_KeyRepeat := 0
 		}
 		Gosub,RemapOya
 		Gosub,RefreshLayoutA
@@ -924,14 +952,6 @@ RemapOya:
 	}
 	return
 
-;-----------------------------------------------------------------------
-; 機能：キーリピートの設定
-;-----------------------------------------------------------------------
-gKeyRepeat:
-	Gui, Submit, NoHide
-	g_KeyRepeat := vKeyRepeat
-	return
-	
 gDefFile:
 	Gui, Submit, NoHide
 	;MsgBox % %A_GuiControl%
@@ -942,8 +962,8 @@ gDefFile:
 ;-----------------------------------------------------------------------
 gFileSelect:
 	SetTimer,G2PollingLayout,off
-	SetWorkingDir, %A_ScriptDir%
-	FileSelectFile, vLayoutFileAbs,0,%A_ScriptDir%,,Layout File (*.bnz; *.yab)
+	SetWorkingDir, %g_DataDir%
+	FileSelectFile, vLayoutFileAbs,0,%g_DataDir%,,Layout File (*.bnz; *.yab)
 	
 	if(vLayoutFileAbs<>"")
 	{
@@ -1018,6 +1038,7 @@ gButtonAdmin:
 ;-----------------------------------------------------------------------
 
 gButtonOk:
+	SetWorkingDir, %g_DataDir%
 	g_IniFile := ".\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 	IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
@@ -1029,7 +1050,6 @@ gButtonOk:
 	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle
-	IniWrite,%g_KeyRepeat%,%g_IniFile%,Key,KeyRepeat
 	IniWrite,%g_KeyPause%,%g_IniFile%,Key,KeyPause
 	SetTimer,G2PollingLayout,off
 	Gui,Destroy

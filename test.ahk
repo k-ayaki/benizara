@@ -1,5 +1,16 @@
 #include IME.ahk
 StringCaseSense, On
+	if("A" == "A") {
+		msgbox, Yes
+	} else {
+		msgbox, No
+	}
+	return
+	Process,Exist,yamabuki_r.exe
+	msgbox, % "yamabuki_r.exe:El is " . ErrorLevel
+	Process,Exist,yamabuki.exe
+	msgbox, % "yamabuki.exe:El is " . ErrorLevel
+	return
 	tmp := Object()
 	tmp["A"] := "hello"
 	tmp["B"] := "goodbye"

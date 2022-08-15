@@ -20,7 +20,7 @@ Logs:
 	Gui, Add, Button,ggButtonClose X431 Y666 W77 H22,閉じる
 	Gui, Show, W547 H700, 紅皿ログ
 	Gui, Font,s9 c000000,ＭＳ ゴシック
-	Gui, Add, Text,X30 Y10,TIME   INPUT  MD  EV  SEND
+	Gui, Add, Text,X30 Y10,__TIME|PERIOD| INPUT           |O|MD |TG |MOJ| TOUT |SEND
 	loop, 64
 	{
 		_yaxis := A_Index*10 + 10
@@ -35,7 +35,7 @@ LogRedraw:
 	loop, 64
 	{
 		_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
-		_disp := aLog%_idx% . "                                                                _                                                               "
+		_disp := g_Log[_idx] . "                                                                                                                                "
 		GuiControl,3:,disp%A_Index%, %_disp%
 	}
 	return
@@ -44,7 +44,7 @@ LogRedraw:
 ; 機能：ログ保存ボタンの押下
 ;-----------------------------------------------------------------------
 gButtonSave:
-	SetWorkingDir, %A_ScriptDir%
+	SetWorkingDir, %g_DataDir%
 	FileSelectFile, vLogFileAbs,0,.\%A_Now%.log,,Log File (*.log)
 	
 	if vLogFileAbs<>
@@ -60,11 +60,11 @@ gButtonSave:
 		file.WriteLine("零遅延モード=" . g_ZeroDelay . "`r")
 		file.WriteLine("親指キー単独打鍵=" . g_KeySingle . "`r")
 		file.WriteLine("親指キーリピート=" . g_KeyRepeat . "`r")
-		file.WriteLine("TIME   INPUT  MD TG SEND`r")
+		file.WriteLine("  TIME|PERIOD| INPUT           |O|MD |TG |MOJ| TOUT |SEND`r")
 		loop, 64
 		{
 			_idx := (idxLogs - aLogCnt + A_Index - 1) & 63
-			file.WriteLine(aLog%_idx% . "`r")
+			file.WriteLine(g_Log[_idx] . "`r")
 		}
 		file.close()
 	}
