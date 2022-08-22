@@ -37,7 +37,7 @@ Init:
 		IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
 		g_OverlapMO := 70
 		IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
-		g_OverlapOMO := 50
+		g_OverlapOMO := 70
 		IniWrite,%g_OverlapOMO%,%g_IniFile%,Key,OverlapOMO
 		g_OverlapSS := 100
 		IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
@@ -861,14 +861,14 @@ gContinue:
 		g_Threshold := 100
 		g_OverlapOM := 35
 		g_OverlapMO := 70
-		g_OverlapOMO := 50
+		g_OverlapOMO := 70
 	}
 	else
 	{
 		g_Threshold := 150
 		g_OverlapOM := 35
 		g_OverlapMO := 70
-		g_OverlapOMO := 50
+		g_OverlapOMO := 70
 	}
 	GuiControl,,vThSlider,%g_Threshold%
 	GuiControl,,vThresholdNum,%g_Threshold%
@@ -1047,6 +1047,7 @@ gButtonOk:
 	IniWrite,%g_ZeroDelay%,%g_IniFile%,Key,ZeroDelay
 	IniWrite,%g_OverlapMO%,%g_IniFile%,Key,OverlapMO
 	IniWrite,%g_OverlapOM%,%g_IniFile%,Key,OverlapOM
+	IniWrite,%g_OverlapOMO%,%g_IniFile%,Key,OverlapOMO
 	IniWrite,%g_OverlapSS%,%g_IniFile%,Key,OverlapSS
 	IniWrite,%g_OyaKey%,%g_IniFile%,Key,OyaKey
 	IniWrite,%g_KeySingle%,%g_IniFile%,Key,KeySingle

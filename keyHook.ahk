@@ -202,6 +202,14 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("右", flg)
 	SetHotkeyFunctionByName("下", flg)
 
+	SetHotkeyFunctionByName("Tab", flg)
+	SetHotkeyFunctionByName("Enter", flg)
+}
+;----------------------------------------------------------------------
+; テンキーをオン・オフする
+;----------------------------------------------------------------------
+SetHotkeyNumpad(flg)
+{
 	SetHotkeyFunctionByName("NumpadDiv", flg)
 	SetHotkeyFunctionByName("NumpadMult", flg)
 	SetHotkeyFunctionByName("NumpadAdd", flg)
@@ -218,10 +226,8 @@ SetHotkeyFunction(flg)
 	SetHotkeyFunctionByName("Numpad8", flg)
 	SetHotkeyFunctionByName("Numpad9", flg)
 	SetHotkeyFunctionByName("NumpadDot", flg)
-
-	SetHotkeyFunctionByName("Tab", flg)
-	SetHotkeyFunctionByName("Enter", flg)
 }
+
 ;----------------------------------------------------------------------
 ; 指定された名称のキーのHotkeyをオン・オフする
 ;----------------------------------------------------------------------

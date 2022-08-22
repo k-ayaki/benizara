@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.5.01 .... 2022/8/20
+;	ver.0.1.5.02 .... 2022/8/22
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.5.01"
-	g_Date := "2022/8/20"
+	g_Ver := "ver.0.1.5.02"
+	g_Date := "2022/8/22"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -115,7 +115,6 @@
 	Gosub,InitKeyQueue
 	keyTick := Object()
 	g_KeyOnHold := ""
-	g_RepeatCount := 0
 	
 	g_sansTick := INFINITE
 	g_sans := "N"
@@ -170,6 +169,7 @@
 	Suspend,on
 	SetHotkey("off")
 	SetHotkeyFunction("off")
+	SetHotkeyNumpad("off")
 	g_HotKey := "off"
 	return
 
@@ -183,6 +183,7 @@ MenuExit:
 	Suspend,on
 	SetHotkey("off")
 	SetHotkeyFunction("off")
+	SetHotkeyNumpad("off")
 	exitapp
 
 ;-----------------------------------------------------------------------
@@ -240,16 +241,11 @@ keydownD:	; 拡張4 A16
 	g_Timeout := ""
 	if(keyState[g_layoutPos] != 0)
 	{
-		if(g_KeyRepeat == 1 || g_layoutPos == "A02")
+		if(g_KeyRepeat == 0 && g_layoutPos != "A02")
 		{
-			g_KeyRepeating := true
-		} else {
-			g_KeyRepeating := true
 			critical,off
 			return
 		}
-	} else {
-		g_KeyRepeating := false
 	}
 	g_Oya := g_metaKey
 	keyState[g_layoutPos] := 2
@@ -585,8 +581,7 @@ keydownM:
 		}
 		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 		if(ksc[_mode . g_layoutPos] > 1) {
-			if(g_RepeatCount == 1
-			&& pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+			if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
 			{
 				critical,off
 				return
@@ -598,7 +593,6 @@ keydownM:
 				return
 			}
 		}
-		g_RepeatCount += 1
 	}
 	keyTick[g_layoutPos] := pf_TickCount
 	g_Timeout := ""
@@ -919,13 +913,11 @@ keydownS:
 	pf_TickCount := Pf_Count()
 	if(keyState[g_layoutPos] != 0)
 	{
-		if(g_RepeatCount == 1
-		&& pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+		if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
 		{
 			critical,off
 			return
 		}
-		g_RepeatCount += 1
 	}
 	keyTick[g_layoutPos] := pf_TickCount
 	g_Timeout := ""
@@ -1989,6 +1981,5 @@ gSC136up:	;右Shift
 	}
 	GuiControl,2:,vkeyDN%g_layoutPos%,　
 	gosub, keyup%g_metaKey%
-	g_RepeatCount := 0
 	return
 
