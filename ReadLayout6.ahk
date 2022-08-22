@@ -79,7 +79,7 @@ InitLayout2:
 	HandakuonSurfaceHash := MakeHanDakuonSurfaceHash()	; 半濁音
 	YouonSurfaceHash := MakeYouonSurfaceHash()	; 拗音
 	CorrectSurfaceHash := MakeCorrectSurfaceHash()	; 修正
-	g_MaxTimeoutM := g_MaxTimeout
+	;g_MaxTimeoutM := g_MaxTimeout
 	g_sansPos := ""
 
 	g_Oya2Layout := Object()
@@ -238,7 +238,6 @@ ReadLayoutFile:
 		g_error := "ファイルが存在しません " . vLayoutFile
 		return
 	}
-	Gosub,InitLayout2
 	g_mode := ""
 	g_modeName := ""
 	g_Section := ""
@@ -259,7 +258,7 @@ ReadLayoutFile:
 	}
 	Loop
 	{
-		_lineCtr := _lineCtr + 1
+		_lineCtr += 1
 		if(_fileObj.AtEOF) {
 			break
 		}
@@ -295,11 +294,6 @@ ReadLayoutFile:
 					_mline := 1
 					_mline2 := 0
 					CopyColumns("NUL",g_mode)
-					;LF[g_mode . g_colhash[1]] := ""
-					;LF[g_mode . g_colhash[2]] := ""
-					;LF[g_mode . g_colhash[3]] := ""
-					;LF[g_mode . g_colhash[4]] := ""
-					;LF[g_mode . g_colhash[5]] := "換,空,変,日"
 				}
 				continue
 			}
