@@ -648,15 +648,27 @@ SetTimeout(_KeyInPtn)
 			_Timeout := minimum(g_Threshold, g_MaxTimeout)
 		}
 	} else
-	if(RegExMatch(_KeyInPtn, "^M[RLABCD]$")==1)
+	if(RegExMatch(_KeyInPtn, "^[RLABCD]M[RLABCD]$")==1)
 	{
-		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[1]
+		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx-1]
 		_Timeout := minimum(floor(g_Interval["M" . g_Oya]*g_OverlapMO/(100-g_OverlapMO)),g_MaxTimeout)
 	} else
-	if(RegExMatch(_KeyInPtn, "^(RMr|LMl|AMa|BMb|CMc|DMd)$")==1)
+	if(RegExMatch(_KeyInPtn, "^M[RLABCD]$")==1)
 	{
-		g_Interval["M_" . g_Oya] := g_OyaUpTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx]	; 文字キー押しから右親指キー解除までの期間
-		_Timeout := minimum(floor((g_Interval["M_" . g_Oya]*(100-g_OverlapOMO))/g_OverlapOMO),g_MaxTimeout)
+		g_Interval["M" . g_Oya] := g_OyaTick[g_Oya] - g_TDownOnHold[g_OnHoldIdx-1]
+		_Timeout := minimum(floor(g_Interval["M" . g_Oya]*g_OverlapMO/(100-g_OverlapMO)),g_MaxTimeout)
+	} else
+	if(RegExMatch(_KeyInPtn, "^[RLABCD]M[rlabcd]$")==1)
+	{
+		wOya := g_OyaOnHold[g_OnHoldIdx]
+		g_Interval["M_" . wOya] := g_TDownOnHold[g_OnHoldIdx-1] - g_TUpOnHold[g_OnHoldIdx]	; 文字キーオンから親指キーオフまでの期間
+		_Timeout := minimum(floor((g_Interval["M_" . wOya]*(100-g_OverlapOMO))/g_OverlapOMO),g_MaxTimeout)
+	} else 
+	if(RegExMatch(_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)
+	{
+		wOya := g_OyaOnHold[g_OnHoldIdx-1]
+		g_Interval[wOya] := g_TDownOnHold[g_OnHoldIdx-1] - g_TUpOnHold[g_OnHoldIdx]	; 親指キーオンから現在までの期間
+		_Timeout := minimum(floor((g_Interval[wOya]*(100-g_OverlapOMO))/g_OverlapOMO),g_MaxTimeout)
 	} else 
 	{
 		_Timeout := 60000

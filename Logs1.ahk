@@ -20,7 +20,7 @@ Logs:
 	Gui, Add, Button,ggButtonClose X431 Y666 W77 H22,閉じる
 	Gui, Show, W547 H700, 紅皿ログ
 	Gui, Font,s9 c000000,ＭＳ ゴシック
-	Gui, Add, Text,X30 Y10,__TIME|PERIOD| INPUT           |O|MD |TG |MOJ| TOUT |SEND
+	Gui, Add, Text,X30 Y10,__TIME|PERIOD| INPUT           |O|MD  |TG |OVL| TOUT |SEND
 	loop, 64
 	{
 		_yaxis := A_Index*10 + 10
@@ -60,7 +60,7 @@ gButtonSave:
 		file.WriteLine("零遅延モード=" . g_ZeroDelay . "`r")
 		file.WriteLine("親指キー単独打鍵=" . g_KeySingle . "`r")
 		file.WriteLine("親指キーリピート=" . g_KeyRepeat . "`r")
-		file.WriteLine("  TIME|PERIOD| INPUT           |O|MD |TG |MOJ| TOUT |SEND`r")
+		file.WriteLine("  TIME|PERIOD| INPUT           |O|MD  |TG |OVL| TOUT |SEND`r")
 		loop, 64
 		{
 			_idx := (idxLogs - aLogCnt + A_Index - 1) & 63

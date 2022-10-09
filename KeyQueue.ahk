@@ -28,7 +28,7 @@ dequeueKey()
 	if(keyState[g_MojiOnHold[1]] == 2) {
 		keyState[g_MojiOnHold[1]] := 1
 	}
-	loop,4
+	loop,5
 	{
 		if(A_Index < g_OnHoldIdx && RegExMatch(g_MetaOnHold[A_Index+1], "^[rlabcdm]$")!=1) {
 			g_RomajiOnHold[A_Index] := g_RomajiOnHold[A_Index+1]
@@ -118,7 +118,7 @@ setKeyup(_Moji, _UpTick)
 {
 	global
 
-	loop,4
+	loop,5
 	{
 		if(_Moji == g_MojiOnHold[A_Index]) {
 			g_TUpOnHold[A_Index] := _UpTick
@@ -151,7 +151,7 @@ getKeyinPtnFromQueue()
 	local _keyInPtn
 	
 	_KeyInPtn := ""
-	loop,4
+	loop,5
 	{
 		if(g_MetaOnHold[A_Index] != "") {
 			_KeyInPtn .= g_MetaOnHold[A_Index]
@@ -200,7 +200,7 @@ clearQueue()
 {
 	global
 	
-	loop,4
+	loop,5
 	{
 		g_RomajiOnHold[A_Index] := ""
 		g_OyaOnHold[A_Index]    := ""
@@ -214,6 +214,29 @@ clearQueue()
 		g_MetaOnHold[A_Index]   := ""
 	}
 	g_OnHoldIdx := 0
+	return ""
+}
+;----------------------------------------------------------------------
+; 文字キーキューの末尾のクリア
+;----------------------------------------------------------------------
+clearLastQueue()
+{
+	global
+
+	if(g_OnHoldIdx != 0)
+	{
+		g_RomajiOnHold[g_OnHoldIdx] := ""
+		g_OyaOnHold[g_OnHoldIdx]    := ""
+		g_KoyubiOnHold[g_OnHoldIdx] := ""
+		if(keyState[g_MojiOnHold[g_OnHoldIdx]] == 2) {
+			keyState[g_MojiOnHold[g_OnHoldIdx]] := 1
+		}
+		g_MojiOnHold[g_OnHoldIdx]   := ""
+		g_TDownOnHold[g_OnHoldIdx]  := 0
+		g_TUpOnHold[g_OnHoldIdx]    := 0
+		g_MetaOnHold[g_OnHoldIdx]   := ""
+		g_OnHoldIdx -= 1
+	}
 	return ""
 }
 ;----------------------------------------------------------------------
