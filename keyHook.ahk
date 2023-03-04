@@ -4,7 +4,6 @@
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 
-
 ;----------------------------------------------------------------------
 ; キーを押下されたときに呼び出されるGotoラベルにフックする
 ;----------------------------------------------------------------------
@@ -132,6 +131,14 @@ SetHotkeyInit()
 	SetHotkeyInitByPos("A10")	;右Win
 	SetHotkeyInitByPos("A11")	;Applications
 	SetHotkeyInitByPos("A12")	;右Shift
+	g_Hotkey := ""
+	SetHotkey("off")
+
+	g_HotkeyFunction := ""
+	SetHotkeyFunction("off")
+	
+	g_HotkeyNumpad := ""
+	SetHotkeyNumpad("off")
 	return
 }
 ;----------------------------------------------------------------------
@@ -154,78 +161,96 @@ SetHotkeyInitByPos(_pos)
 ;----------------------------------------------------------------------
 ; ファンクションキーをオン・オフする
 ;----------------------------------------------------------------------
-SetHotkeyFunction(flg)
+SetHotkeyFunction(_flg)
 {
-	SetHotkeyFunctionByName("Esc", flg)
-	SetHotkeyFunctionByName("F1", flg)
-	SetHotkeyFunctionByName("F2", flg)
-	SetHotkeyFunctionByName("F3", flg)
-	SetHotkeyFunctionByName("F4", flg)
-	SetHotkeyFunctionByName("F5", flg)
-	SetHotkeyFunctionByName("F6", flg)
-	SetHotkeyFunctionByName("F7", flg)
-	SetHotkeyFunctionByName("F8", flg)
-	SetHotkeyFunctionByName("F9", flg)
-	SetHotkeyFunctionByName("F10", flg)
-	SetHotkeyFunctionByName("F11", flg)
-	SetHotkeyFunctionByName("F12", flg)
+	global
+	if (_flg == "on" || _flg == "off")
+	{
+		if (g_HotkeyFunction != _flg) ; on-offが変化したときだけ実行
+		{
+			g_HotkeyFunction := _flg
 
-	SetHotkeyFunctionByName("半角/全角", flg)
-
-	SetHotkeyFunctionByName("左Ctrl", flg)
-	SetHotkeyFunctionByName("無変換", flg)
-	SetHotkeyFunctionByName("Space", flg)
-	SetHotkeyFunctionByName("変換", flg)
-	SetHotkeyFunctionByName("カタカナ/ひらがな", flg)
-	SetHotkeyFunctionByName("右Ctrl", flg)
-
-	SetHotkeyFunctionByName("左Shift", flg)
-	SetHotkeyFunctionByName("右Shift", flg)
-
-	SetHotkeyFunctionByName("左Win", flg)
-	SetHotkeyFunctionByName("左Alt", flg)
-	SetHotkeyFunctionByName("右Alt", flg)
-	SetHotkeyFunctionByName("右Win", flg)
-	SetHotkeyFunctionByName("Applications", flg)
-
-	SetHotkeyFunctionByName("PrintScreen", flg)
-	SetHotkeyFunctionByName("ScrollLock", flg)
-	SetHotkeyFunctionByName("Pause", flg)
-	SetHotkeyFunctionByName("Insert", flg)
-	SetHotkeyFunctionByName("Home", flg)
-	SetHotkeyFunctionByName("PageUp", flg)
-	SetHotkeyFunctionByName("Delete", flg)
-	SetHotkeyFunctionByName("End", flg)
-	SetHotkeyFunctionByName("PageDown", flg)
-	SetHotkeyFunctionByName("上", flg)
-	SetHotkeyFunctionByName("左", flg)
-	SetHotkeyFunctionByName("右", flg)
-	SetHotkeyFunctionByName("下", flg)
-
-	SetHotkeyFunctionByName("Tab", flg)
-	SetHotkeyFunctionByName("Enter", flg)
+			SetHotkeyFunctionByName("Esc", _flg)
+			SetHotkeyFunctionByName("F1", _flg)
+			SetHotkeyFunctionByName("F2", _flg)
+			SetHotkeyFunctionByName("F3", _flg)
+			SetHotkeyFunctionByName("F4", _flg)
+			SetHotkeyFunctionByName("F5", _flg)
+			SetHotkeyFunctionByName("F6", _flg)
+			SetHotkeyFunctionByName("F7", _flg)
+			SetHotkeyFunctionByName("F8", _flg)
+			SetHotkeyFunctionByName("F9", _flg)
+			SetHotkeyFunctionByName("F10", _flg)
+			SetHotkeyFunctionByName("F11", _flg)
+			SetHotkeyFunctionByName("F12", _flg)
+		
+			SetHotkeyFunctionByName("半角/全角", _flg)
+		
+			SetHotkeyFunctionByName("左Ctrl", _flg)
+			SetHotkeyFunctionByName("無変換", _flg)
+			SetHotkeyFunctionByName("Space", _flg)
+			SetHotkeyFunctionByName("変換", _flg)
+			SetHotkeyFunctionByName("カタカナ/ひらがな", _flg)
+			SetHotkeyFunctionByName("右Ctrl", _flg)
+		
+			SetHotkeyFunctionByName("左Shift", _flg)
+			SetHotkeyFunctionByName("右Shift", _flg)
+		
+			SetHotkeyFunctionByName("左Win", _flg)
+			SetHotkeyFunctionByName("左Alt", _flg)
+			SetHotkeyFunctionByName("右Alt", _flg)
+			SetHotkeyFunctionByName("右Win", _flg)
+			SetHotkeyFunctionByName("Applications", _flg)
+		
+			SetHotkeyFunctionByName("PrintScreen", _flg)
+			SetHotkeyFunctionByName("ScrollLock", _flg)
+			SetHotkeyFunctionByName("Pause", _flg)
+			SetHotkeyFunctionByName("Insert", _flg)
+			SetHotkeyFunctionByName("Home", _flg)
+			SetHotkeyFunctionByName("PageUp", _flg)
+			SetHotkeyFunctionByName("Delete", _flg)
+			SetHotkeyFunctionByName("End", _flg)
+			SetHotkeyFunctionByName("PageDown", _flg)
+			SetHotkeyFunctionByName("上", _flg)
+			SetHotkeyFunctionByName("左", _flg)
+			SetHotkeyFunctionByName("右", _flg)
+			SetHotkeyFunctionByName("下", _flg)
+		
+			SetHotkeyFunctionByName("Tab", _flg)
+			SetHotkeyFunctionByName("Enter", _flg)
+		}
+	}
 }
 ;----------------------------------------------------------------------
 ; テンキーをオン・オフする
 ;----------------------------------------------------------------------
-SetHotkeyNumpad(flg)
+SetHotkeyNumpad(_flg)
 {
-	SetHotkeyFunctionByName("NumpadDiv", flg)
-	SetHotkeyFunctionByName("NumpadMult", flg)
-	SetHotkeyFunctionByName("NumpadAdd", flg)
-	SetHotkeyFunctionByName("NumpadSub", flg)
-	SetHotkeyFunctionByName("HNumpadEnter", flg)
-	SetHotkeyFunctionByName("Numpad0", flg)
-	SetHotkeyFunctionByName("Numpad1", flg)
-	SetHotkeyFunctionByName("Numpad2", flg)
-	SetHotkeyFunctionByName("Numpad3", flg)
-	SetHotkeyFunctionByName("Numpad4", flg)
-	SetHotkeyFunctionByName("Numpad5", flg)
-	SetHotkeyFunctionByName("Numpad6", flg)
-	SetHotkeyFunctionByName("Numpad7", flg)
-	SetHotkeyFunctionByName("Numpad8", flg)
-	SetHotkeyFunctionByName("Numpad9", flg)
-	SetHotkeyFunctionByName("NumpadDot", flg)
+	global
+	if(_flg=="on" || _flg=="off") 
+	{
+		if (g_HotkeyNumpad != _flg) ; on-offが変化したときだけ実行
+		{
+			g_HotkeyNumpad := _flg
+
+			SetHotkeyFunctionByName("NumpadDiv", _flg)
+			SetHotkeyFunctionByName("NumpadMult", _flg)
+			SetHotkeyFunctionByName("NumpadAdd", _flg)
+			SetHotkeyFunctionByName("NumpadSub", _flg)
+			SetHotkeyFunctionByName("HNumpadEnter", _flg)
+			SetHotkeyFunctionByName("Numpad0", _flg)
+			SetHotkeyFunctionByName("Numpad1", _flg)
+			SetHotkeyFunctionByName("Numpad2", _flg)
+			SetHotkeyFunctionByName("Numpad3", _flg)
+			SetHotkeyFunctionByName("Numpad4", _flg)
+			SetHotkeyFunctionByName("Numpad5", _flg)
+			SetHotkeyFunctionByName("Numpad6", _flg)
+			SetHotkeyFunctionByName("Numpad7", _flg)
+			SetHotkeyFunctionByName("Numpad8", _flg)
+			SetHotkeyFunctionByName("Numpad9", _flg)
+			SetHotkeyFunctionByName("NumpadDot", _flg)
+		}
+	}
 }
 
 ;----------------------------------------------------------------------
@@ -244,80 +269,80 @@ SetHotkeyFunctionByName(_kName, _flg)
 	}
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {
 		hotkey,*%_sCode%,%_flg%
-		;if(kup_save[_pos]=="" || _sCode == "sc029")
-		;{
-			keyHook[_pos] := _flg
-			hotkey,*%_sCode% up,%_flg%
-		;}
+		keyHook[_pos] := _flg
+		hotkey,*%_sCode% up,%_flg%
 	} else {
 		hotkey,*%_sCode%,off
-		;if(kup_save[_pos]=="" || _sCode == "sc029")
-		;{
-			keyHook[_pos] := "off"
-			hotkey,*%_sCode% up,off
-		;}
+		keyHook[_pos] := "off"
+		hotkey,*%_sCode% up,off
 	}
 }
 ;----------------------------------------------------------------------
 ; 動的にホットキーをオン・オフする
 ; flg : 文字キーと機能キー
 ;----------------------------------------------------------------------
-SetHotkey(flg)
+SetHotkey(_flg)
 {
 	global
-	g_HotKey := flg
-	SetHotkeyByPos("E01",flg)	;1
-	SetHotkeyByPos("E02",flg)	;2
-	SetHotkeyByPos("E03",flg)	;3
-	SetHotkeyByPos("E04",flg)	;4
-	SetHotkeyByPos("E05",flg)	;5
-	SetHotkeyByPos("E06",flg)	;6
-	SetHotkeyByPos("E07",flg)	;7
-	SetHotkeyByPos("E08",flg)	;8
-	SetHotkeyByPos("E09",flg)	;9
-	SetHotkeyByPos("E10",flg)	;0
-	SetHotkeyByPos("E11",flg)	;-
-	SetHotkeyByPos("E12",flg)	;^
-	SetHotkeyByPos("E13",flg)	;\
-	SetHotkeyByPos("E14",flg)	;\b
-	
-	SetHotkeyByPos("D01",flg)	;q
-	SetHotkeyByPos("D02",flg)	;w
-	SetHotkeyByPos("D03",flg)	;e
-	SetHotkeyByPos("D04",flg)	;r
-	SetHotkeyByPos("D05",flg)	;t
-	SetHotkeyByPos("D06",flg)	;y
-	SetHotkeyByPos("D07",flg)	;u
-	SetHotkeyByPos("D08",flg)	;i
-	SetHotkeyByPos("D09",flg)	;o
-	SetHotkeyByPos("D10",flg)	;p
-	SetHotkeyByPos("D11",flg)	;@
-	SetHotkeyByPos("D12",flg)	;[
-	
-	SetHotkeyByPos("C01",flg)	;a
-	SetHotkeyByPos("C02",flg)	;s
-	SetHotkeyByPos("C03",flg)	;d
-	SetHotkeyByPos("C04",flg)	;f
-	SetHotkeyByPos("C05",flg)	;g
-	SetHotkeyByPos("C06",flg)	;h
-	SetHotkeyByPos("C07",flg)	;j
-	SetHotkeyByPos("C08",flg)	;k
-	SetHotkeyByPos("C09",flg)	;l
-	SetHotkeyByPos("C10",flg)	;';'
-	SetHotkeyByPos("C11",flg)	;*
-	SetHotkeyByPos("C12",flg)	;]
-	
-	SetHotkeyByPos("B01",flg)	;z
-	SetHotkeyByPos("B02",flg)	;x
-	SetHotkeyByPos("B03",flg)	;c
-	SetHotkeyByPos("B04",flg)	;v
-	SetHotkeyByPos("B05",flg)	;b
-	SetHotkeyByPos("B06",flg)	;n
-	SetHotkeyByPos("B07",flg)	;m
-	SetHotkeyByPos("B08",flg)	;,
-	SetHotkeyByPos("B09",flg)	;.
-	SetHotkeyByPos("B10",flg)	;/
-	SetHotkeyByPos("B11",flg)	;\
+	if(_flg=="on" || _flg=="off")
+	{
+		if (g_HotKey != _flg) ; on-offが変化したときだけ実行
+		{
+			g_HotKey := _flg
+			SetHotkeyByPos("E01",_flg)	;1
+			SetHotkeyByPos("E02",_flg)	;2
+			SetHotkeyByPos("E03",_flg)	;3
+			SetHotkeyByPos("E04",_flg)	;4
+			SetHotkeyByPos("E05",_flg)	;5
+			SetHotkeyByPos("E06",_flg)	;6
+			SetHotkeyByPos("E07",_flg)	;7
+			SetHotkeyByPos("E08",_flg)	;8
+			SetHotkeyByPos("E09",_flg)	;9
+			SetHotkeyByPos("E10",_flg)	;0
+			SetHotkeyByPos("E11",_flg)	;-
+			SetHotkeyByPos("E12",_flg)	;^
+			SetHotkeyByPos("E13",_flg)	;\
+			SetHotkeyByPos("E14",_flg)	;\b
+			
+			SetHotkeyByPos("D01",_flg)	;q
+			SetHotkeyByPos("D02",_flg)	;w
+			SetHotkeyByPos("D03",_flg)	;e
+			SetHotkeyByPos("D04",_flg)	;r
+			SetHotkeyByPos("D05",_flg)	;t
+			SetHotkeyByPos("D06",_flg)	;y
+			SetHotkeyByPos("D07",_flg)	;u
+			SetHotkeyByPos("D08",_flg)	;i
+			SetHotkeyByPos("D09",_flg)	;o
+			SetHotkeyByPos("D10",_flg)	;p
+			SetHotkeyByPos("D11",_flg)	;@
+			SetHotkeyByPos("D12",_flg)	;[
+			
+			SetHotkeyByPos("C01",_flg)	;a
+			SetHotkeyByPos("C02",_flg)	;s
+			SetHotkeyByPos("C03",_flg)	;d
+			SetHotkeyByPos("C04",_flg)	;f
+			SetHotkeyByPos("C05",_flg)	;g
+			SetHotkeyByPos("C06",_flg)	;h
+			SetHotkeyByPos("C07",_flg)	;j
+			SetHotkeyByPos("C08",_flg)	;k
+			SetHotkeyByPos("C09",_flg)	;l
+			SetHotkeyByPos("C10",_flg)	;';'
+			SetHotkeyByPos("C11",_flg)	;*
+			SetHotkeyByPos("C12",_flg)	;]
+			
+			SetHotkeyByPos("B01",_flg)	;z
+			SetHotkeyByPos("B02",_flg)	;x
+			SetHotkeyByPos("B03",_flg)	;c
+			SetHotkeyByPos("B04",_flg)	;v
+			SetHotkeyByPos("B05",_flg)	;b
+			SetHotkeyByPos("B06",_flg)	;n
+			SetHotkeyByPos("B07",_flg)	;m
+			SetHotkeyByPos("B08",_flg)	;,
+			SetHotkeyByPos("B09",_flg)	;.
+			SetHotkeyByPos("B10",_flg)	;/
+			SetHotkeyByPos("B11",_flg)	;\
+		}
+	}
 	return
 }
 ;----------------------------------------------------------------------
@@ -329,7 +354,8 @@ SetHotkeyByPos(_pos, _flg)
 	local _sCode
 	
 	_sCode := scanCodeHash[_pos]
-	if(_pos=="" || _sCode=="") {
+	if(_pos=="" 
+	|| _sCode=="") {
 		return
 	}
 	if(keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . _pos]!="") {

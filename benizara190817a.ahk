@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.5.03 .... 2022/9/11
+;	ver.0.1.5.05 .... 2022/10/25
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,8 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.5.03"
-	g_Date := "2022/9/11"
+	g_Ver := "ver.0.1.5.05"
+	g_Date := "2023/3/4"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -122,7 +122,6 @@
 	
 	g_debugout := ""
 	
-	g_Pause := 0
 	g_KeyPause := "Pause"
 	vLayoutFile := g_LayoutFile
 	g_Tau := 400
@@ -140,10 +139,7 @@
 	}
 	Menu, Tray, Add, 紅皿設定,Settings
 	Menu, Tray, Add, ログ,Logs
-	Menu, Tray, Add, 一時停止,DoPause
-	Menu, Tray, Add, 再開,DoResume
 	Menu, Tray, Add, 終了,MenuExit
-	Gosub,DoResume
 
 	SetBatchLines, -1
 	SetHotkeyInit()
@@ -164,54 +160,25 @@
 	g_process["em1keypc"] := 0
 	g_process["姫踊子草2"] := 0
 	g_intproc := 0
-	SetTimer,Interrupt10,10
+	SetTimer,Interrupt16,16
 	SetTimer,InterruptProcessPolling,600
-	Suspend,on
-	SetHotkey("off")
-	SetHotkeyFunction("off")
-	SetHotkeyNumpad("off")
-	g_HotKey := "off"
+	Suspend,off
+	g_RepeatCount := 0
+	g_Pause := 1
+	Gosub,pauseKeyDown
 	return
 
 ;-----------------------------------------------------------------------
 ;	メニューからの終了
 ;-----------------------------------------------------------------------
 MenuExit:
-	SetTimer,Interrupt10,off
+	SetTimer,Interrupt16,off
 	SetTimer,InterruptProcessPolling,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
-	Suspend,on
 	SetHotkey("off")
 	SetHotkeyFunction("off")
 	SetHotkeyNumpad("off")
 	exitapp
-
-;-----------------------------------------------------------------------
-;	一時停止(Pause)
-;-----------------------------------------------------------------------
-DoPause:
-	Menu, Tray,disable,一時停止
-	Menu, Tray,enable,再開
-	g_Pause := 1
-	if(Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
-	{
-		Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
-	}
-	return
-
-;-----------------------------------------------------------------------
-;	再開（一時停止の解除）
-;-----------------------------------------------------------------------
-DoResume:
-	Menu, Tray,enable,一時停止
-	Menu, Tray,disable,再開
-	g_Pause := 0
-	if(Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
-	{
-		Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
-	}
-	return	
-
 
 #include IME.ahk
 #include ReadLayout6.ahk
@@ -249,7 +216,7 @@ keydownD:	; 拡張4 A16
 		}
 	}
 	g_Oya := g_metaKey
-	keyState[g_layoutPos] := 2
+	keyState[g_layoutPos] |= 2
 	keyTick[g_layoutPos] := pf_TickCount
 
 	if(g_KeyInPtn == "MM" || g_KeyInPtn == "MMm")	; S7)MMオン状態、S8)MMオンmオフ状態
@@ -414,7 +381,7 @@ keyupD:	; 拡張4 A16
 		else if(RegExMatch(g_KeyInPtn, "^" . g_metaKey . "M[RLABCD]$")==1)	;S5a)O-M-Oオン状態/１文字目の親指キー
 		{
 			g_KeyInPtn := enqueueKey(g_Romaji, g_metaKey, KoyubiOrSans(g_Koyubi,g_sans), g_layoutPos, g_metaKeyUp[g_metaKey], pf_TickCount)
-				; S9)O-M-O-oオフ状態に遷移
+				; S7)O-M-O-oオフ状態に遷移
 			g_Timeout := g_TDownOnHold[g_OnHoldIdx-2] - g_TDownOnHold[g_OnHoldIdx-1]
 			g_SendTick := pf_TickCount + g_Timeout
 		}
@@ -422,7 +389,7 @@ keyupD:	; 拡張4 A16
 		{
 			clearLastQueue()
 		}
-		else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M" . g_metaKey . "[rlabcd]$")==1)	;S9)O-M-O-oオフ状態
+		else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M" . g_metaKey . "[rlabcd]$")==1)	;S7)O-M-O-oオフ状態
 		{
 			wOya := g_OyaOnHold[g_OnHoldIdx]
 			g_Interval["M_" . wOya] := g_TUpOnHold[g_OnHoldIdx] - g_TDownOnHold[g_OnHoldIdx-2]			; 文字キー押しから他の親指キーオフまでの期間
@@ -573,10 +540,14 @@ keydownM:
 		}
 		_mode := g_RomajiOnHold[1] . g_OyaOnHold[1] . g_KoyubiOnHold[1]
 		if(ksc[_mode . g_layoutPos] > 1) {
-			if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+			if (keyState[g_layoutPos] == 2)
 			{
-				critical,off
-				return
+				if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+				{
+					critical,off
+					return
+				}
+				keyState[g_layoutPos] |= 4
 			}
 			g_KeyOnHold := GetPushedKeys()	; 同時打鍵時にはキーリピートしない
 			if(strlen(g_KeyOnHold)>=6)
@@ -589,7 +560,7 @@ keydownM:
 	keyTick[g_layoutPos] := pf_TickCount
 	g_Timeout := ""
 	
-	keyState[g_layoutPos] := 2
+	keyState[g_layoutPos] |= 2
 	g_sansTick := INFINITE
 	if(keyState[g_sansPos]==2) {
 		keyState[g_sansPos] := 1
@@ -695,7 +666,7 @@ keydownM:
 		}
 	}
 	else
-	if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	;S9)O-M-O-oオフ状態
+	if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	;S7)O-M-O-oオフ状態
 	{
 		wOya  := g_OyaOnHold[g_OnHoldIdx]
 		wOya1 := g_OyaOnHold[g_OnHoldIdx - 1]
@@ -889,7 +860,7 @@ keydownX:
 	if(g_KeyPause==kName) {
 		Gosub,pauseKeyDown
 	}
-	keyState[g_layoutPos] := 2
+	keyState[g_layoutPos] |= 2
 
 	Gosub,ModeInitialize
 	if(ShiftMode[g_Romaji] == "プレフィックスシフト") {
@@ -909,9 +880,7 @@ keydownX:
 	if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
 		SetHotkey("on")
 		SetHotkeyFunction("on")
-		Suspend,off
 	} else {
-		Suspend,on
 		SetHotkey("off")
 		SetHotkeyFunction("off")
 	}
@@ -930,15 +899,19 @@ keydownS:
 	pf_TickCount := Pf_Count()
 	if(keyState[g_layoutPos] != 0)
 	{
-		if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+		if(keyState[g_layoutPos] == 2)
 		{
-			critical,off
-			return
+			if(pf_TickCount - keyTick[g_layoutPos] < g_MaxTimeoutM)
+			{
+				critical,off
+				return
+			}
 		}
+		keyState[g_layoutPos] |= 4
 	}
 	keyTick[g_layoutPos] := pf_TickCount
 	g_Timeout := ""
-	keyState[g_layoutPos] := 2
+	keyState[g_layoutPos] |= 2
 
 	g_ModifierTick := pf_TickCount
 	Gosub,ModeInitialize
@@ -976,7 +949,7 @@ keydown9:
 	RegLogs(kName . " down", g_KeyInPtn, g_trigger, g_Timeout, "")
 	g_Timeout := ""
 
-	keyState[g_layoutPos] := 2
+	keyState[g_layoutPos] |= 2
 	g_trigger := g_metaKey
 	if(g_prefixshift == "")
 	{
@@ -1169,7 +1142,7 @@ keyupM:
 			}
 		}
 	}
-	else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	;S9)O-M-O-oオフ状態
+	else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	;S7)O-M-O-oオフ状態
 	{
 		; キューは、Mo または OMo
 		if((g_MetaOnHold[1]=="M" && g_layoutPos==g_MojiOnHold[1])
@@ -1299,21 +1272,20 @@ InterruptProcessPolling:
 	return
 
 ;----------------------------------------------------------------------
-; 10[mSEC]ごとの割込処理
+; 16[mSEC]ごとの割込処理
 ;----------------------------------------------------------------------
-Interrupt10:
+Interrupt16:
 	critical
 	Gosub,ScanModifier
 	Gosub,ScanOyaKey
 	Gosub,ScanPauseKey
-	if(g_Modifier!=0) 
+	if (g_Modifier != 0)
 	{
 		Gosub,ModeInitialize
 	} else
-	if(g_Pause==1) 
+	if (g_Pause==1)
 	{
 		Gosub,ModeInitialize
-		Suspend,on
 		SetHotkey("off")
 		SetHotkeyFunction("off")
 	} else {
@@ -1322,9 +1294,7 @@ Interrupt10:
 		if(LF[g_Romaji . "N" . KoyubiOrSans(g_Koyubi,g_sans)]!="") {
 			SetHotkey("on")
 			SetHotkeyFunction("on")
-			Suspend,off
 		} else {
-			Suspend,on
 			SetHotkey("off")
 			SetHotkeyFunction("off")
 		}
@@ -1355,7 +1325,7 @@ Interrupt10:
 		szConverting := IME_GetConverting()
 		
 		;g_debugout3 := ksc["RNNC01"] . ":" . kst["RNNC01"]
-		g_debugout3 := g_HotKey
+		g_debugout3 := ":" . g_Pause
 		g_debugout2 := g_LastKey["表層"]
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans)
@@ -1445,7 +1415,7 @@ Polling:
 			{
 				g_KeyInPtn := SendOnHoldOM()
 			}
-			else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	; S9)O-M-O-oオフ状態
+			else if(RegExMatch(g_KeyInPtn, "^[RLABCD]M[RLABCD][rlabcd]$")==1)	; S7)O-M-O-oオフ状態
 			{
 				wOya  := g_OyaOnHold[g_OnHoldIdx]
 				wOya1 := g_OyaOnHold[g_OnHoldIdx-1]
@@ -1570,17 +1540,14 @@ ScanOyaKey:
 	return
 
 ;----------------------------------------------------------------------
-; Pauseキー読み取り
+; Pauseキーのポーリングによる読み取り
 ;----------------------------------------------------------------------
 ScanPauseKey:
-	if(g_KeyPause != "") {
-		if(GetKeyStateWithLog5(g_KeyPause)==1) {
-			Gosub,pauseKeyDown
-		}
-	}
-	if(g_KeyPause == "無効")
+	if (g_KeyPause != ""
+	&& g_KeyPause != "無効")
 	{
-		if(g_Pause == 1) {
+		if(GetKeyStateWithLog5(g_KeyPause)==1)
+		{
 			Gosub,pauseKeyDown
 		}
 	}
@@ -1687,10 +1654,21 @@ GetKeyStateWithLog5(_fName) {
 ;	ボーズキーが押された
 ;-----------------------------------------------------------------------
 pauseKeyDown:
-	if(g_Pause == 1) {
-		Gosub, DoResume
-	} else {
-		Gosub, DoPause
+	if (g_Pause == 1)
+	{
+		if (Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+		}
+		g_Pause := 0
+	}
+	else
+	{
+		if (Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
+		}
+		g_Pause := 1
 	}
 	return
 

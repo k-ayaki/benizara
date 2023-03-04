@@ -258,9 +258,9 @@ _Settings:
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Edit,X20 Y40 W690 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
 	Gui, Add, Text,X30 Y130,一時停止キー：
-	if(g_KeyPause = "Pause")
+	if(g_KeyPause == "Pause")
 		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause||ScrollLock|無効|
-	else if(g_KeyPause = "ScrollLock")
+	else if(g_KeyPause == "ScrollLock")
 		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock||無効|
 	else
 		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock|無効||
@@ -974,7 +974,7 @@ gFileSelect:
 		}
 		GuiControl,, vFilePath, %vLayoutFile%
 
-		SetTimer,Interrupt10,off
+		SetTimer,Interrupt16,off
 		SetHotkey("off")
 		SetHotkeyFunction("off")
 		
@@ -1000,7 +1000,7 @@ gFileSelect:
 		g_MojiTick[0] := _currentTick
 		g_OyaTick["R"] := _currentTick
 		g_OyaTick["L"] := _currentTick
-		SetTimer,Interrupt10,on
+		SetTimer,Interrupt16,on
 		vIntKeyUp := 0
 		vIntKeyDn := 0
 	}
@@ -1014,7 +1014,10 @@ gFileSelect:
 
 gSetPause:
 	Gui, Submit, NoHide
-	g_KeyPause := vKeyPause
+	if(vKeyPause == "Pause" || vKeyPause == "ScrollLock" || vKeyPause == "無効")
+	{
+		g_KeyPause := vKeyPause
+	}
 	return
 
 ;-----------------------------------------------------------------------
