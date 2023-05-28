@@ -2,7 +2,7 @@
 ;	名称：benizara / 紅皿
 ;	機能：Yet another NICOLA Emulaton Software
 ;         キーボード配列エミュレーションソフト
-;	ver.0.1.5.05 .... 2022/10/25
+;	ver.0.1.6.00 .... 2023/05/06
 ;	作者：Ken'ichiro Ayaki
 ;-----------------------------------------------------------------------
 	#InstallKeybdHook
@@ -11,8 +11,9 @@
 #SingleInstance, Off
 	SetStoreCapsLockMode,Off
 	StringCaseSense, On			; 大文字小文字を区別
-	g_Ver := "ver.0.1.5.05"
-	g_Date := "2023/3/4"
+	Process, Priority, , High
+	g_Ver := "ver.0.1.6.00"
+	g_Date := "2023/5/7"
 	MutexName := "benizara"
     If DllCall("OpenMutex", Int, 0x100000, Int, 0, Str, MutexName)
     {
@@ -51,7 +52,7 @@
 		ExitApp
 	}
 	g_DataDir := A_AppData . "\ayaki\benizara"
-	if (Path_FileExists(g_DataDir . "\NICOLA配列.bnz") == 0)
+	if (Path_FileExists(g_DataDir . "\benizara.ini") == 0)
 	{
 		g_DataDir := A_ScriptDir
 	}
@@ -128,8 +129,7 @@
 	GoSub,Init
 	Gosub,ReadLayout
 	Traytip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
-	g_allTheLayout := vAllTheLayout
-	g_LayoutFile := vLayoutFile
+	GoSub,StartGdi
 	kup_save := Object()
 
 	g_SendTick := INFINITE
@@ -153,43 +153,62 @@
 	g_OyaTick["D"] := _TickCount
 	VarSetCapacity(lpKeyState,256,0)
 
-	g_process := Object()	; 反対側の親指キー
-	g_process["yamabuki_r"] := 0
-	g_process["yamabuki"] := 0
-	g_process["DvorakJ"] := 0
-	g_process["em1keypc"] := 0
-	g_process["姫踊子草2"] := 0
 	g_intproc := 0
+	Process,Exist,yamabuki_r.exe
+	if(ErrorLevel!=0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
+		ExitApp
+	}
+	Process,Exist,yamabuki.exe
+	if(ErrorLevel!=0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
+		ExitApp
+	}
+	Process,Exist,DvorakJ.exe
+	if(ErrorLevel!=0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
+		ExitApp
+	}
+	Process,Exist,em1keypc.exe
+	if(ErrorLevel!=0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
+		ExitApp
+	}
+	Process,Exist,姫踊子草2.exe
+	if(ErrorLevel!=0) {
+		Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
+		ExitApp
+	}
 	SetTimer,Interrupt16,16
-	SetTimer,InterruptProcessPolling,600
 	Suspend,off
 	g_RepeatCount := 0
-	g_Pause := 1
-	Gosub,pauseKeyDown
+	g_Pause := 0
+	s_Pause := 1
+	trayIconRefresh(g_Pause)
 	return
 
 ;-----------------------------------------------------------------------
 ;	メニューからの終了
 ;-----------------------------------------------------------------------
 MenuExit:
+	GoSub,CloseGdi
 	SetTimer,Interrupt16,off
-	SetTimer,InterruptProcessPolling,off
 	DllCall("ReleaseMutex", Ptr, hMutex)
 	SetHotkey("off")
 	SetHotkeyFunction("off")
 	SetHotkeyNumpad("off")
 	exitapp
 
-#include IME.ahk
-#include ReadLayout6.ahk
-#include Settings7.ahk
-#include PfCount.ahk
-#include Logs1.ahk
-#include Path.ahk
-#include Objects.ahk
-#include KeyQueue.ahk
-#include SendOnHold.ahk
-#include keyHook.ahk
+#include .\IME.ahk
+#include .\ReadLayout6.ahk
+#include .\Settings7.ahk
+#include .\PfCount.ahk
+#include .\Logs1.ahk
+#include .\Path.ahk
+#include .\Objects.ahk
+#include .\KeyQueue.ahk
+#include .\SendOnHold.ahk
+#include .\keyHook.ahk
 
 ;-----------------------------------------------------------------------
 ; 親指シフトキー
@@ -858,7 +877,8 @@ keydownX:
 	g_Timeout := ""
 
 	if(g_KeyPause==kName) {
-		Gosub,pauseKeyDown
+		g_Pause := gPauseStatus(g_Pause)
+		trayIconRefresh(g_Pause)
 	}
 	keyState[g_layoutPos] |= 2
 
@@ -871,8 +891,7 @@ keydownX:
 		critical,off
 		return
 	}
-	g_ModifierTick := pf_TickCount
-	SubSendOne(MnDown(kName))
+	g_ModifierTick := pf_TickCount	SubSendOne(MnDown(kName))
 	SetKeyupSave(MnUp(kName),g_layoutPos)
 
 	Gosub,ChkIME
@@ -1223,53 +1242,6 @@ keyup9:
 	sleep,-1
 	return
 
-;----------------------------------------------------------------------
-; プロセス監視割込処理
-;----------------------------------------------------------------------
-InterruptProcessPolling:
-	g_intproc += 1
-	if(mod(g_intproc,5)==0) {
-		Process,Exist,yamabuki_r.exe
-		_pid := ErrorLevel
-		if(_pid!=0 && g_process["yamabuki_r"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきRが動作中。干渉のおそれがあります。
-		}
-		g_process["yamabuki_r"] := _pid
-	}
-	if(mod(g_intproc,5)==1) {
-		Process,Exist,yamabuki.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["yamabuki"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,やまぶきが動作中。干渉のおそれがあります。
-		}
-		g_process["yamabuki"] := _pid
-	}
-	if(mod(g_intproc,5)==2) {
-		Process,Exist,DvorakJ.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["DvorakJ"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,DvorakJが動作中。干渉のおそれがあります。
-		}
-		g_process["DvorakJ"] := _pid
-	}
-	if(mod(g_intproc,5)==3) {
-		Process,Exist,em1keypc.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["em1keypc"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,em1keypcが動作中。干渉のおそれがあります。
-		}
-		g_process["em1keypc"] := _pid
-	}
-	if(mod(g_intproc,5)==4) {
-		Process,Exist,姫踊子草2.exe
-		_pid := ErrorLevel
-		if(_pid!=0 &&  g_process["姫踊子草2"]==0) {
-			Traytip,キーボード配列エミュレーションソフト「紅皿」,姫踊子草2が動作中。干渉のおそれがあります。
-		}
-		g_process["姫踊子草2"] := _pid
-	}
-	sleep,-1
-	return
 
 ;----------------------------------------------------------------------
 ; 16[mSEC]ごとの割込処理
@@ -1308,7 +1280,8 @@ Interrupt16:
 			g_layoutPos := "A04"
 			g_metaKey := keyAttribute3[g_Romaji . KoyubiOrSans(g_Koyubi,g_sans) . g_layoutPos]
 			kName := keyNameHash[g_layoutPos]
-			GuiControl,2:,vkeyDN%g_layoutPos%,　
+			;GuiControl,2:,vkeyDN%g_layoutPos%,　
+			RefreshKey(g_layoutPos,0)
 			goto, keyup%g_metaKey%
 		}
 	}
@@ -1317,7 +1290,7 @@ Interrupt16:
 			SansSend()
 		}
 	}
-	Gosub,Polling
+	Gosub,PollingTimeout
 	critical,off
 	if(A_IsCompiled != 1)
 	{
@@ -1329,7 +1302,7 @@ Interrupt16:
 		g_debugout2 := g_LastKey["表層"]
 		;g_debugout2 := GetKeyState(keyNameHash[g_sansPos],"P")
 		_mode := g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans)
-		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans) . ":" . g_layoutPos . ":" . g_KeyInPtn . ":" . g_debugout2 . ":" . g_debugout3
+		g_debugout := vImeMode . ":" . vImeConvMode . szConverting . ":" . g_Romaji . g_Oya . KoyubiOrSans(g_Koyubi,g_sans) . ":" . g_layoutPos . ":" . g_KeyInPtn . ":" . g_vOut
 		;g_LastKey["status"] . ":" . g_LastKey["snapshot"]
 		Tooltip, %g_debugout%, 0, 0, 2 ; debug
 	}
@@ -1355,9 +1328,9 @@ SansSend()
 }
 
 ;----------------------------------------------------------------------
-; 10mSECなどのポーリング
+; 16mSECなどのタイムアウト監視のポーリング
 ;----------------------------------------------------------------------
-Polling:
+PollingTimeout:
 	if(g_SendTick != INFINITE)
 	{
 		g_trigger := "TO"
@@ -1510,7 +1483,6 @@ ScanModifier:
 		}
 	}
 	g_Modifier &= 0x7E00
-
 	GetKeyStateWithLog5("Applications")
 	return
 
@@ -1548,7 +1520,8 @@ ScanPauseKey:
 	{
 		if(GetKeyStateWithLog5(g_KeyPause)==1)
 		{
-			Gosub,pauseKeyDown
+			g_Pause := gPauseStatus(g_Pause)
+			trayIconRefresh(g_Pause)
 		}
 	}
 	return
@@ -1653,14 +1626,16 @@ GetKeyStateWithLog5(_fName) {
 ;-----------------------------------------------------------------------
 ;	ボーズキーが押された
 ;-----------------------------------------------------------------------
-pauseKeyDown:
-	if (g_Pause == 1)
+trayIconRefresh(a_Pause)
+{
+	global
+
+	if (a_Pause == 0)
 	{
 		if (Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
 		{
 			Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
 		}
-		g_Pause := 0
 	}
 	else
 	{
@@ -1668,7 +1643,24 @@ pauseKeyDown:
 		{
 			Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
 		}
-		g_Pause := 1
+	}
+	return 0
+}
+
+
+	if (g_Pause == 0)
+	{
+		if (Path_FileExists(A_ScriptDir . "\benizara_on.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_on.ico , ,1
+		}
+	}
+	else
+	{
+		if (Path_FileExists(A_ScriptDir . "\benizara_off.ico")==1)
+		{
+			Menu, Tray, Icon, %A_ScriptDir%\benizara_off.ico , ,1
+		}
 	}
 	return
 
@@ -1687,10 +1679,10 @@ ChkIME:
 	}
 	if(vImeMode==0)
 	{
-		vImeConvMode :=IME_GetConvMode()
+		vImeConvMode := IME_GetConvMode()
 		g_Romaji := "A"
 	} else {
-		vImeConvMode :=IME_GetConvMode()
+		vImeConvMode := IME_GetConvMode()
 		if((vImeConvMode & 0x01)==1) ;半角カナ・全角平仮名・全角カタカナ
 		{
 			g_Romaji := "R"
@@ -1864,7 +1856,8 @@ gSC136: ;右Shift
 		goto, keydown%g_metaKey%
 	}
 	if(g_Modifier != 0) {
-		GuiControl,2:,vkeyDN%g_layoutPos%,□
+		;GuiControl,2:,vkeyDN%g_layoutPos%,□
+		RefreshKey(g_layoutPos,1)
 		RegLogs(kName . " down", g_KeyInPtn, g_trigger, g_Timeout, "")
 		g_Timeout := ""
 		Gosub,ModeInitialize
@@ -1885,7 +1878,8 @@ gSC136: ;右Shift
 		critical,off
 		return
 	}
-	GuiControl,2:,vkeyDN%g_layoutPos%,□
+	;GuiControl,2:,vkeyDN%g_layoutPos%,□
+	RefreshKey(g_layoutPos,1)
 	goto, keydown%g_metaKey%
 
 ;----------------------------------------------------------------------
@@ -2034,7 +2028,8 @@ gSC136up:	;右Shift
 	if(kName=="RWin") {	;右Win
 		g_Modifier &= (~0x4000)
 	}
-	GuiControl,2:,vkeyDN%g_layoutPos%,　
+	;GuiControl,2:,vkeyDN%g_layoutPos%,　
+	RefreshKey(g_layoutPos,0)
 	gosub, keyup%g_metaKey%
 	return
 

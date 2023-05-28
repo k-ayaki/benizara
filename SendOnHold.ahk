@@ -308,87 +308,77 @@ SubSend(_vOut)
 {
 	global g_KeyInPtn, g_trigger
 	global g_Koyubi, g_Timeout
+	global g_vOut
 
-	_stroke := ""
+	g_vOut := _vOut
+	_strokes := StrSplit(_vOut,chr(9))
 	_scnt := 0
 	_len := strlen(_vOut)
-	_cnt := 0
 	_sendch := ""
-	_bsflg := 0
-	loop, Parse, _vOut
+	loop, % _strokes.MaxIndex()
 	{
-		_cnt := _cnt + 1
-		_stroke .= A_LoopField
-		StringLeft, _left2c, _stroke, 2
-		if(A_LoopField == "}" && _left2c != "{}") {	; ストロークの終わり
-			if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_stroke,"{vk")==0) {
-				if(_scnt>=4) 
-				{
-					SetKeyDelay, 16,-1
-					_scnt := 0
-				} else {
-					SetKeyDelay, -1,-1
-				}
-				Send, {blind}{capslock}
-				_scnt +=  1
-				RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, "{capslock}")
-				g_Timeout := ""
-
-				if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
-					_scnt += 4
-				}
-				if(_scnt>=4)
-				{
-					SetKeyDelay, 64,-1
-					_scnt := 0
-				} else {
-					SetKeyDelay, -1,-1
-				}
-				Send, %_stroke%
-				_scnt += 1
-				RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
-				g_Timeout := ""
-				
-				if(_scnt>=4) 
-				{
-					SetKeyDelay,16,-1
-					_scnt := 0
-				} else {
-					SetKeyDelay,-1,-1
-				}
-				Send, {blind}{capslock}
-				_scnt += 1
-				RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, "{capslock}")
-				g_Timeout := ""
-				
-			} else {
-				if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
-					_scnt += 4
-				}
-				if(_scnt>=4)
-				{
-					SetKeyDelay, 64,-1
-					_scnt := 0
-				} else {
-					SetKeyDelay, -1,-1
-				}
-				Send, %_stroke%
-				_scnt += 1
-				RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
-				g_Timeout := ""
-			}
-			_stroke := ""
+		_stroke := _strokes[A_Index]
+		_idx := InStr(_stroke, "{")
+		if (_idx>0 && _idx+1 <= StrLen(_stroke))
+		{
+			_sendch := SubStr(_stroke,_idx + 1,1)
+		} else {
 			_sendch := ""
 		}
-		if(_sendch=="" && substr(_left2c,1,1)=="{") {
-			_sendch := substr(_left2c,2,1)
+		if(g_Koyubi=="K" && isCapsLock(_sendch)==true && instr(_stroke,"{vk")==0) {
+			if(_scnt>=4) 
+			{
+				SetKeyDelay, 16,-1
+				_scnt := 0
+			} else {
+				SetKeyDelay, -1,-1
+			}
+			Send, {blind}{capslock}
+			_scnt +=  1
+			RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, "{capslock}")
+			g_Timeout := ""
+			if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
+				_scnt += 4
+			}
+			if(_scnt>=4)
+			{
+				SetKeyDelay, 64,-1
+				_scnt := 0
+			} else {
+				SetKeyDelay, -1,-1
+			}
+			Send,% _stroke
+			_scnt += 1
+			RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
+			g_Timeout := ""
+			
+			if(_scnt>=4) 
+			{
+				SetKeyDelay,16,-1
+				_scnt := 0
+			} else {
+				SetKeyDelay,-1,-1
+			}
+			Send, {blind}{capslock}
+			_scnt += 1
+			RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, "{capslock}")
+			g_Timeout := ""
+		} else {
+			if(instr(_stroke,"^{M")>0 || instr(_stroke,"{Enter")>0) {
+				_scnt += 4
+			}
+			if(_scnt>=4)
+			{
+				SetKeyDelay, 64,-1
+				_scnt := 0
+			} else {
+				SetKeyDelay, -1,-1
+			}
+			Send,% _stroke
+			_scnt += 1
+			RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
+			g_Timeout := ""
 		}
-	}
-	SetKeyDelay, -1,-1
-	if(_stroke != "") {
-		Send, %_stroke%
-		RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
-		g_Timeout := ""
 	}
 }
 ;----------------------------------------------------------------------
@@ -400,7 +390,9 @@ SubSendOne(_vOut)
 	
 	if(_vOut!="") {
 		SetKeyDelay, -1,-1
-		Send, {blind}%_vOut%
+;		Send, {blind}%_vOut%
+		_vOut2 := "{blind}" . _vOut
+		Send, % _vOut2
 		RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _vOut)
 		g_Timeout := ""
 	}
@@ -437,7 +429,7 @@ isCapsLock(_ch)
 	_code := ASC(_ch)
 	if(0x61<= _code && 0x7A <=_code) {
 		return true
-	}
+	}	
 	if(instr("1234567890-^\@[;:],./\", _ch)>0) {
 		return true
 	}

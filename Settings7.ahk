@@ -14,13 +14,28 @@
 #include ReadLayout6.ahk
 #include Path.ahk
 #include Objects.ahk
+#Include, Gdip.ahk
+
+StartGdi:
+	; Start gdi+
+	If !pToken := Gdip_Startup()
+	{
+		MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+		ExitApp
+	}
+	return
+
+CloseGdi:
+	; gdi+ may now be shutdown
+	Gdip_Shutdown(pToken)
+	Return
 
 ;-----------------------------------------------------------------------
 ; Iniファイルの読み込み
 ;-----------------------------------------------------------------------
 Init:
 	SetWorkingDir, %g_DataDir%
-	g_IniFile := ".\benizara.ini"
+	g_IniFile := g_DataDir . "\benizara.ini"
 	if(Path_FileExists(g_IniFile) = 0)
 	{
 		g_LayoutFile := ".\NICOLA配列.bnz"
@@ -104,7 +119,7 @@ Init:
 	IniRead,g_KeyPause,%g_IniFile%,Key,KeyPause
 	if g_KeyPause not in Pause,ScrollLock,無効
 		g_KeyPause := "Pause"
-	gosub, RemapOya
+	RemapOya()
 	return
 	
 ;-----------------------------------------------------------------------
@@ -120,12 +135,13 @@ Settings:
 	vLayoutFile := g_LayoutFile
 	g_CurrSimulMode := "…"
 _Settings:
+	g_isDialog := 1
 	Gui,2:Default
 	Gui, 2:New
 	Gui, Font,s10 c000000
 	Gui, Add, Button,ggButtonOk X530 Y405 W80 H22,ＯＫ
 	Gui, Add, Button,ggButtonCancel X620 Y405 W80 H22,キャンセル
-	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W740 H390, 配列||親指シフト|文字同時打鍵|一時停止|管理者権限|紅皿について
+	Gui, Add, Tab3,ggTabChange vvTabName X10 Y10 W740 H390, 配列||親指シフト|文字同時打鍵|状態|紅皿について
 	g_TabName := "配列"
 	
 	Gui, Tab, 1
@@ -161,34 +177,18 @@ _Settings:
 			Gui, Add, DropDownList,ggKeySingle vvKeySingle X360 Y70 W95,無効|有効||
 
 		Gui, Add, Text,X490 Y70,同時打鍵の表示：
-		_ddlist := "…"
-		if(v == g_CurrSimulMode) {
-			_ddlist := _ddlist . "||"
-		} else {
-			_ddlist := _ddlist . "|"
-		}
-		enum := g_SimulMode._NewEnum()
-		while enum[k,v]
-		{
-			if(substr(v,1,1) == g_Romaji) {
-				if(v == g_CurrSimulMode) {
-					_ddlist := _ddlist . v . "||"
-				} else {
-					_ddlist := _ddlist . v . "|"
-				}
-			}
-		}
-		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X600 Y70 W95,%_ddlist%
+		s_ddlist := RefreshSimulKeyMenu()
+		Gui, Add, DropDownList,ggCurrSimulMode vvCurrSimulMode X600 Y70 W95,%s_ddlist%
 	}
 	else if(ShiftMode["R"] = "プレフィックスシフト")
 	{
 		Gui, Add, Text,X30 Y70,プレフィックスシフトを用いた配列です
 	}
 	Gui, Font,s10 c000000,Meiryo UI
-	Gosub,G2DrawKeyFrame
+	G2DrawKeyFrame(g_Romaji)
 	Gui, Font,s9 c000000,Meiryo UI
 	Gui, Add, Edit,vvEdit X60 Y370 W650 H20 -Vscroll,
-	Gosub, G2RefreshLayout
+	G2RefreshLayout()
 	
 	Gui, Tab, 2
 	Gui, Font,s10 c000000,Meiryo UI
@@ -256,28 +256,30 @@ _Settings:
 	
 	Gui, Tab, 4
 	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W690 H60 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
-	Gui, Add, Text,X30 Y130,一時停止キー：
+	Gui, Add, Edit,X20 Y40 W300 H20 ReadOnly -Vscroll,紅皿を一時停止させるキーを決定します。
 	if(g_KeyPause == "Pause")
-		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause||ScrollLock|無効|
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X+20 Y40 W125,Pause||ScrollLock|無効|
 	else if(g_KeyPause == "ScrollLock")
-		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock||無効|
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X+20 Y40 W125,Pause|ScrollLock||無効|
 	else
-		Gui, Add, DropDownList,ggSetPause vvKeyPause X140 Y130 W125,Pause|ScrollLock|無効||
+		Gui, Add, DropDownList,ggSetPause vvKeyPause X+20 Y40 W125,Pause|ScrollLock|無効||
 
-	Gui, Tab, 5
-	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Edit,X20 Y40 W690 H60 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
+	Gui, Add, Edit,X20 Y70 W300 H20 ReadOnly -Vscroll,一時停止状態であるか否かの表示です。
+	Gui, Add, Checkbox,ggPauseStatus vvPauseStatus X+20 Y70,一時停止
+	g_Pause := 0
+	s_Pause := 0
+	Gui, Add, Edit,X20 Y100 W300 H40 ReadOnly -Vscroll,管理者権限で動作しているアプリケーションに対して親指シフト入力するか否かを決定します。
 	if(DllCall("Shell32\IsUserAnAdmin") = 1)
 	{
-		Gui, Add, Text,X30 Y+30,紅皿は管理者権限で動作しています。
+		Gui, Add, Text,X+20 Y100,紅皿は管理者権限で動作しています。
 	}
 	else
 	{
-		Gui, Add, Text,X30 Y+30,紅皿は通常権限で動作しています。
-		Gui, Add, Button,ggButtonAdmin X30 Y+30 W140 H22,管理者権限に切替
+		Gui, Add, Text,X+20 Y100,紅皿は通常権限で動作しています。
+		Gui, Add, Button,ggButtonAdmin X340 Y120 W140 H22,管理者権限に切替
 	}
-	Gui, Tab, 6
+
+	Gui, Tab, 5
 	Gui, Font,s10 c000000,Meiryo UI
 	Gui, Add, Text,X30  Y52,名称：benizara / 紅皿
 	Gui, Add, Text,X30  Y92,機能：Yet another NICOLA Emulaton Software
@@ -291,7 +293,8 @@ _Settings:
 
 	s_Romaji := ""
 	s_KeySingle := ""
-	SetTimer,G2PollingLayout,50
+	SetTimer,G2PollingLayout,64
+	SetTimer,G4PollingPause,128
 	GuiControl,Focus,vEdit
 	return
 
@@ -319,207 +322,128 @@ gURLsupport:
 ;-----------------------------------------------------------------------
 ; 機能：キーレイアウトの表示
 ;-----------------------------------------------------------------------
-G2DrawKeyFrame:
-	_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
+G2DrawKeyFrame(a_Romaji)
+{
+	global
+	Gui,2:Default
+	_ch := GuiLayoutHash[a_Romaji] . ":" . ShiftMode[a_Romaji]
 	Gui,Add,GroupBox,vvkeyLayoutName X20 Y90 W720 H270,%_ch%
-	_col := 1
-	_ypos := 105
 	loop,14
 	{
-		_row := A_Index
-		Gosub,DrawKeyE2B
+		DrawKeyE2B(1, A_Index)
 	}
-	_col := 2
-	_ypos += 48
 	loop,12
 	{
-		_row := A_Index
-		Gosub,DrawKeyE2B
+		DrawKeyE2B(2, A_Index)
 	}
-	_col := 3
-	_ypos += 48
 	loop,12
 	{
-		_row := A_Index
-		Gosub,DrawKeyE2B
+		DrawKeyE2B(3, A_Index)
 	}
-	_col := 4
-	_ypos += 48
 	loop,11
 	{
-		_row := A_Index
-		Gosub,DrawKeyE2B
+		DrawKeyE2B(4, A_Index)
 	}
-	_col := 5
-	_ypos += 48
 	loop, 4
 	{
-		_row := A_Index
-		Gosub,DrawKeyA
+		DrawKeyA(5, A_Index)
 	}
-	Gosub,DrawKeyUsage
+	DrawKeyUsage(5)
 	return
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：E～B段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
-DrawKeyE2B:
-	_xpos := 32*(_col-1) + 48*(_row - 1) + 40
-	_ch := " "
-	Gosub, DrawKeyRectE2B
-	_xpos0 := _xpos + 4
-	_ypos0 := _ypos + 10
-	_col2 := g_colhash[_col]
-	_row2 := g_rowhash[_row]
-	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRL%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 24
-	_ypos0 := _ypos + 10
-	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRR%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 4
-	_ypos0 := _ypos + 30
-	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRK%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 24
-	_ypos0 := _ypos + 30
-	Gui, Font,s10 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyRN%_col2%%_row2% X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	Gosub, DrawKeyBorder
+DrawKeyE2B(a_col,a_row)
+{
+	global
+	_xpos0 := 32*(a_col-1) + 48*(a_row - 1) + 44
+	_ypos0 := (a_col - 1)*48 + 115
+	_col2 := g_colhash[a_col]
+	_row2 := g_rowhash[a_row]
+	Gui,2:Default
+	Gui, Add, Picture, x%_xpos0% y%_ypos0% w44 h44 0xE vKeyRectangle%_col2%%_row2%
+	RefreshKey(_col2 . _row2)
 	return
+}
+
 ;-----------------------------------------------------------------------
 ; 機能：A段の各キーの矩形と入力文字の表示
 ;-----------------------------------------------------------------------
-DrawKeyA:
-	_xpos := 32*(_col-1) + 48*(_row + 2 - 1) + 40
-	Gosub, DrawKeyRectA
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 10
-	_col2 := g_colhash[_col]
-	_row2 := g_rowhash[_row]
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFA%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　　
-	_xpos0 := _xpos + 6
-	_ypos0 := _ypos + 30
-	Gui, Font,s9 c000000,Meiryo UI
-	Gui, Add, Text,vvkeyFB%_col2%%_row2% X%_xpos0% Y%_ypos0% W42 +Center c000000 BackgroundTrans,　  
-	Gosub, DrawKeyBorder
-	return
+DrawKeyA(a_col,a_row)
+{
+	global
+	_xpos0 := 32*(a_col-1) + 48*(a_row + 2 - 1) + 44
+	_ypos0 := (a_col - 1)*48 + 115
+	_col2 := g_colhash[a_col]
+	_row2 := g_rowhash[a_row]
+	Gui,2:Default
+	Gui, Add, Picture, x%_xpos0% y%_ypos0% w44 h44 0xE vKeyRectangle%_col2%%_row2%
+	RefreshKey(_col2 . _row2)
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：キー凡例
 ;-----------------------------------------------------------------------
-DrawKeyUsage:
-	_xpos := 40
-	_row := 0
-	Gosub, DrawKeyRectA
-	_xpos0 := _xpos + 4
-	_ypos0 := _ypos + 10
-	Gui, Font,s7 c000000,Meiryo UI
-	_ch := "左親"
-	Gui, Add, Text,vvkeyRLA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 24
-	_ypos0 := _ypos + 10
-	Gui, Font,s7 c000000,Meiryo UI
-	_ch := "右親"
-	Gui, Add, Text,vvkeyRRA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 4
-	_ypos0 := _ypos + 30
-	Gui, Font,s7 c000000,Meiryo UI
+DrawKeyUsage(a_col)
+{
+	global
+	_ypos0 := (a_col - 1)*48 + 115
+	_xpos0 := 40
+	Gui,2:Default
+	Gui, Add, Picture, x%_xpos0% y%_ypos0% w44 h44 0xE vKeyRectangleA00
+	RefreshKey("A00")
+	return
+}
+
+;-----------------------------------------------------------------------
+; 機能：キー表示
+;-----------------------------------------------------------------------
+Gdip_KeyRect(ByRef keyRectangle, Foreground, Background=0x00000000, TextLU="", TextRU="", TextLD="", TextRD="", pushed=0)
+{
+	GuiControlGet, Pos, Pos, keyRectangle
+	GuiControlGet, hwnd, hwnd, keyRectangle
+	pBrushFront := Gdip_BrushCreateSolid(Foreground)
+	pBrushBack := Gdip_BrushCreateSolid(Background)
+	pBitmap := Gdip_CreateBitmap(Posw, Posh)
+	G := Gdip_GraphicsFromImage(pBitmap)
+	Gdip_SetSmoothingMode(G, 4)
 	
-	if(g_CurrSimulMode == "…" || g_Romaji == "A") {
-		_ch := "小指"
+	Gdip_FillRectangle(G, pBrushBack, 0, 0, Posw, Posh)
+	if(pushed == 0)
+	{
+		Gdip_FillRoundedRectangle(G, pBrushFront, 2, 3, (Posw-5), Posh-5, 3)
+		Gdip_TextToGraphics(G, TextLU, "x6p y6p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		Gdip_TextToGraphics(G, TextRU, "x50p y6p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		if(strlen(TextLD)>6)
+		{
+			Gdip_TextToGraphics(G, TextLD, "x3p y50p s15p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		} else {
+			Gdip_TextToGraphics(G, TextLD, "x6p y50p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		}
+		Gdip_TextToGraphics(G, TextRD, "x50p y50p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
 	} else {
-		_ch := "同打"
+		Gdip_FillRoundedRectangle(G, pBrushFront, 3, 2, (Posw-5), Posh-5, 3)
+		Gdip_TextToGraphics(G, TextLU, "x8p y4p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		Gdip_TextToGraphics(G, TextRU, "x52p y4p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		if(strlen(TextLD)>6)
+		{
+			Gdip_TextToGraphics(G, TextLD, "x5p y48p s15p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		} else {
+			Gdip_TextToGraphics(G, TextLD, "x8p y48p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
+		}
+		Gdip_TextToGraphics(G, TextRD, "x52p y48p s25p left cff000000 r4", "Meiryo UI", Posw, Posh)
 	}
-	Gui, Add, Text,vvkeyRKA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	_xpos0 := _xpos + 24
-	_ypos0 := _ypos + 30
-	Gui, Font,s8 c000000,Meiryo UI
-	_ch := "無"
-	Gui, Add, Text,vvkeyRNA00 X%_xpos0% Y%_ypos0% W24 +Center c000000 BackgroundTrans,%_ch%
-	Gosub, DrawKeyBorder
-	return
-
-;-----------------------------------------------------------------------
-; 機能：各キーの矩形表示
-;-----------------------------------------------------------------------
-DrawKeyRectE2B:
-	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 12
-	_xpos0 := _xpos - 3
-	Gui, Add, Text,X%_xpos0% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(_row = 1)
-	{
-		Gui, Font,s42 cFFC3E1,Yu Gothic UI
-	}
-	else if _row in 2,3
-	{
-		Gui, Font,s42 cFFFFC3,Yu Gothic UI
-	}
-	else if _row in 4,5
-	{
-		Gui, Font,s42 cC3FFC3,Yu Gothic UI
-	}
-	else if _row in 6,7
-	{
-		Gui, Font,s42 cC3FFFF,Yu Gothic UI
-	}
-	else if _row in 8,9
-	{
-		Gui, Font,s42 cE1C3FF,Yu Gothic UI
-	}
-	else
-	{
-		Gui, Font,s42 cC0C0C0,Yu Gothic UI
-	}
-	_ypos0 := _ypos - 8
-	_xpos0 := _xpos - 1
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	return
-
-;-----------------------------------------------------------------------
-; 機能：各キーの矩形表示・・・５列目
-;-----------------------------------------------------------------------
-DrawKeyRectA:
-	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 12
-	_xpos0 := _xpos - 3
-	_col2 := g_colhash[_col]
-	_row2 := g_rowhash[_row]
-	Gui, Add, Text,X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	if(keyAttribute3[g_Romaji . "N" . _col2 . _row2] == "L")
-	{
-		Gui, Font,s42 cFFFF00,Yu Gothic UI
-	}
-	else
-	if(keyAttribute3[g_Romaji . "K" . _col2 . _row2] == "R")
-	{
-		Gui, Font,s42 c00FFFF,Yu Gothic UI
-	}
-	else
-	{
-		Gui, Font,s42 cFFFFFF,Yu Gothic UI
-	}
-	_ypos0 := _ypos - 8
-	_xpos0 := _xpos - 1
-	_col2 := g_colhash[_col]
-	_row2 := g_rowhash[_row]
-	Gui, Add, Text,vvkeyFC%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,■
-	return
-
-;-----------------------------------------------------------------------
-; 機能：キーダウン表示
-;-----------------------------------------------------------------------
-DrawKeyBorder:
-	Gui, Font,s45 c000000,Yu Gothic UI
-	_ypos0 := _ypos - 12
-	_xpos0 := _xpos - 3
-	_col2 := g_colhash[_col]
-	_row2 := g_rowhash[_row]
 	
-	Gui, Add, Text,vvkeyDN%_col2%%_row2% X%_xpos0% Y%_ypos0% +Center BackgroundTrans,　
-	return
+	hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
+	SetImage(hwnd, hBitmap)
+	Gdip_DeleteBrush(pBrushFront), Gdip_DeleteBrush(pBrushBack)
+	Gdip_DeleteGraphics(G)
+	Gdip_DisposeImage(pBitmap)
+	DeleteObject(hBitmap)
+	Return, 0
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列変更に係る変数の監視
@@ -527,6 +451,11 @@ DrawKeyBorder:
 G2PollingLayout:
 	Gui,2:Default
 	Gui, Submit, NoHide
+	if(g_isDialog==0)
+	{
+		SetTimer,G2PollingLayout,off
+		return
+	}
 	if(g_TabName != "配列")
 	{
 		return
@@ -538,256 +467,194 @@ G2PollingLayout:
 			s_Romaji := g_Romaji
 			s_ch := GuiLayoutHash[g_Romaji] . ":" . ShiftMode[g_Romaji]
 			GuiControl,,vkeyLayoutName,%s_ch%
-			Gosub,G2RefreshLayout
-			
-			Gosub,RefreshSimulKeyMenu
+
+			G2RefreshLayout()
+			s_ddlist := "|" . RefreshSimulKeyMenu()	; リストを設定し直す
+			GuiControl,,vCurrSimulMode,%s_ddlist%
 		}
 		s_KeySingle := g_KeySingle
-		Gosub,RefreshLayoutA
+		RefreshLayoutA()
 	}
-	Gosub,ReadKeyboardState
+	ReadKeyboardState()
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：同時打鍵キーメニューの更新：英数ローマ字モードに応じて（割込）
 ;-----------------------------------------------------------------------
-RefreshSimulKeyMenu:
-	s_ddlist := "|…"
-	if(v == g_CurrSimulMode) {
-		s_ddlist := s_ddlist . "||"
+RefreshSimulKeyMenu()
+{
+	global
+	s_ddlist := "…"
+	if(s_ddlist == g_CurrSimulMode) {
+		s_ddlist .= "||"
 	} else {
-		s_ddlist := s_ddlist . "|"
+		s_ddlist .= "|"
 	}
 	enum := g_SimulMode._NewEnum()
 	while enum[k,v]
 	{
 		if(substr(v,1,1) == g_Romaji) {
 			if(v == g_CurrSimulMode) {
-				s_ddlist := s_ddlist . v . "||"
+				s_ddlist .= v . "||"
 			} else {
-				s_ddlist := s_ddlist . v . "|"
+				s_ddlist .= v . "|"
 			}
 		}
 	}
-	GuiControl,,vCurrSimulMode,%s_ddlist%
-	return
+	return s_ddlist
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え（割込）
 ;-----------------------------------------------------------------------
-RefreshLayoutA:
-	s_layoutPos := "A01"
-	Gosub,RefreshLayoutA1
-	s_layoutPos := "A02"
-	Gosub,RefreshLayoutA1
-	s_layoutPos := "A03"
-	Gosub,RefreshLayoutA1
-	s_layoutPos := "A04"
-	Gosub,RefreshLayoutA1
-	s_layoutPos := "A00"
-	Gosub,RefreshLayoutUsage
+RefreshLayoutA()
+{
+	RefreshKey("A01")
+	RefreshKey("A02")
+	RefreshKey("A03")
+	RefreshKey("A04")
+	RefreshKey("A00")
 	return
-
-;-----------------------------------------------------------------------
-; 機能：Ａ列のキー表示の更新（割込）
-;-----------------------------------------------------------------------
-RefreshLayoutA1:
-	Gui, Submit, NoHide
-	GuiControl,-Redraw,vkeyDN%s_layoutPos%
-	if(keyAttribute3[g_Romaji . "N" . s_layoutPos] == "L")
-	{
-		Gui,Font,S42 cFFFF00,Yu Gothic UI
-		GuiControl,Font,vkeyFC%s_layoutPos%
-		GuiControl,,vkeyFA%s_layoutPos%,左親指
-	}
-	else
-	if(keyAttribute3[g_Romaji . "N" . s_layoutPos] == "R")
-	{
-		Gui,Font,S42 c00FFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%s_layoutPos%
-		GuiControl,,vkeyFA%s_layoutPos%,右親指
-	}
-	else
-	{
-		Gui,Font,S42 cFFFFFF,Yu Gothic UI
-		GuiControl,Font,vkeyFC%s_layoutPos%
-
-		Gui,Font,s9 c000000,Meiryo UI
-		GuiControl,,vkeyFA%s_layoutPos%,　　　
-	}
-	s_label := kLabel[s_layoutPos]
-	GuiControl,,vkeyFB%s_layoutPos%,%s_label%
-	vkeyDN%s_layoutPos% := "　"
-	GuiControl,2:,vkeyDN%s_layoutPos%,　
-	GuiControl,+Redraw,vkeyDN%s_layoutPos%
-	return
-;-----------------------------------------------------------------------
-; 機能：凡例表示の更新（割込）
-;-----------------------------------------------------------------------
-RefreshLayoutUsage:
-	Gui, Submit, NoHide
-	if(ShiftMode["R"] == "親指シフト" || ShiftMode["R"] == "文字同時打鍵") {
-		GuiControl,,vkeyRLA00,左親
-		GuiControl,,vkeyRRA00,右親
-	}
-	else
-	if(ShiftMode["R"] == "プレフィックスシフト") {
-		GuiControl,,vkeyRLA00,１
-		GuiControl,,vkeyRRA00,２
-	}
-	return
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：キー配列表示の切り替え（割込）
 ;-----------------------------------------------------------------------
-G2RefreshLayout:
-	Gui, Submit, NoHide
+G2RefreshLayout()
+{
+	global
 	for index, element in layoutArys
 	{
-		GuiControl,-Redraw,vkeyDN%element%
-		GuiControl,,vkeyDN%element%,　
-		GuiControl,-Redraw,vkeyRK%element%
-		GuiControl,-Redraw,vkeyRN%element%
-		GuiControl,-Redraw,vkeyRL%element%
-		GuiControl,-Redraw,vkeyRR%element%
-		
-		if(g_sansPos != "") {
-			s_st := kst[g_Romaji . "NS" . element]
-			Gosub, SetFontColor
-			GuiControl,Font,vkeyRK%element%
-			s_ch := kLabel[g_Romaji . "NS" . element]
-			GuiControl,,vkeyRK%element%,%s_ch%
-		} else if(g_CurrSimulMode == "…") {
-			s_st := kst[g_Romaji . "NK" . element]
-			Gosub, SetFontColor
-			GuiControl,Font,vkeyRK%element%
-			s_ch := kLabel[g_Romaji . "NK" . element]
-			GuiControl,,vkeyRK%element%,%s_ch%
-		} else {
-			s_st := kst[g_CurrSimulMode . element]
-			Gosub, SetFontColor
-			GuiControl,Font,vkeyRK%element%
-			s_ch := kLabel[g_CurrSimulMode . element]
-			GuiControl,,vkeyRK%element%,%s_ch%
-		}
-
-		s_st := kst[g_Romaji . "NN" . element]
-		Gosub, SetFontColor
-		GuiControl,Font,vkeyRN%element%
-		s_ch := kLabel[g_Romaji . "NN" . element]
-		GuiControl,,vkeyRN%element%,%s_ch%
-		
-
-		s_ch := kLabel[g_Romaji . "LN" . element]
-		s_st := kst[g_Romaji . "LN" . element]
-		if(s_ch == "") {
-			s_ch := kLabel[g_Romaji . "1N" . element]
-			s_st := kst[g_Romaji . "1N" . element]
-		}
-		Gosub, SetFontColor
-		GuiControl,Font,vkeyRL%element%
-		GuiControl,,vkeyRL%element%,%s_ch%
-
-		s_ch := kLabel[g_Romaji . "RN" . element]
-		s_st := kst[g_Romaji . "RN" . element]
-		if(s_ch == "") {
-			s_ch := kLabel[g_Romaji . "2N" . element]
-			s_st := kst[g_Romaji . "2N" . element]
-		}
-		Gosub, SetFontColor
-		GuiControl,Font,vkeyRR%element%
-		GuiControl,,vkeyRR%element%,%s_ch%
-
-		GuiControl,+Redraw,vkeyDN%element%
-		GuiControl,+Redraw,vkeyRK%element%
-		GuiControl,+Redraw,vkeyRN%element%
-		GuiControl,+Redraw,vkeyRL%element%
-		GuiControl,+Redraw,vkeyRR%element%
+		RefreshKey(element)
 	}
 	return
-
+}
 
 ;-----------------------------------------------------------------------
-; 機能：フォント色の設定（割込）
+; 機能：キー配列表示の更新（キー押しか否か）
 ;-----------------------------------------------------------------------
-SetFontColor:
-	if(s_st=="e") {			; 
-		Gui, Font,s10 cC00000 Norm,Meiryo UI
-	} else if(s_st=="Q") {	; 引用符
-		Gui, Font,s10 c0000FF Norm,Meiryo UI
-	} else if(s_st=="V") {	; 仮想キーコード
-		Gui, Font,s10 c008000 Norm,Meiryo UI
+RefreshKey(_pos, _keystatus=0)
+{
+	global
+
+	g_keyState[_pos] := _keystatus 
+	if(g_isDialog == 0)
+	{
+		return
+	}
+	if (_pos == "A00")
+	{
+		Gui, 2:Default
+		Gui, 2: -DPIScale
+		if(ShiftMode["R"] == "親指シフト" || ShiftMode["R"] == "文字同時打鍵") {
+			if(g_CurrSimulMode == "…")
+			{
+				Gdip_KeyRect(KeyRectangle%_pos%, 0xffFFFFFF, 0xff000000, "左","右","小","無")
+			} else {
+				Gdip_KeyRect(KeyRectangle%_pos%, 0xffFFFFFF, 0xff000000, "左","右", substr(g_CurrSimulMode,4),"無")
+			}
+		}
+		else
+		if(ShiftMode["R"] == "プレフィックスシフト") {
+			Gdip_KeyRect(KeyRectangle%_pos%, 0xffFFFFFF, 0xff000000, "１","２","小","無")
+		}
+		Gui, 2: +DPIScale
+	} else
+	if (substr(_pos,1,1) == "A")
+	{
+		Gui, 2:Default
+		Gui, 2: -DPIScale
+		if(keyAttribute3[g_Romaji . "N" . _pos] == "L")
+		{
+			Gdip_KeyRect(KeyRectangle%_pos%, 0xffFFFF00, 0xff000000, "左親指","",kLabel[_pos], "", _keystatus)
+		}
+		else
+		if(keyAttribute3[g_Romaji . "N" . _pos] == "R")
+		{
+			Gdip_KeyRect(KeyRectangle%_pos%, 0xff00FFFF, 0xff000000, "右親指","",kLabel[_pos], "", _keystatus)
+		}
+		else
+		{
+			Gdip_KeyRect(KeyRectangle%_pos%, 0xffFFFFFF, 0xff000000, "","", kLabel[_pos], "", _keystatus)
+		}
+		Gui, 2: +DPIScale
 	} else {
-		Gui, Font,s10 c000000 Norm,Meiryo UI
+		if(g_sansPos != "") {
+			_chrk := kLabel[g_Romaji . "NS" . _pos]
+		} else
+		if(g_CurrSimulMode == "…") {
+			_chrk := kLabel[g_Romaji . "NK" . _pos]
+		} else {
+			_chrk := kLabel[g_CurrSimulMode . _pos]
+		}
+		_chrn := kLabel[g_Romaji . "NN" . _pos]
+		
+		_chrl := kLabel[g_Romaji . "LN" . _pos]
+		if(_chrl == "") {
+			_chrl := kLabel[g_Romaji . "1N" . _pos]
+		}
+		_chrr := kLabel[g_Romaji . "RN" . _pos]
+		if(_chrr == "") {
+			_chrr := kLabel[g_Romaji . "2N" . _pos]
+		}
+		Gui, 2:Default
+		Gui, 2: -DPIScale
+		Gdip_KeyRect(KeyRectangle%_pos%, "0xff" . g_pos2Colors[_pos], 0xff000000, _chrl,_chrr,_chrk,_chrn, _keystatus)
+		GUI, 2: +DPIScale
+	}
+	return 0
+}
+
+;-----------------------------------------------------------------------
+; 機能：キー配列表示の切り替え（割込）
+;-----------------------------------------------------------------------
+G4PollingPause:
+	if(g_isDialog == 0)
+	{
+		SetTimer,G4PollingPause,off
+		return
+	}
+	if (g_Pause != s_Pause)
+	{
+		s_Pause := g_Pause
+		Gui,2:Default
+		Gui, Submit, NoHide
+		GuiControl,,vPauseStatus,%g_Pause%
+		trayIconRefresh(g_Pause)
 	}
 	return
 
 ;-----------------------------------------------------------------------
 ; 機能：キーのオンオフ表示の更新
 ;-----------------------------------------------------------------------
-ReadKeyboardState:
-	loop, 14
+ReadKeyboardState()
+{
+	global
+	for index, element in layoutArys
 	{
-		s_layoutPos := "E" . g_rowhash[A_Index]
-		s_vkey := vkeyStrHash[s_layoutPos]
-		Gosub,SetKeyGui2
-	}
-	loop, 12
-	{
-		s_layoutPos := "D" . g_rowhash[A_Index]
-		s_vkey := vkeyStrHash[s_layoutPos]
-		Gosub,SetKeyGui2
-	}
-	loop, 12
-	{
-		s_layoutPos := "C" . g_rowhash[A_Index]
-		s_vkey := vkeyStrHash[s_layoutPos]
-		Gosub,SetKeyGui2
-	}
-	loop, 11
-	{
-		s_layoutPos := "B" . g_rowhash[A_Index]
-		s_vkey := vkeyStrHash[s_layoutPos]
-		Gosub,SetKeyGui2
-	}
-	loop, 4
-	{
-		s_layoutPos := "A" . g_rowhash[A_Index]
-		s_vkey := vkeyStrHash[s_layoutPos]
-		Gosub,SetKeyGui2
-	}
-	return
-
-;-----------------------------------------------------------------------
-; 機能：キー状態を反映
-;-----------------------------------------------------------------------
-SetKeyGui2:
-	;ひらがな/カタカナキーはキー状態が読めない
-	if(s_layoutPos == "A04")
-	{
-		return
-	}
-	;キーフックしていない場合にポーリングする
-	if(keyHook[g_layoutPos] == "off")
-	{
-		s_keyState := GetKeyState(s_vkey,"P")
-		GuiControlGet,s_val,,vkeyDN%s_layoutPos%
-		if(s_keyState != 0 && s_val != "□")
+		if(element == "A04")
 		{
-			GuiControl,2:,vkeyDN%s_layoutPos%,□
+			continue
 		}
-		else
-		if(s_keyState == 0 && s_val != "　")
+		;キーフックしていない場合にポーリングする
+		if(keyHook[element] == "off")
 		{
-			GuiControl,2:,vkeyDN%s_layoutPos%,　
+			s_vkey := vkeyStrHash[element]
+			s_keyState := GetKeyState(s_vkey,"P")
+			if(s_keyState != g_keyState[element])
+			{
+				RefreshKey(element, s_keyState)
+			}
 		}
 	}
 	return
+}
 
 ;-----------------------------------------------------------------------
 ; 機能：タブ変更
 ;-----------------------------------------------------------------------
 gTabChange:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	g_TabName := vTabName
 	GuiControl,Focus,vEdit
@@ -805,6 +672,7 @@ gTabChange:
 ; 機能：親指シフト同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
 gThSlider:
+	Gui,2:Default
 	GuiControlGet, g_Threshold , , vThSlider, 
 	GuiControl,, vThresholdNum, %g_Threshold%
 	return
@@ -813,6 +681,7 @@ gThSlider:
 ; 機能：文字同時打鍵の判定時間のスライダー操作
 ;-----------------------------------------------------------------------
 gThSliderSS:
+	Gui,2:Default
 	GuiControlGet, g_ThresholdSS , , vThSliderSS, 
 	GuiControl,, vThresholdNumSS, %g_ThresholdSS%
 	return
@@ -822,6 +691,7 @@ gThSliderSS:
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderMO:
+	Gui,2:Default
 	GuiControlGet, g_OverlapMO , , vOlSliderMO, 
 	GuiControl,, vOverlapNumMO, %g_OverlapMO%
 	return
@@ -830,6 +700,7 @@ gOlSliderMO:
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderOM:
+	Gui,2:Default
 	GuiControlGet, g_OverlapOM , , vOlSliderOM, 
 	GuiControl,, vOverlapNumOM, %g_OverlapOM%
 	return
@@ -838,6 +709,7 @@ gOlSliderOM:
 ; 機能：親指シフト同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderOMO:
+	Gui,2:Default
 	GuiControlGet, g_OverlapOMO , , vOlSliderOMO, 
 	GuiControl,, vOverlapNumOMO, %g_OverlapOMO%
 	return
@@ -846,6 +718,7 @@ gOlSliderOMO:
 ; 機能：文字同時打鍵の割合のスライダー操作
 ;-----------------------------------------------------------------------
 gOlSliderSS:
+	Gui,2:Default
 	GuiControlGet, g_OverlapSS , , vOlSliderSS, 
 	GuiControl,, vOverlapNumSS, %g_OverlapSS%
 	return
@@ -854,6 +727,7 @@ gOlSliderSS:
 ; 機能：連続シフトチェックボックスの操作
 ;-----------------------------------------------------------------------
 gContinue:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	g_Continue := %A_GuiControl%
 	if(g_Continue = 1)
@@ -887,6 +761,7 @@ gContinue:
 ; 機能：零遅延モードチェックボックスの操作
 ;-----------------------------------------------------------------------
 gZeroDelay:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	g_ZeroDelay := %A_GuiControl%
 	Return
@@ -896,6 +771,7 @@ gZeroDelay:
 ; 機能：零遅延モードチェックボックスの操作
 ;-----------------------------------------------------------------------
 gZeroDelaySS:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	g_ZeroDelay := %A_GuiControl%
 	Return
@@ -905,11 +781,12 @@ gZeroDelaySS:
 ; ver.0.1.3.7 ... gSpace/gSpaceUp を追加
 ;-----------------------------------------------------------------------
 gOya:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	if(vOyaKey != "…") {
 		g_OyaKey := vOyaKey
-		Gosub,RemapOya
-		Gosub,RefreshLayoutA
+		RemapOya()
+		RefreshLayoutA()
 	}
 	Return
 
@@ -917,6 +794,7 @@ gOya:
 ; 機能：単独打鍵の設定
 ;-----------------------------------------------------------------------
 gKeySingle:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	if(vKeySingle != "…") {
 		g_KeySingle := vKeySingle
@@ -926,8 +804,8 @@ gKeySingle:
 		} else {
 			g_KeyRepeat := 0
 		}
-		Gosub,RemapOya
-		Gosub,RefreshLayoutA
+		RemapOya()
+		RefreshLayoutA()
 	}
 	return
 
@@ -935,6 +813,7 @@ gKeySingle:
 ; 機能：同時打鍵キーの指定
 ;-----------------------------------------------------------------------
 gCurrSimulMode:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	g_CurrSimulMode := vCurrSimulMode
 	Gui,Destroy
@@ -943,7 +822,9 @@ gCurrSimulMode:
 ;-----------------------------------------------------------------------
 ; 機能：親指シフトモードの変数設定
 ;-----------------------------------------------------------------------
-RemapOya:
+RemapOya()
+{
+	global
 	if(ShiftMode["A"] == "親指シフト") {
 		RemapOyaKey("A")
 	}
@@ -951,6 +832,7 @@ RemapOya:
 		RemapOyaKey("R")
 	}
 	return
+}
 
 gDefFile:
 	Gui, Submit, NoHide
@@ -965,6 +847,7 @@ gFileSelect:
 	SetWorkingDir, %g_DataDir%
 	FileSelectFile, vLayoutFileAbs,0,%g_DataDir%,,Layout File (*.bnz; *.yab)
 	
+	Gui,2:Default
 	if(vLayoutFileAbs<>"")
 	{
 		vLayoutFile := Path_RelativePathTo(A_WorkingDir, 0x10, vLayoutFileAbs, 0x20)
@@ -979,7 +862,7 @@ gFileSelect:
 		SetHotkeyFunction("off")
 		
 		Gosub, InitLayout2
-		GoSub, ReadLayoutFile
+		ReadLayoutFile(vLayoutFile)
 		if(_error=="")
 		{
 			Traytip,キーボード配列エミュレーションソフト「紅皿」,benizara %g_Ver% `n%g_layoutName%　%g_layoutVersion%
@@ -990,7 +873,7 @@ gFileSelect:
 			; 元ファイルを再読み込みする
 			Gosub, InitLayout2
 			vLayoutFile := g_LayoutFile
-			GoSub, ReadLayoutFile
+			ReadLayoutFile(g_LayoutFile)
 			GuiControl,, vFilePath, %vLayoutFile%
 		}
 		Gosub, SetLayoutProperty
@@ -1011,8 +894,8 @@ gFileSelect:
 ;-----------------------------------------------------------------------
 ; 機能：一時停止ボタンの選択メニュー
 ;-----------------------------------------------------------------------
-
 gSetPause:
+	Gui,2:Default
 	Gui, Submit, NoHide
 	if(vKeyPause == "Pause" || vKeyPause == "ScrollLock" || vKeyPause == "無効")
 	{
@@ -1021,16 +904,33 @@ gSetPause:
 	return
 
 ;-----------------------------------------------------------------------
+; 機能：一時停止のチェックボックス
+;-----------------------------------------------------------------------
+gPauseStatus(a_Pause)
+{
+	if (a_Pause == 0)
+	{
+		return 1
+	}
+	return 0
+}
+;-----------------------------------------------------------------------
 ; 機能：管理者権限設定ボタン
 ;-----------------------------------------------------------------------
 gButtonAdmin:
 	{ 
 		try ; leads to having the script re-launching itself as administrator 
 		{ 
-			if A_IsCompiled 
+			if(A_IsCompiled)
+			{
 				Run *RunAs "%A_ScriptFullPath%" /restart 
+			}
 			else
-				Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%" 
+			{
+				SetWorkingDir, %A_ScriptDir%
+				Run *RunAs "%A_ScriptFullPath%" /restart
+				;Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%" 
+			}
 		} 
 		ExitApp 
 	}
@@ -1042,7 +942,7 @@ gButtonAdmin:
 
 gButtonOk:
 	SetWorkingDir, %g_DataDir%
-	g_IniFile := ".\benizara.ini"
+	g_IniFile := g_DataDir . "\benizara.ini"
 	IniWrite,%g_LayoutFile%,%g_IniFile%,FilePath,LayoutFile
 	IniWrite,%g_Continue%,%g_IniFile%,Key,Continue
 	IniWrite,%g_Threshold%,%g_IniFile%,Key,Threshold
@@ -1064,6 +964,10 @@ gButtonOk:
 ;-----------------------------------------------------------------------
 gButtonCancel:
 GuiClose:
+	Gui,2:Default
 	SetTimer,G2PollingLayout,off
+	SetTimer,G4PollingPause,off
 	Gui,Destroy
+	g_isDialog := 0
 	return
+
