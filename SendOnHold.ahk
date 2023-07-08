@@ -374,7 +374,21 @@ SubSend(_vOut)
 			} else {
 				SetKeyDelay, -1,-1
 			}
-			Send,% _stroke
+			if WinActive("ahk_class ApplicationFrameWindow")
+			{
+				if (_stroke == "{Up down}")	; Microsoft OneNote 対策
+				{
+					dllcall("keybd_event", int, 0x26, int, 0, int, 1, int, 0) ;Up
+				} else
+				if (_stroke == "{Down down}")
+				{
+					dllcall("keybd_event", int, 0x28, int, 0, int, 1, int, 0) ;Down
+				} else {
+					Send,% _stroke
+				}
+			} else {
+				Send,% _stroke
+			}
 			_scnt += 1
 			RegLogs("", g_KeyInPtn, g_trigger, g_Timeout, _stroke)
 			g_Timeout := ""
