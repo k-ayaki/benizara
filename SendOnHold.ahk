@@ -315,6 +315,7 @@ SubSend(_vOut)
 	_scnt := 0
 	_len := strlen(_vOut)
 	_sendch := ""
+	WinGetTitle, _szTitle,A
 	loop, % _strokes.MaxIndex()
 	{
 		_stroke := _strokes[A_Index]
@@ -374,15 +375,23 @@ SubSend(_vOut)
 			} else {
 				SetKeyDelay, -1,-1
 			}
-			if WinActive("ahk_class ApplicationFrameWindow")
+			if (instr(szTitle,"OneNote")>0)
 			{
 				if (_stroke == "{Up down}")	; Microsoft OneNote 対策
 				{
 					dllcall("keybd_event", int, 0x26, int, 0, int, 1, int, 0) ;Up
 				} else
+				if (_stroke == "{Up up}")
+				{
+					dllcall("keybd_event", int, 0x26, int, 0, int, 2, int, 0) ;Up
+				} else
 				if (_stroke == "{Down down}")
 				{
 					dllcall("keybd_event", int, 0x28, int, 0, int, 1, int, 0) ;Down
+				} else
+				if (_stroke == "{Down up}")
+				{
+					dllcall("keybd_event", int, 0x28, int, 0, int, 2, int, 0) ;Down
 				} else {
 					Send,% _stroke
 				}
